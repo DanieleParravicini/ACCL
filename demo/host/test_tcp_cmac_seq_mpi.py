@@ -42,6 +42,7 @@ def configure_xccl(xclbin, board_idx, nbufs=16, bufsize=1024*1024):
 
 
     print("Allocating 1MB scratchpad memory")
+    args.board_instance = local_alveo.name
     if local_alveo.name == 'xilinx_u250_gen3x16_xdma_shell_3_1':
         devicemem   = ol.bank1
         rxbufmem    = ol.bank1
@@ -114,13 +115,13 @@ def configure_xccl(xclbin, board_idx, nbufs=16, bufsize=1024*1024):
 
 
 
-def test_sendrecv(bsize, to_from_fpga=True):
+def test_sendrecv(bsize, segment_size,  to_from_fpga=True):
     print("========================================")
     print("SendRecv 1 -> 0")
     print("========================================")
     naccel = 2
     # test sending from each cclo 
-    tx_buf[:]=np.arange(0,bsize*1024)
+    tx_buf[:bsize*1024]=np.arange(0,bsize*1024)
     rx_buf[:]=np.zeros(rx_buf.shape)# clear rx buffers
     # to_from_fpga = True
     niter = 10
@@ -130,14 +131,14 @@ def test_sendrecv(bsize, to_from_fpga=True):
     for j in range (niter):
         if rank     == 0:
             for i in range(num_message):
-                cclo.recv(0, rx_buf, src=1, tag=i, to_fpga=to_from_fpga)
+                cclo.recv(0, rx_buf[:bsize*1024], src=1, tag=i, to_fpga=to_from_fpga)
         elif rank   == 1 :
             for i in range(num_message):
-                cclo.send(0, tx_buf, dst=0, tag=i, from_fpga=to_from_fpga)
+                cclo.send(0, tx_buf[:bsize*1024], dst=0, tag=i, from_fpga=to_from_fpga)
                 if args.debug and to_from_fpga:
                     cclo.dump_rx_buffers_spares()
                     if not to_from_fpga:
-                        if not (rx_buf == tx_buf).all():
+                        if not (rx_buf[:bsize*1024] == tx_buf[:bsize*1024]).all():
                             print("Message {} Send/Recv {} -> {} failed".format(i, 0, 1))
                         else:
                             print("Message {} Send/Recv {} -> {} succeeded".format(i, 0, 1))
@@ -149,17 +150,17 @@ def test_sendrecv(bsize, to_from_fpga=True):
     if to_from_fpga:
         print("Size[KB],{},Num device,{},*Duration[us],{},throughput[gbps],{}".format(bsize,naccel, duration_us, throughput_gbps))
         if rank == 0 :
-            csv_writer.writerow(["Sendrecv ", naccel, bsize, duration_us, throughput_gbps])
+            csv_writer.writerow([args.experiment, args.board_instance, args.naccel, args.num_banks, bsize, segment_size, "Sendrecv ", duration_us, throughput_gbps])
     else:
         print("FullPath,Size[KB],{},Num device,{},&Duration[us],{},throughput[gbps],{}".format(bsize,naccel, duration_us, throughput_gbps))
         if rank == 0 :
-            csv_writer.writerow(["Sendrecv FullPath", naccel, bsize, duration_us, throughput_gbps])
+            csv_writer.writerow([args.experiment, args.board_instance, args.naccel, args.num_banks, bsize, segment_size, "Sendrecv FullPath", duration_us, throughput_gbps])
 
-def test_bcast(bsize, naccel, to_from_fpga=True):
+def test_bcast(bsize, segment_size, naccel, to_from_fpga=True):
     print("========================================")
     print("Broadcast (0)")
     print("========================================")
-    tx_buf[:]=np.arange(0,bsize*1024)
+    tx_buf[:bsize*1024]=np.arange(0,bsize*1024)
     rx_buf[:]=np.zeros(rx_buf.shape)# clear rx buffers
     # to_from_fpga = True
     niter = 10
@@ -169,16 +170,16 @@ def test_bcast(bsize, naccel, to_from_fpga=True):
     for j in range (niter):
         if rank == 0:
             for i in range(num_message):
-                cclo.bcast(0, tx_buf, root=0, sw=False, rr=True, from_fpga=to_from_fpga, to_fpga=to_from_fpga, run_async=False)
+                cclo.bcast(0, tx_buf[:bsize*1024], root=0, sw=False, rr=True, from_fpga=to_from_fpga, to_fpga=to_from_fpga, run_async=False)
                 # print("rank 0 finishes")
         else :
             for i in range(num_message):
-                cclo.bcast(0, rx_buf, root=0, sw=False, rr=True, from_fpga=to_from_fpga, to_fpga=to_from_fpga, run_async=False)
+                cclo.bcast(0, rx_buf[:bsize*1024], root=0, sw=False, rr=True, from_fpga=to_from_fpga, to_fpga=to_from_fpga, run_async=False)
                 if args.debug and to_from_fpga:
                     cclo.dump_rx_buffers_spares()
                     print(f"rank {rank} finishes")
                     if not to_from_fpga:
-                        if not (rx_buf == tx_buf).all():
+                        if not (rx_buf[:bsize*1024] == tx_buf[:bsize*1024]).all():
                             print("Rank {} Message {} Bcast failed".format(rank, i))
                         else:
                             print("Rank {} Message {} Bcast succeeded".format(rank, i))
@@ -190,20 +191,20 @@ def test_bcast(bsize, naccel, to_from_fpga=True):
     if to_from_fpga:
         print("Size[KB],{},Num device,{},*Duration[us],{},throughput[gbps],{}".format(bsize,naccel, duration_us, throughput_gbps))
         if rank == 0 :
-            csv_writer.writerow(["Broadcast ", naccel, bsize, duration_us, throughput_gbps])
+            csv_writer.writerow([args.experiment, args.board_instance, args.naccel, args.num_banks, bsize, segment_size, "Broadcast ", duration_us, throughput_gbps])
     else:
         print("FullPath,Size[KB],{},Num device,{},&Duration[us],{},throughput[gbps],{}".format(bsize,naccel, duration_us, throughput_gbps))
         if rank == 0 :
-            csv_writer.writerow(["Broadcast FullPath", naccel, bsize, duration_us, throughput_gbps])
+            csv_writer.writerow([args.experiment, args.board_instance, args.naccel, args.num_banks, bsize, segment_size, "Broadcast FullPath", duration_us, throughput_gbps])
 
-def test_ring_reduce(bsize, naccel, to_from_fpga=True):
+def test_ring_reduce(bsize, segment_size, naccel, to_from_fpga=True):
     print("========================================")
     print("Ring-reduce (0)")
     print("========================================")
     tx_buf[0]=0
     rx_buf[0]=0
     # to_from_fpga = True
-    count = tx_buf.nbytes
+    count = tx_buf[:bsize*1024].nbytes
     niter = 10
     num_message=1
     comm.barrier()
@@ -212,7 +213,7 @@ def test_ring_reduce(bsize, naccel, to_from_fpga=True):
         if rank     == 0:
             for i in range(num_message):
                 tx_buf[0]=i+1
-                cclo.reduce(0, tx_buf, rx_buf, count, root=0, func=2, sw=False, shift=True, from_fpga=to_from_fpga, to_fpga=to_from_fpga, run_async=False)
+                cclo.reduce(0, tx_buf[:bsize*1024], rx_buf[:bsize*1024], count, root=0, func=2, sw=False, shift=True, from_fpga=to_from_fpga, to_fpga=to_from_fpga, run_async=False)
 
                 if args.debug and to_from_fpga:
                     cclo.dump_rx_buffers_spares()
@@ -235,13 +236,13 @@ def test_ring_reduce(bsize, naccel, to_from_fpga=True):
     if to_from_fpga:
         print("Size[KB],{},Num device,{},*Duration[us],{},throughput[gbps],{}".format(bsize,naccel, duration_us, throughput_gbps))
         if rank == 0 :
-            csv_writer.writerow(["Reduce ", naccel, bsize, duration_us, throughput_gbps])
+            csv_writer.writerow([args.experiment, args.board_instance, args.naccel, args.num_banks, bsize, segment_size, "Reduce ", duration_us, throughput_gbps])
     else:
         print("FullPath,Size[KB],{},Num device,{},&Duration[us],{},throughput[gbps],{}".format(bsize,naccel, duration_us, throughput_gbps))
         if rank == 0 :
-            csv_writer.writerow(["Reduce FullPath", naccel, bsize, duration_us, throughput_gbps])
+            csv_writer.writerow([args.experiment, args.board_instance, args.naccel, args.num_banks, bsize, segment_size, "Reduce FullPath", duration_us, throughput_gbps])
 
-def test_ring_all_reduce(bsize, naccel, to_from_fpga=True):
+def test_ring_all_reduce(bsize, segment_size, naccel, to_from_fpga=True):
     print("========================================")
     print("Ring_All_Reduce")
     print("========================================")
@@ -250,7 +251,7 @@ def test_ring_all_reduce(bsize, naccel, to_from_fpga=True):
     result=tx_buf*naccel
     # print(tx_buf)
     # print(result)
-    count = tx_buf.nbytes
+    count = tx_buf[:bsize*1024].nbytes
     # to_from_fpga = True
     niter = 10
     num_message=1
@@ -282,19 +283,19 @@ def test_ring_all_reduce(bsize, naccel, to_from_fpga=True):
     if to_from_fpga:
         print("Size[KB],{},Num device,{},*Duration[us],{},throughput[gbps],{}".format(bsize,naccel, duration_us, throughput_gbps))
         if rank == 0 :
-            csv_writer.writerow(["Allreduce ", naccel, bsize, duration_us, throughput_gbps])
+            csv_writer.writerow([args.experiment, args.board_instance, args.naccel, args.num_banks, bsize, segment_size, "Allreduce ", duration_us, throughput_gbps])
     else:
         print("FullPath,Size[KB],{},Num device,{},&Duration[us],{},throughput[gbps],{}".format(bsize,naccel, duration_us, throughput_gbps))
         if rank == 0 :
-            csv_writer.writerow(["Allreduce FullPath", naccel, bsize, duration_us, throughput_gbps])
+            csv_writer.writerow([args.experiment, args.board_instance, args.naccel, args.num_banks, bsize, segment_size, "Allreduce FullPath", duration_us, throughput_gbps])
 
-def test_scatter(bsize, naccel, to_from_fpga=True):
+def test_scatter(bsize, segment_size, naccel, to_from_fpga=True):
     print("========================================")
     print("Scatter (0)")
     print("========================================")
-    tx_buf[:]=np.arange(0,bsize*1024)
+    tx_buf[:bsize*1024]=np.arange(0,bsize*1024)
     rx_buf[:]=np.zeros(rx_buf.shape)# clear rx buffers
-    count = tx_buf.nbytes//naccel
+    count = tx_buf[:bsize*1024].nbytes//naccel
     print(f"Scatter Send count:{count}")
     #to_from_fpga = True
     niter = 10
@@ -304,12 +305,12 @@ def test_scatter(bsize, naccel, to_from_fpga=True):
     for j in range (niter):
         if rank == 0:
             for i in range(num_message):
-                cclo.scatter(0, tx_buf, rx_buf, count, root=0,  sw=False, rr=True, from_fpga=to_from_fpga, to_fpga=to_from_fpga, run_async=False)
+                cclo.scatter(0, tx_buf, rx_buf, count, root=0,  sw=False, rr=False, from_fpga=to_from_fpga, to_fpga=to_from_fpga, run_async=False)
                 if args.debug and to_from_fpga:
                     print("rank 0 finishes")
         else :
             for i in range(num_message):
-                cclo.scatter(0, tx_buf, rx_buf, count, root=0,  sw=False, rr=True, from_fpga=to_from_fpga, to_fpga=to_from_fpga, run_async=False)
+                cclo.scatter(0, tx_buf, rx_buf, count, root=0,  sw=False, rr=False, from_fpga=to_from_fpga, to_fpga=to_from_fpga, run_async=False)
                 if args.debug and to_from_fpga:
                     cclo.dump_rx_buffers_spares()
                     print(f"rank {rank} finishes")
@@ -326,21 +327,21 @@ def test_scatter(bsize, naccel, to_from_fpga=True):
     if to_from_fpga:
         print("Size[KB],{},Num device,{},*Duration[us],{},throughput[gbps],{}".format(bsize,naccel, duration_us, throughput_gbps))
         if rank == 0 :
-            csv_writer.writerow(["Scatter ", naccel, bsize, duration_us, throughput_gbps])
+            csv_writer.writerow([args.experiment, args.board_instance, args.naccel, args.num_banks, bsize, segment_size, "Scatter ", duration_us, throughput_gbps])
     else:
         print("FullPath,Size[KB],{},Num device,{},&Duration[us],{},throughput[gbps],{}".format(bsize,naccel, duration_us, throughput_gbps))
         if rank == 0 :
-            csv_writer.writerow(["Scatter FullPath", naccel, bsize, duration_us, throughput_gbps])
+            csv_writer.writerow([args.experiment, args.board_instance, args.naccel, args.num_banks, bsize, segment_size, "Scatter FullPath", duration_us, throughput_gbps])
 
 
 
-def test_gather(bsize, naccel, to_from_fpga=True):
+def test_gather(bsize, segment_size, naccel, to_from_fpga=True):
     print("========================================")
     print("Gather (0)")
     print("========================================")
-    tx_buf[:]=np.arange(0,bsize*1024)
+    tx_buf[:bsize*1024]=np.arange(0,bsize*1024)
     rx_buf[:]=np.zeros(rx_buf.shape)# clear rx buffers
-    count = tx_buf.nbytes//naccel
+    count = tx_buf[:bsize*1024].nbytes//naccel
     print(f"Gather Send count:{count}")
     #to_from_fpga = True
     niter = 10
@@ -372,19 +373,19 @@ def test_gather(bsize, naccel, to_from_fpga=True):
     if to_from_fpga:
         print("Size[KB],{},Num device,{},*Duration[us],{},throughput[gbps],{}".format(bsize,naccel, duration_us, throughput_gbps))
         if rank == 0 :
-            csv_writer.writerow(["Gather ", naccel, bsize, duration_us, throughput_gbps])
+            csv_writer.writerow([args.experiment, args.board_instance, args.naccel, args.num_banks, bsize, segment_size, "Gather ", duration_us, throughput_gbps])
     else:
         print("FullPath,Size[KB],{},Num device,{},&Duration[us],{},throughput[gbps],{}".format(bsize,naccel, duration_us, throughput_gbps))
         if rank == 0 :
-            csv_writer.writerow(["Gather FullPath", naccel, bsize, duration_us, throughput_gbps])
+            csv_writer.writerow([args.experiment, args.board_instance, args.naccel, args.num_banks, bsize, segment_size, "Gather FullPath", duration_us, throughput_gbps])
 
-def test_allgather(bsize, naccel, to_from_fpga=True):
+def test_allgather(bsize, segment_size, naccel, to_from_fpga=True):
     print("========================================")
     print("All_Gather")
     print("========================================")
-    tx_buf[:]=np.arange(0,bsize*1024)
+    tx_buf[:bsize*1024]=np.arange(0,bsize*1024)
     rx_buf[:]=np.zeros(rx_buf.shape)# clear rx buffers
-    count = tx_buf.nbytes//naccel
+    count = tx_buf[:bsize*1024].nbytes//naccel
     print(f"All_Gather Send count:{count}")
     #to_from_fpga = True
     niter = 10
@@ -416,32 +417,33 @@ def test_allgather(bsize, naccel, to_from_fpga=True):
     if to_from_fpga:
         print("Size[KB],{},Num device,{},*Duration[us],{},throughput[gbps],{}".format(bsize,naccel, duration_us, throughput_gbps))
         if rank == 0 :
-            csv_writer.writerow(["AllGather ", naccel, bsize, duration_us, throughput_gbps])
+            csv_writer.writerow([args.experiment, args.board_instance, args.naccel, args.num_banks, bsize, segment_size, "AllGather ", duration_us, throughput_gbps])
     else:
         print("FullPath,Size[KB],{},Num device,{},&Duration[us],{},throughput[gbps],{}".format(bsize,naccel, duration_us, throughput_gbps))
         if rank == 0 :
-            csv_writer.writerow(["AllGather FullPath", naccel, bsize, duration_us, throughput_gbps])
+            csv_writer.writerow([args.experiment, args.board_instance, args.naccel, args.num_banks, bsize, segment_size, "AllGather FullPath", duration_us, throughput_gbps])
 
 
 parser = argparse.ArgumentParser(description='Tests for MPI collectives offload with UDP (VNx) backend')
-parser.add_argument('--xclbin',         type=str, default=None,             help='Accelerator image file (xclbin)', required=True)
-parser.add_argument('--device_index',   type=int, default=1,                help='Card index')
-parser.add_argument('--nruns',          type=int, default=1,                help='How many times to run each test')
-parser.add_argument('--nbufs',          type=int, default=16,               help='How many times to run each test')
-parser.add_argument('--bsize',          type=int, default=1024,             help='How many KB per buffer')
-parser.add_argument('--segment_size',   type=int, default=1024,             help='How many KB per spare_buffer')
-parser.add_argument('--dump_rx_regs',   type=int, default=0,    	        help='Print RX regs of specified ')
-parser.add_argument('--num_banks',      type=int, default=6,                help='for U280 specifies how many memory banks to use per CCL_Offload instance')
-parser.add_argument('--sendrecv',       action='store_true', default=False, help='Run send/recv test')
-parser.add_argument('--bcast',          action='store_true', default=False, help='Run bcast test')
-parser.add_argument('--scatter',        action='store_true', default=False, help='Run scatter test')
-parser.add_argument('--gather',         action='store_true', default=False, help='Run gather test')
-parser.add_argument('--allgather',      action='store_true', default=False, help='Run allgather test')
-parser.add_argument('--reduce',         action='store_true', default=False, help='Run reduce test')
-parser.add_argument('--allreduce',      action='store_true', default=False, help='Run allreduce test')
-parser.add_argument('--sum',            action='store_true', default=False, help='Run fp/dp/i32/i64 test')
-parser.add_argument('--fused',          action='store_true', default=False, help='For all-* collectives, run the fused implementation')
-parser.add_argument('--debug',          action='store_true', default=False, help='activate tests')
+parser.add_argument('--xclbin',         type=str, default=None,                             help='Accelerator image file (xclbin)', required=True)
+parser.add_argument('--device_index',   type=int, default=1,                                help='Card index')
+parser.add_argument('--nruns',          type=int, default=1,                                help='How many times to run each test')
+parser.add_argument('--nbufs',          type=int, default=16,                               help='How many times to run each test')
+parser.add_argument('--bsize',          type=int, default=1024,             nargs="+" ,    help='How many KB per buffer')
+parser.add_argument('--segment_size',   type=int, default=1024,             nargs="+" ,    help='How many KB per spare_buffer')
+parser.add_argument('--dump_rx_regs',   type=int, default=0,    	                        help='Print RX regs of specified ')
+parser.add_argument('--num_banks',      type=int, default=6,                                help='for U280 specifies how many memory banks to use per CCL_Offload instance')
+parser.add_argument('--sendrecv',       action='store_true', default=False ,                help='Run send/recv test')
+parser.add_argument('--bcast',          action='store_true', default=False ,                help='Run bcast test')
+parser.add_argument('--scatter',        action='store_true', default=False ,                help='Run scatter test')
+parser.add_argument('--gather',         action='store_true', default=False ,                help='Run gather test')
+parser.add_argument('--allgather',      action='store_true', default=False ,                help='Run allgather test')
+parser.add_argument('--reduce',         action='store_true', default=False ,                help='Run reduce test')
+parser.add_argument('--allreduce',      action='store_true', default=False ,                help='Run allreduce test')
+parser.add_argument('--sum',            action='store_true', default=False ,                help='Run fp/dp/i32/i64 test')
+parser.add_argument('--fused',          action='store_true', default=False ,                help='For all-* collectives, run the fused implementation')
+parser.add_argument('--debug',          action='store_true', default=False ,                help='activate tests')
+parser.add_argument('--experiment',     type=str,            default="test",                help='experiment meaningful name')
 args = parser.parse_args()
 
 comm         = MPI.COMM_WORLD
@@ -453,11 +455,10 @@ rank         = comm.Get_rank()
 if __name__ == "__main__":    
     try:
         #configure FPGA and CCLO cores with the default 16 RX buffers of 16KB each
-        ol, cclo, devicemem = configure_xccl(args.xclbin, args.device_index, nbufs=args.nbufs ,bufsize=args.segment_size*1024 )
+        ol, cclo, devicemem = configure_xccl(args.xclbin, args.device_index, nbufs=args.nbufs ,bufsize=max(args.segment_size)*1024 )
 
-        tx_buf = pynq.allocate((args.bsize*1024,), dtype=np.int8, target=devicemem)
-        rx_buf = pynq.allocate((args.bsize*1024,), dtype=np.int8, target=devicemem)
-        print(f"message size {args.bsize} KB")
+        tx_buf = pynq.allocate((max(args.bsize)*1024,), dtype=np.int8, target=devicemem)
+        rx_buf = pynq.allocate((max(args.bsize)*1024,), dtype=np.int8, target=devicemem)
 
         print(f"CCLO {rank}: rx_buf {hex(rx_buf.device_address)}")
         print(f"CCLO {rank}: tx_buf {hex(tx_buf.device_address)}")
@@ -466,53 +467,56 @@ if __name__ == "__main__":
             # if args.dump_rx_regs >= 0:
             cclo.dump_rx_buffers_spares(nbufs=32)
         
-        csv_file = open(f"bench_naccel{args.naccel}nruns{args.nruns}_bsize{args.bsize}_segment_size{args.segment_size}.csv", "w", newline="") 
+        csv_file = open(f"measurements/{args.experiment}.csv", "w", newline="") 
         import csv
         global csv_writer
         csv_writer = csv.writer(csv_file, delimiter=",", quoting=csv.QUOTE_MINIMAL)
-        csv_writer.writerow(["bsize[KB]", args.bsize, "segment[KB]", args.segment_size])
-        csv_writer.writerow(["collective", "size communicator" ,"size [KB]", "execution time [us]", "throughput[Gbps]", ])
-
+        csv_writer.writerow(["experiment", "board_instance", "number of nodes", "number of banks", "buffer size[KB]", "segment_size[KB]", "collective name", "execution_time[us]", "throughput[Gbps]"])
 
         cclo.set_timeout(10_000_000)
+        cclo.set_max_dma_transaction_flight(20)
+        for segment_size in args.segment_size:
+            #change dma_transaction size
+            cclo.set_dma_transaction_size(segment_size*1024)
+            print(f"segment size size {segment_size} KB")
+            for bsize in args.bsize:
+                print(f"message size {bsize} KB")
+                #to synchronize the processes
+                comm.barrier()
+                if args.sendrecv:
+                    for i in range(args.nruns):
+                        test_sendrecv(bsize, segment_size)
+                        test_sendrecv(bsize, segment_size, False)
 
-        #to synchronize the processes
-        comm.barrier()
+                if args.bcast:
+                    for i in range(args.nruns):
+                        test_bcast(bsize, segment_size, args.naccel)
+                        test_bcast(bsize, segment_size, args.naccel, False)
 
-        if args.sendrecv:
-            for i in range(args.nruns):
-                test_sendrecv(args.bsize)
-                test_sendrecv(args.bsize, False)
+                if args.reduce:
+                    for i in range(args.nruns):
+                        test_ring_reduce(bsize, segment_size, args.naccel)
+                        test_ring_reduce(bsize, segment_size, args.naccel, False)
 
-        if args.bcast:
-            for i in range(args.nruns):
-                test_bcast(args.bsize, args.naccel)
-                test_bcast(args.bsize, args.naccel, False)
+                if args.scatter:
+                    for i in range(args.nruns):
+                        test_scatter(bsize, segment_size, args.naccel)
+                        test_scatter(bsize, segment_size, args.naccel, False)
 
-        if args.reduce:
-            for i in range(args.nruns):
-                test_ring_reduce(args.bsize, args.naccel)
-                test_ring_reduce(args.bsize, args.naccel, False)
+                if args.gather:
+                    for i in range(args.nruns):
+                        test_gather(bsize, segment_size, args.naccel)
+                        test_gather(bsize, segment_size, args.naccel, False)
 
-        if args.scatter:
-            for i in range(args.nruns):
-                test_scatter(args.bsize, args.naccel)
-                test_scatter(args.bsize, args.naccel, False)
+                if args.allreduce:
+                    for i in range(args.nruns):
+                        test_ring_all_reduce(bsize, segment_size, args.naccel)
+                        test_ring_all_reduce(bsize, segment_size, args.naccel,False)
 
-        if args.gather:
-            for i in range(args.nruns):
-                test_gather(args.bsize, args.naccel)
-                test_gather(args.bsize, args.naccel, False)
-
-        if args.allreduce:
-            for i in range(args.nruns):
-                test_ring_all_reduce(args.bsize, args.naccel)
-                test_ring_all_reduce(args.bsize, args.naccel,False)
-
-        if args.allgather:
-            for i in range(args.nruns):
-                test_allgather(args.bsize, args.naccel)
-                test_allgather(args.bsize, args.naccel,False)
+                if args.allgather:
+                    for i in range(args.nruns):
+                        test_allgather(bsize, segment_size, args.naccel)
+                        test_allgather(bsize, segment_size, args.naccel,False)
 
     except KeyboardInterrupt:
         print("CTR^C")
