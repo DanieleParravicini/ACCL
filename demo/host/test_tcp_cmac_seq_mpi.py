@@ -115,7 +115,7 @@ def configure_xccl(xclbin, board_idx, nbufs=16, bufsize=1024*1024):
 
 
 
-def test_sendrecv(bsize, segment_size,  to_from_fpga=True):
+def test_sendrecv(bsize,  to_from_fpga=True):
     print("========================================")
     print("SendRecv 1 -> 0")
     print("========================================")
@@ -149,14 +149,11 @@ def test_sendrecv(bsize, segment_size,  to_from_fpga=True):
     throughput_gbps = num_message*bsize*1024*8/(duration_us*1000)
     if to_from_fpga:
         print("Size[KB],{},Num device,{},*Duration[us],{},throughput[gbps],{}".format(bsize,naccel, duration_us, throughput_gbps))
-        if rank == 0 :
-            csv_writer.writerow([args.experiment, args.board_instance, args.naccel, args.num_banks, bsize, segment_size, "Sendrecv ", duration_us, throughput_gbps])
     else:
         print("FullPath,Size[KB],{},Num device,{},&Duration[us],{},throughput[gbps],{}".format(bsize,naccel, duration_us, throughput_gbps))
-        if rank == 0 :
-            csv_writer.writerow([args.experiment, args.board_instance, args.naccel, args.num_banks, bsize, segment_size, "Sendrecv FullPath", duration_us, throughput_gbps])
+    return duration_us, throughput_gbps
 
-def test_bcast(bsize, segment_size, naccel, to_from_fpga=True):
+def test_bcast(bsize, naccel, to_from_fpga=True):
     print("========================================")
     print("Broadcast (0)")
     print("========================================")
@@ -190,14 +187,12 @@ def test_bcast(bsize, segment_size, naccel, to_from_fpga=True):
     throughput_gbps = (naccel-1)*num_message*bsize*1024*8/(duration_us*1000)
     if to_from_fpga:
         print("Size[KB],{},Num device,{},*Duration[us],{},throughput[gbps],{}".format(bsize,naccel, duration_us, throughput_gbps))
-        if rank == 0 :
-            csv_writer.writerow([args.experiment, args.board_instance, args.naccel, args.num_banks, bsize, segment_size, "Broadcast ", duration_us, throughput_gbps])
     else:
         print("FullPath,Size[KB],{},Num device,{},&Duration[us],{},throughput[gbps],{}".format(bsize,naccel, duration_us, throughput_gbps))
-        if rank == 0 :
-            csv_writer.writerow([args.experiment, args.board_instance, args.naccel, args.num_banks, bsize, segment_size, "Broadcast FullPath", duration_us, throughput_gbps])
+    return duration_us, throughput_gbps
 
-def test_ring_reduce(bsize, segment_size, naccel, to_from_fpga=True):
+
+def test_ring_reduce(bsize, naccel, to_from_fpga=True):
     print("========================================")
     print("Ring-reduce (0)")
     print("========================================")
@@ -235,14 +230,11 @@ def test_ring_reduce(bsize, segment_size, naccel, to_from_fpga=True):
     throughput_gbps = (naccel)*num_message*bsize*1024*8/(duration_us*1000)
     if to_from_fpga:
         print("Size[KB],{},Num device,{},*Duration[us],{},throughput[gbps],{}".format(bsize,naccel, duration_us, throughput_gbps))
-        if rank == 0 :
-            csv_writer.writerow([args.experiment, args.board_instance, args.naccel, args.num_banks, bsize, segment_size, "Reduce ", duration_us, throughput_gbps])
     else:
         print("FullPath,Size[KB],{},Num device,{},&Duration[us],{},throughput[gbps],{}".format(bsize,naccel, duration_us, throughput_gbps))
-        if rank == 0 :
-            csv_writer.writerow([args.experiment, args.board_instance, args.naccel, args.num_banks, bsize, segment_size, "Reduce FullPath", duration_us, throughput_gbps])
+    return duration_us, throughput_gbps
 
-def test_ring_all_reduce(bsize, segment_size, naccel, to_from_fpga=True):
+def test_ring_all_reduce(bsize, naccel, to_from_fpga=True):
     print("========================================")
     print("Ring_All_Reduce")
     print("========================================")
@@ -282,14 +274,12 @@ def test_ring_all_reduce(bsize, segment_size, naccel, to_from_fpga=True):
     throughput_gbps = (naccel)*num_message*bsize*1024*8/(duration_us*1000)
     if to_from_fpga:
         print("Size[KB],{},Num device,{},*Duration[us],{},throughput[gbps],{}".format(bsize,naccel, duration_us, throughput_gbps))
-        if rank == 0 :
-            csv_writer.writerow([args.experiment, args.board_instance, args.naccel, args.num_banks, bsize, segment_size, "Allreduce ", duration_us, throughput_gbps])
     else:
         print("FullPath,Size[KB],{},Num device,{},&Duration[us],{},throughput[gbps],{}".format(bsize,naccel, duration_us, throughput_gbps))
-        if rank == 0 :
-            csv_writer.writerow([args.experiment, args.board_instance, args.naccel, args.num_banks, bsize, segment_size, "Allreduce FullPath", duration_us, throughput_gbps])
+    return duration_us, throughput_gbps
+    
 
-def test_scatter(bsize, segment_size, naccel, to_from_fpga=True):
+def test_scatter(bsize, naccel, to_from_fpga=True):
     print("========================================")
     print("Scatter (0)")
     print("========================================")
@@ -326,16 +316,13 @@ def test_scatter(bsize, segment_size, naccel, to_from_fpga=True):
     throughput_gbps = num_message*bsize*1024*8/(duration_us*1000)
     if to_from_fpga:
         print("Size[KB],{},Num device,{},*Duration[us],{},throughput[gbps],{}".format(bsize,naccel, duration_us, throughput_gbps))
-        if rank == 0 :
-            csv_writer.writerow([args.experiment, args.board_instance, args.naccel, args.num_banks, bsize, segment_size, "Scatter ", duration_us, throughput_gbps])
     else:
         print("FullPath,Size[KB],{},Num device,{},&Duration[us],{},throughput[gbps],{}".format(bsize,naccel, duration_us, throughput_gbps))
-        if rank == 0 :
-            csv_writer.writerow([args.experiment, args.board_instance, args.naccel, args.num_banks, bsize, segment_size, "Scatter FullPath", duration_us, throughput_gbps])
+    return duration_us, throughput_gbps
 
 
 
-def test_gather(bsize, segment_size, naccel, to_from_fpga=True):
+def test_gather(bsize, naccel, to_from_fpga=True):
     print("========================================")
     print("Gather (0)")
     print("========================================")
@@ -372,14 +359,12 @@ def test_gather(bsize, segment_size, naccel, to_from_fpga=True):
     throughput_gbps = num_message*bsize*1024*8/(duration_us*1000)
     if to_from_fpga:
         print("Size[KB],{},Num device,{},*Duration[us],{},throughput[gbps],{}".format(bsize,naccel, duration_us, throughput_gbps))
-        if rank == 0 :
-            csv_writer.writerow([args.experiment, args.board_instance, args.naccel, args.num_banks, bsize, segment_size, "Gather ", duration_us, throughput_gbps])
     else:
         print("FullPath,Size[KB],{},Num device,{},&Duration[us],{},throughput[gbps],{}".format(bsize,naccel, duration_us, throughput_gbps))
-        if rank == 0 :
-            csv_writer.writerow([args.experiment, args.board_instance, args.naccel, args.num_banks, bsize, segment_size, "Gather FullPath", duration_us, throughput_gbps])
+    return duration_us, throughput_gbps
 
-def test_allgather(bsize, segment_size, naccel, to_from_fpga=True):
+
+def test_allgather(bsize, naccel, to_from_fpga=True):
     print("========================================")
     print("All_Gather")
     print("========================================")
@@ -416,13 +401,9 @@ def test_allgather(bsize, segment_size, naccel, to_from_fpga=True):
     throughput_gbps = (naccel)*num_message*bsize*1024*8/(duration_us*1000)
     if to_from_fpga:
         print("Size[KB],{},Num device,{},*Duration[us],{},throughput[gbps],{}".format(bsize,naccel, duration_us, throughput_gbps))
-        if rank == 0 :
-            csv_writer.writerow([args.experiment, args.board_instance, args.naccel, args.num_banks, bsize, segment_size, "AllGather ", duration_us, throughput_gbps])
     else:
         print("FullPath,Size[KB],{},Num device,{},&Duration[us],{},throughput[gbps],{}".format(bsize,naccel, duration_us, throughput_gbps))
-        if rank == 0 :
-            csv_writer.writerow([args.experiment, args.board_instance, args.naccel, args.num_banks, bsize, segment_size, "AllGather FullPath", duration_us, throughput_gbps])
-
+    return duration_us, throughput_gbps
 
 parser = argparse.ArgumentParser(description='Tests for MPI collectives offload with UDP (VNx) backend')
 parser.add_argument('--xclbin',         type=str, default=None,                             help='Accelerator image file (xclbin)', required=True)
@@ -467,13 +448,13 @@ if __name__ == "__main__":
             # if args.dump_rx_regs >= 0:
             cclo.dump_rx_buffers_spares(nbufs=32)
         
-        csv_file = open(f"measurements/{args.experiment}.csv", "w", newline="") 
+        csv_file = open(f"measurements/{args.experiment}_rank{rank}.csv", "w", newline="") 
         import csv
         global csv_writer
         csv_writer = csv.writer(csv_file, delimiter=",", quoting=csv.QUOTE_MINIMAL)
-        csv_writer.writerow(["experiment", "board_instance", "number of nodes", "number of banks", "buffer size[KB]", "segment_size[KB]", "collective name", "execution_time[us]", "throughput[Gbps]"])
+        csv_writer.writerow(["experiment", "board_instance", "number of nodes", "rank id", "number of banks", "buffer size[KB]", "segment_size[KB]", "collective name", "execution_time[us]", "throughput[Gbps]","execution_time_fullpath[us]", "throughput_fullpath[Gbps]"])
 
-        cclo.set_timeout(10_000_000)
+        cclo.set_timeout(200_000_000)
         cclo.set_max_dma_transaction_flight(20)
         for segment_size in args.segment_size:
             #change dma_transaction size
@@ -485,38 +466,53 @@ if __name__ == "__main__":
                 comm.barrier()
                 if args.sendrecv:
                     for i in range(args.nruns):
-                        test_sendrecv(bsize, segment_size)
-                        test_sendrecv(bsize, segment_size, False)
+                        duration_us, throughput_gbps        = test_sendrecv(bsize,)
+                        duration_us_fp, throughput_gbps_fp  = test_sendrecv(bsize, False)
+
+                        csv_writer.writerow([args.experiment, args.board_instance, args.naccel, rank, args.num_banks, bsize, segment_size, "Send/recv", duration_us, throughput_gbps, duration_us_fp, throughput_gbps_fp])
 
                 if args.bcast:
                     for i in range(args.nruns):
-                        test_bcast(bsize, segment_size, args.naccel)
-                        test_bcast(bsize, segment_size, args.naccel, False)
+                        duration_us, throughput_gbps        = test_bcast(bsize, args.naccel)
+                        duration_us_fp, throughput_gbps_fp  = test_bcast(bsize, args.naccel, False)
+
+                        csv_writer.writerow([args.experiment, args.board_instance, args.naccel, rank, args.num_banks, bsize, segment_size, "Broadcast", duration_us, throughput_gbps, duration_us_fp, throughput_gbps_fp])
 
                 if args.reduce:
                     for i in range(args.nruns):
-                        test_ring_reduce(bsize, segment_size, args.naccel)
-                        test_ring_reduce(bsize, segment_size, args.naccel, False)
+                        duration_us, throughput_gbps        = test_ring_reduce(bsize, args.naccel)
+                        duration_us_fp, throughput_gbps_fp  = test_ring_reduce(bsize, args.naccel, False)
+
+                        csv_writer.writerow([args.experiment, args.board_instance, args.naccel, rank, args.num_banks, bsize, segment_size, "Reduce", duration_us, throughput_gbps, duration_us_fp, throughput_gbps_fp])
 
                 if args.scatter:
                     for i in range(args.nruns):
-                        test_scatter(bsize, segment_size, args.naccel)
-                        test_scatter(bsize, segment_size, args.naccel, False)
+                        duration_us, throughput_gbps        = test_scatter(bsize, args.naccel)
+                        duration_us_fp, throughput_gbps_fp  = test_scatter(bsize, args.naccel, False)
+
+                        csv_writer.writerow([args.experiment, args.board_instance, args.naccel, rank, args.num_banks, bsize, segment_size, "Scatter", duration_us, throughput_gbps, duration_us_fp, throughput_gbps_fp])
 
                 if args.gather:
                     for i in range(args.nruns):
-                        test_gather(bsize, segment_size, args.naccel)
-                        test_gather(bsize, segment_size, args.naccel, False)
+                        duration_us, throughput_gbps        = test_gather(bsize, args.naccel)
+                        duration_us_fp, throughput_gbps_fp  = test_gather(bsize, args.naccel, False)
+
+                        csv_writer.writerow([args.experiment, args.board_instance, args.naccel, rank, args.num_banks, bsize, segment_size, "Gather", duration_us, throughput_gbps, duration_us_fp, throughput_gbps_fp])
 
                 if args.allreduce:
                     for i in range(args.nruns):
-                        test_ring_all_reduce(bsize, segment_size, args.naccel)
-                        test_ring_all_reduce(bsize, segment_size, args.naccel,False)
+                        duration_us, throughput_gbps        = test_ring_all_reduce(bsize, args.naccel)
+                        duration_us_fp, throughput_gbps_fp  = test_ring_all_reduce(bsize, args.naccel, False)
+
+                        csv_writer.writerow([args.experiment, args.board_instance, args.naccel, rank, args.num_banks, bsize, segment_size, "Allreduce", duration_us, throughput_gbps, duration_us_fp, throughput_gbps_fp])
+
 
                 if args.allgather:
                     for i in range(args.nruns):
-                        test_allgather(bsize, segment_size, args.naccel)
-                        test_allgather(bsize, segment_size, args.naccel,False)
+                        duration_us, throughput_gbps        = test_allgather(bsize, args.naccel)
+                        duration_us_fp, throughput_gbps_fp  = test_allgather(bsize, args.naccel, False)
+
+                        csv_writer.writerow([args.experiment, args.board_instance, args.naccel, rank, args.num_banks, bsize, segment_size, "Allgather", duration_us, throughput_gbps, duration_us_fp, throughput_gbps_fp])
 
     except KeyboardInterrupt:
         print("CTR^C")
