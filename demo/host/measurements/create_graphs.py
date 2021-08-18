@@ -13,7 +13,7 @@ def plot_clustered_bars(title, x_datas, y_datas, y_labels):
     from itertools import chain
     ticks = list(np.unique(np.concatenate(x_datas)))
     fig, ax = plt.subplots(figsize=(10,4))
-    # fig = plt.figure(figsize=(8,4))
+
     for i, (x, y, y_label) in enumerate(zip(x_datas, y_datas, y_labels)):
         ax.bar(x + (i - len(y_datas)/2)*width, y, width, label=y_label)
 
@@ -30,8 +30,8 @@ def plot_clustered_bars(title, x_datas, y_datas, y_labels):
 def plot_lines(title, x_datas, y_datas, y_labels, y_styles=None, logx=False):
     if not(y_styles):
         y_styles = [None for _ in range(len(y_labels))]
-    fig, ax = plt.subplots(figsize=(10,4))
-    # fig = plt.figure(figsize=(8,4))
+    fig, ax = plt.subplots(figsize=(12,6))
+
     for i, (x, y, y_label, y_styles) in enumerate(zip(x_datas, y_datas, y_labels, y_styles)):
         if y_styles:
             ax.plot(x, y, y_styles, label=y_label)
@@ -47,7 +47,7 @@ def plot_lines(title, x_datas, y_datas, y_labels, y_styles=None, logx=False):
         ax.set_xscale('log')
     ax.legend()
     plt.show()
-    #plt.savefig(f"{title}.png")
+    plt.savefig(f"{title}.png")
 
 def normality_test(df):
     df              = df[ df["rank id"] == 0]
@@ -113,7 +113,7 @@ def compare_board(df):
     collectives     = df["collective name"].unique()
     segment_size    = 1024
     for collective in collectives:
-        subset              = df[(df["collective name"] == collective) & (df["segment_size[KB]"] == segment_size) ]
+        subset              = df[(df["collective name"] == collective) & ((df["segment_size[KB]"] == segment_size) | (df["board_instance"] == "open_mpi" ))]
         print(subset)
         grouped             = subset.groupby(["board_instance", "buffer size[KB]"]).mean(['execution_time[us]', 'execution_time_fullpath[us]'])
         grouped.reset_index(inplace=True)
@@ -125,27 +125,31 @@ def compare_board(df):
         series_x     = []
         styles       = []
         for i, (board, group) in enumerate(grouped):
-            exe     = group['execution_time[us]'].to_numpy()
-            bufsize = group['buffer size[KB]'].to_numpy()
+            exe          = group['execution_time[us]'].to_numpy()
+            bufsize      = group['buffer size[KB]'].to_numpy()
             exe_full     = group['execution_time_fullpath[us]'].to_numpy()
-
-            series_label.append(board)
-            series_y.append(exe)
-            series_x.append(bufsize)
-            styles.append(f"C{i}+-")
-            series_label.append(f"{board} fullpath")
-            series_y.append(exe_full)
-            series_x.append(bufsize)
-            styles.append(f"C{i}+--")
+            if np.any(exe != 0):
+                series_label.append(board)
+                series_y.append(exe)
+                series_x.append(bufsize)
+                styles.append(f"C{i}+-")
+            if np.any(exe_full != 0):
+                series_label.append(f"{board} fullpath")
+                series_y.append(exe_full)
+                series_x.append(bufsize)
+                styles.append(f"C{i}+--")
         plot_lines(collective, series_x, series_y, series_label, styles, logx=True)
-        plot_clustered_bars(collective, series_x, series_y, series_label)
+        #plot_clustered_bars(collective, series_x, series_y, series_label)
 
 
 if __name__ == "__main__":
     #mypath ="C:\\Users\\danielep\\Documents\\github\\ACCL_measure"
-    mypath ="\\\\xir-pvst2ns02\\danielep\\ACCL_measure\\demo\\host\\measurements\\accl"
-
-    csv_files       = [join(mypath, f) for f in listdir(mypath) if (isfile(join(mypath, f)) and f.find(".csv") != -1)]
+    accl                 ="accl"
+    openmpi              ="open_mpi"
+    csv_files_accl       = [join(accl, f) for f in listdir(accl) if (isfile(join(accl, f)) and f.find(".csv") != -1)]
+    csv_files_openmpi    = [join(openmpi, f) for f in listdir(openmpi) if (isfile(join(openmpi, f)) and f.find(".csv") != -1)]
+    
+    csv_files            = csv_files_accl + csv_files_openmpi
     print(csv_files)
     csvs = []
     for csv_path in csv_files:
@@ -163,6 +167,20 @@ if __name__ == "__main__":
     parser.add_argument('--norm'            , action='store_true', default=False,     help='test normality'                          )
     parser.add_argument('--ssize'           , action='store_true', default=False,    help='ssize vs buffer size'                     )
     parser.add_argument('--compare_board'   , action='store_true', default=True,     help='comapre performance of different alveo'   )
+    #                                                                                                                       fig           data  
+    #D)for every collectiveopen_mpi_and_fpga_at_different_ranks (probably 4-8 with fpga not full_path)                      6xfig         ok    
+    #Z)send and receive throughput with different banks (1)                                                                 1xfig         ok
+    #Z)send and receive throughput with different segment size (2)                                                          1             ko  
+    #Z)send and receive latency    with different banks (1)                 (needed?)                                                     ok
+    #Z)send and receive latency    with different segment size (2)          (needed?)                                                     ko   
+    #Z)show throughput send-recv and compare with openmpi                                                                   1xfig         ok
+    #optimizations 
+    #D)   bcast scatter   : one of them                                                                                                   ok(u280 dual datapath baseline/ u280 rr)  
+    #D)   reduce          : avoid store intermediate results (reduce UXX vs reduce UXX dual datapath. Shows streaming kernels)  x)        ok(upto 16 MB, dualpath / u280 baseline)
+    #D)   allreduce       : can be overlapped with reduce                                                                       x)        ok(upto 32 MB, dualpath / u280 baseline, similar to reduce(we don't show naive implementation), difference w.r.t reduce would be more pronounced)
+    # WE need to rename the experiments (data)
+    #   different algorithm(scatter and bcast rr/none)
+    # the other u280 baseline might be better than dual datapath (waiting for packetizer)
 
     args = parser.parse_args()
     if args.norm:

@@ -4,8 +4,8 @@ from itertools import chain
 import re
 import csv
 from tqdm import tqdm
-src_base_path ="\\\\xir-pvst2ns02\\danielep\\ACCL_measure\\demo\\host\\open_mpi\\log"
-dst_base_path = "\\\\xir-pvst2ns02\\danielep\\ACCL_measure\\demo\\host\\measurements\\open_mpi"
+src_base_path ="."
+dst_base_path = "../../measurements/open_mpi"
 
 if __name__ == "__main__":
 
@@ -24,14 +24,14 @@ if __name__ == "__main__":
         
         experiment      = "converted from log"
         board_instance  = "open_mpi"
-        number_of_nodes = filename_parts[0][0]
+        number_of_nodes = filename_parts[0][1]
         rank_id         = 0
         number_of_banks = 0
-        buffer_size     = filename_parts[0][1] 
+        buffer_size     = filename_parts[0][0] 
         segment_size    = 0
-        collective_name = filename_parts[0][2]
-        execution_time  = 0
-        throughput      = 0
+        collective_name = filename_parts[0][2][0].upper() + filename_parts[0][2][1:].lower().replace("_","")
+        execution_time_fullpath     = 0
+        throughput_fullpath         = 0
                 
         with open(join(dst_base_path, f"open_mpi_{collective_name}.csv"), "a+", newline="") as f_out:
             csv_writer = csv.writer(f_out, delimiter=",", quoting=csv.QUOTE_MINIMAL)
@@ -44,8 +44,8 @@ if __name__ == "__main__":
                 if len(line_parts) == 0 or len(line_parts) > 1:
                     continue
 
-                execution_time_fullpath = float(line_parts[0][1]) * pow(10,6)
-                throughput_fullpath     = 0
+                execution_time = float(line_parts[0][1]) * pow(10,6)                
+                throughput      = 0
 
                 csv_writer.writerow([experiment, board_instance, number_of_nodes, rank_id, number_of_banks, buffer_size, segment_size, collective_name, execution_time, throughput, execution_time_fullpath, throughput_fullpath])
         
