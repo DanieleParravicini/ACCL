@@ -34,6 +34,8 @@ if __name__ == "__main__":
         throughput_fullpath         = 0
                 
         with open(join(dst_base_path, f"open_mpi_{collective_name}.csv"), "a+", newline="") as f_out:
+            if collective_name == "Sendrecv":
+                collective_name = "Send/recv"
             csv_writer = csv.writer(f_out, delimiter=",", quoting=csv.QUOTE_MINIMAL)
             #csv structure 
             # [experiment,board_instance,number of nodes,rank id,number of banks,buffer size[KB],segment_size[KB],collective name,execution_time[us],throughput[Gbps],execution_time_fullpath[us],throughput_fullpath[Gbps]]
