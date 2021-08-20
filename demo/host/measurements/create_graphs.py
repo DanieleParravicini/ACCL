@@ -46,7 +46,7 @@ def plot_lines(title, x_datas, y_datas, y_labels, y_styles=None, logx=True, logy
     if logy:
         ax.set_yscale('log')
     if logx:
-        ax.set_xscale('log', base=2)
+        ax.set_xscale('log', base=10)
     ax.legend()
     plt.show()
     plt.savefig(f"{title}.png")
