@@ -1,6 +1,6 @@
 from os import error, listdir, name
 from os.path import isfile, join
-from numpy import mean, std
+from numpy import average, mean, std
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -39,12 +39,12 @@ def plot_lines(title, x_datas, y_datas, y_labels, y_styles=None, logx=True, logy
     for x, y, y_label, y_style, y_error in zip(x_datas, y_datas, y_labels, y_styles, y_errors):
         if y_style:
             if not y_error is None:
-                ax.errorbar(x, y,  yerr = y_error, fmt=y_style, label=y_label)
+                ax.errorbar(x, y,  yerr = y_error, fmt=y_style, label=y_label, capsize=2.0, linewidth=1)
             else:
                 ax.plot(x, y, y_style, label=y_label)
         else:
             if not y_error is None:
-                ax.errorbar(x, y, yerr = y_error)
+                ax.errorbar(x, y, yerr = y_error, capsize=2.0, linewidth=1)
             else:
                 ax.plot(x, y, label=y_label)
     plt.grid(axis='y')
@@ -56,17 +56,16 @@ def plot_lines(title, x_datas, y_datas, y_labels, y_styles=None, logx=True, logy
     if logx:
         ax.set_xscale('log', base=2)
     ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: sizeof_fmt(y)))
-    plt.xticks(rotation=-10)
-    plt.tight_layout()
-    plt.xlabel('Message Size')
+    plt.xticks(rotation=0)
+    ax.set_xlabel('Message Size')
     ax.legend(loc="lower right")
     plt.show()
-    plt.savefig(f"{title}.png")
+    plt.savefig(f"{title}.png", format='png')
 
 def sizeof_fmt(num, suffix='B'):
-    for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+    for unit in ['','K','M','G','T','P','E','Z']:
         if abs(num) < 1024.0:
-            return "%3.1f%s%s" % (num, unit, suffix)
+            return "%3.f%s%s" % (num, unit, suffix)
         num /= 1024.0
     return "%.1f%s%s" % (num, 'Yi', suffix)
 
@@ -134,11 +133,9 @@ def compare_board(df):
     collectives     = df["collective name"].unique()
     segment_size    = 1024
     for collective in collectives:
-        subset              = df[(df["collective name"] == collective) & ((df["segment_size[KB]"] == segment_size) | (df["board_instance"] == "OpenMPI" ))]
-        print(subset)
+        subset              = df[(df["collective name"] == collective) & ((df["segment_size[KB]"] == segment_size) | (df["board_instance"] != "OpenMPI" ))]
         grouped             = subset.groupby(["board_instance", "buffer size[KB]"]).agg({'execution_time[us]':['mean','std'], 'execution_time_fullpath[us]':['mean','std']})
         grouped.reset_index(inplace=True)
-        print("grouped", grouped)
         grouped             = grouped.groupby(["board_instance"])
 
         series_label = []
@@ -146,7 +143,9 @@ def compare_board(df):
         series_x     = []
         styles       = []
         stdevs       = []
-        for i, (board, group) in enumerate(grouped):
+        average_delta = None
+        i = 0
+        for board, group in grouped:
             exe          = group['execution_time[us]']['mean'].to_numpy()
             exe_std      = group['execution_time[us]']['std'].to_numpy()
             bufsize      = group['buffer size[KB]'].to_numpy()*1024
@@ -154,6 +153,7 @@ def compare_board(df):
             exe_full_std = group['execution_time_fullpath[us]']['std'].to_numpy()
 
             board = simplify_board_name(board)
+            i+=1
             if np.any(exe != 0):
                 series_label.append(f"{board} F2F")
                 series_y.append(exe)
@@ -166,6 +166,40 @@ def compare_board(df):
                 series_x.append(bufsize)
                 stdevs.append(exe_full_std)
                 styles.append(f"C{i}--")
+
+            if board.find("U280") != -1:
+                average_delta = np.abs(exe_full - exe)
+        #For OpenMPI
+        subset              = df[(df["collective name"] == collective) & (df["board_instance"] == "OpenMPI" )]
+        grouped             = subset.groupby(["board_instance", "buffer size[KB]"]).agg({'execution_time[us]':['mean','std'], 'execution_time_fullpath[us]':['mean','std']})
+        grouped.reset_index(inplace=True)
+        grouped             = grouped.groupby(["board_instance"])
+
+        for board, group in grouped:
+            exe          = group['execution_time[us]']['mean'].to_numpy()
+            exe_std      = group['execution_time[us]']['std'].to_numpy()
+            bufsize      = group['buffer size[KB]'].to_numpy()*1024
+            exe_full     = group['execution_time_fullpath[us]']['mean'].to_numpy()
+            exe_full_std = group['execution_time_fullpath[us]']['std'].to_numpy()
+
+            board = simplify_board_name(board)
+            i+=1
+            if np.any(exe_full != 0):
+                if average_delta is not None:
+                    series_label.append(f"{board} F2F")
+                    exe = list(map(sum, zip(exe_full,average_delta)))
+                    series_y.append(exe)
+                    series_x.append(bufsize[:len(exe)])
+                    stdevs.append(None)
+                    styles.append(f"C{i}-")
+                
+                series_label.append(f"{board} H2H")
+                series_y.append(exe_full)
+                series_x.append(bufsize)
+                stdevs.append(exe_full_std)
+                styles.append(f"C{i}--")
+
+        
         plot_lines("board_comparison"+collective.replace("/", ""), series_x, series_y, series_label, styles, y_errors=stdevs, logx=True)
         #plot_clustered_bars(collective, series_x, series_y, series_label)
 
