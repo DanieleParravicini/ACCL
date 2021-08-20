@@ -458,7 +458,7 @@ def compare_rank1_number(df, H2H=True, F2F=True):
                 series_x.append(num_nodes)
                 stdevs.append(exe_full_std)
                 styles.append(f"C4--+")
-            
+            average_delta = np.abs(exe_full - exe)
             #OpenMPI
             subset              = df[(df["collective name"] == collective) & (df[ "buffer size[KB]"] == bsize) & (df["board_instance"] == "OpenMPI" ) & (df["number of nodes"] > 2)]
             grouped             = subset.groupby(["number of nodes"]).agg({'execution_time[us]':['mean','std'], 'execution_time_fullpath[us]':['mean','std']})
