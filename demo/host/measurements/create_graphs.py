@@ -1,11 +1,11 @@
-from os import listdir, name
+from os import error, listdir, name
 from os.path import isfile, join
 from numpy import mean, std
-import re
-import csv
+
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+import matplotlib.ticker as ticker
 
 def plot_clustered_bars(title, x_datas, y_datas, y_labels):
    
@@ -20,36 +20,55 @@ def plot_clustered_bars(title, x_datas, y_datas, y_labels):
     plt.grid(axis='y')
     # Add some text for labels, title and custom x-axis tick labels, etc.
     ax.set_ylabel('Latency [us]')
-    ax.set_title(title)
+    #ax.set_title(title)
     ax.set_xlabel('Message Size [KB]')
     ax.set_xticks(ticks)
     ax.legend()
     plt.show()
     #plt.savefig(f"{title}.png")
 
-def plot_lines(title, x_datas, y_datas, y_labels, y_styles=None, logx=True, logy=True):
+def plot_lines(title, x_datas, y_datas, y_labels, y_styles=None, logx=True, logy=True, y_errors=None):
     if not(y_styles):
         y_styles = [None for _ in range(len(y_labels))]
-    fig, ax = plt.subplots(figsize=(12,6))
+    
+    if not(y_errors):
+        y_errors = [None for _ in range(len(y_labels))]
 
-    for i, (x, y, y_label, y_style) in enumerate(zip(x_datas, y_datas, y_labels, y_styles)):
+    fig, ax = plt.subplots(figsize=(7,6))
+
+    for x, y, y_label, y_style, y_error in zip(x_datas, y_datas, y_labels, y_styles, y_errors):
         if y_style:
-            ax.plot(x, y, y_style, label=y_label)
+            if not y_error is None:
+                ax.errorbar(x, y,  yerr = y_error, fmt=y_style, label=y_label)
+            else:
+                ax.plot(x, y, y_style, label=y_label)
         else:
-            ax.plot(x, y, label=y_label)
+            if not y_error is None:
+                ax.errorbar(x, y, yerr = y_error)
+            else:
+                ax.plot(x, y, label=y_label)
     plt.grid(axis='y')
     # Add some text for labels, title and custom x-axis tick labels, etc.
     ax.set_ylabel('Latency [us]')
-    ax.set_title(title)
-    ax.set_xlabel('Message Size [KB]')
-    ax.set_xticks(x_datas[0])
+    #ax.set_title(title)
     if logy:
         ax.set_yscale('log')
     if logx:
-        ax.set_xscale('log', base=10)
-    ax.legend()
+        ax.set_xscale('log', base=2)
+    ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: sizeof_fmt(y)))
+    plt.xticks(rotation=-10)
+    plt.tight_layout()
+    plt.xlabel('Message Size')
+    ax.legend(loc="lower right")
     plt.show()
     plt.savefig(f"{title}.png")
+
+def sizeof_fmt(num, suffix='B'):
+    for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+        if abs(num) < 1024.0:
+            return "%3.1f%s%s" % (num, unit, suffix)
+        num /= 1024.0
+    return "%.1f%s%s" % (num, 'Yi', suffix)
 
 def normality_test(df):
     df              = df[ df["rank id"] == 0]
@@ -101,7 +120,7 @@ def compare_ssize(df):
         series_x     = []
         for ssize, group in grouped:
             exe     = group['execution_time[us]'].to_numpy()
-            bufsize = group['buffer size[KB]'].to_numpy()
+            bufsize = group['buffer size[KB]'].to_numpy()*1024
             #print("group", ssize,  group)
             #print(exe)
             #print(bufsize)
@@ -115,9 +134,9 @@ def compare_board(df):
     collectives     = df["collective name"].unique()
     segment_size    = 1024
     for collective in collectives:
-        subset              = df[(df["collective name"] == collective) & ((df["segment_size[KB]"] == segment_size) | (df["board_instance"] == "open_mpi" ))]
+        subset              = df[(df["collective name"] == collective) & ((df["segment_size[KB]"] == segment_size) | (df["board_instance"] == "OpenMPI" ))]
         print(subset)
-        grouped             = subset.groupby(["board_instance", "buffer size[KB]"]).mean(['execution_time[us]', 'execution_time_fullpath[us]'])
+        grouped             = subset.groupby(["board_instance", "buffer size[KB]"]).agg({'execution_time[us]':['mean','std'], 'execution_time_fullpath[us]':['mean','std']})
         grouped.reset_index(inplace=True)
         print("grouped", grouped)
         grouped             = grouped.groupby(["board_instance"])
@@ -126,22 +145,28 @@ def compare_board(df):
         series_y     = []
         series_x     = []
         styles       = []
+        stdevs       = []
         for i, (board, group) in enumerate(grouped):
-            exe          = group['execution_time[us]'].to_numpy()
-            bufsize      = group['buffer size[KB]'].to_numpy()
-            exe_full     = group['execution_time_fullpath[us]'].to_numpy()
+            exe          = group['execution_time[us]']['mean'].to_numpy()
+            exe_std      = group['execution_time[us]']['std'].to_numpy()
+            bufsize      = group['buffer size[KB]'].to_numpy()*1024
+            exe_full     = group['execution_time_fullpath[us]']['mean'].to_numpy()
+            exe_full_std = group['execution_time_fullpath[us]']['std'].to_numpy()
+
             board = simplify_board_name(board)
             if np.any(exe != 0):
-                series_label.append(board)
+                series_label.append(f"{board} F2F")
                 series_y.append(exe)
                 series_x.append(bufsize)
-                styles.append(f"C{i}+-")
+                stdevs.append(exe_std)
+                styles.append(f"C{i}-")
             if np.any(exe_full != 0):
-                series_label.append(f"{board} fullpath")
+                series_label.append(f"{board} H2H")
                 series_y.append(exe_full)
                 series_x.append(bufsize)
-                styles.append(f"C{i}+--")
-        plot_lines("board_comparison"+collective.replace("/", ""), series_x, series_y, series_label, styles, logx=True)
+                stdevs.append(exe_full_std)
+                styles.append(f"C{i}--")
+        plot_lines("board_comparison"+collective.replace("/", ""), series_x, series_y, series_label, styles, y_errors=stdevs, logx=True)
         #plot_clustered_bars(collective, series_x, series_y, series_label)
 
 def compare_rank_number(df):
@@ -150,7 +175,7 @@ def compare_rank_number(df):
     segment_size    = 1024
     for collective in collectives:
         print(collective)
-        subset              = df[(df["collective name"] == collective) & ((df["segment_size[KB]"] == segment_size) | (df["board_instance"] == "open_mpi" ))]
+        subset              = df[(df["collective name"] == collective) & ((df["segment_size[KB]"] == segment_size) | (df["board_instance"] == "OpenMPI" ))]
         grouped             = subset.groupby(["board_instance", "number of nodes", "buffer size[KB]"]).mean(['execution_time[us]', 'execution_time_fullpath[us]'])
         grouped.reset_index(inplace=True)
         grouped             = grouped.groupby(["board_instance"])
@@ -159,33 +184,34 @@ def compare_rank_number(df):
         series_y     = []
         series_x     = []
         styles       = []
-
+        stdevs       = []
         i = 0
-        ls = ['-', '--', '-.', ':', '..', '---', '----']
+        ls = ['-', '--', '-.', ':']
         for board, group in grouped:
             board = simplify_board_name(board)
             j = 0
             for  num_nodes, sub_group in group.groupby(["number of nodes"]):
-                if num_nodes not in [2,4,8]:
+                if num_nodes not in [2,4,5,6,7]:
                     continue
                 j+=1
                 exe          = sub_group['execution_time[us]'].to_numpy()
                 bufsize      = sub_group['buffer size[KB]'].to_numpy()
-
+                
                 if np.any(exe != 0):
                     series_label.append(f"{board} {num_nodes}")
                     series_y.append(exe)
+                    stdevs.append(np.ones_like(exe))
                     series_x.append(bufsize)
-                    styles.append(f"C{i}{ls[j]}+")
+                    styles.append(f"C{i}{ls[j % len(ls)]}+")
             i+=1
         plot_lines("rank_comparison"+collective.replace("/", ""), series_x, series_y, series_label, styles)
 
         #plot_clustered_bars(collective, series_x, series_y, series_label)
 def simplify_board_name(name):
     if   name == "xilinx_u250_gen3x16_xdma_shell_3_1":
-        return "u250"
+        return "U250"
     elif name == "xilinx_u280_xdma_201920_3":
-        return "u280"
+        return "U280"
     else:
         return name
 
