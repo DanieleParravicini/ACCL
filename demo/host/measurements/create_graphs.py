@@ -110,6 +110,80 @@ def compare_ssize(df):
             series_x.append(bufsize)
         plot_clustered_bars(collective, series_x, series_y, series_label)
 
+def get_statistics(df):
+    df              = df[ df["rank id"] == 0]
+    collectives     = df["collective name"].unique()
+
+    seg_sizes = (1024,512,256,128)
+    data_sizes = (1,2,4,8,16,32,64,128,256,512,1024,2048,4096,8192,16384,32768)
+    # check sendrecv u280
+    # subset = df[(df["experiment"] == "u280_sendrecv") & (df["collective name"] == "Send/recv") & (df["board_instance"] == "xilinx_u280_xdma_201920_3")]
+    # print(subset)
+    # for seg_size in seg_sizes:
+    #     for data_size in data_sizes:
+    #         subsubset = subset[(subset["segment_size[KB]"] == seg_size) & (subset["number of banks"] == 6) & (subset["buffer size[KB]"] == data_size)]
+    #         # print(subsubset)
+    #         mean = subsubset["throughput[Gbps]"].mean()
+    #         count = subsubset["throughput[Gbps]"].count()
+    #         std = subsubset["throughput[Gbps]"].std()
+    #         if count < 100:
+    #             print(f"U280, sendrecv, seg size:{seg_size}, num banks:{6}, data size:{data_size}, mean:{mean}, std:{std}, count:{count}")
+
+    # for num_bank in range (2,6):
+    #     for data_size in data_sizes:
+    #         subsubset = subset[(subset["segment_size[KB]"] == 1024) & (subset["number of banks"] == num_bank) & (subset["buffer size[KB]"] == data_size) ]
+    #         mean = subsubset["throughput[Gbps]"].mean()
+    #         count = subsubset["throughput[Gbps]"].count()
+    #         std = subsubset["throughput[Gbps]"].std()
+    #         if count < 100:
+    #             print(f"U280, sendrecv, seg size:{1024}, num banks:{num_bank}, data size:{data_size}, mean:{mean}, std:{std}, count:{count}")
+
+    num_nodes = (3,4)
+    #check U280 collectives (<= 4 nodes)
+    subset = df[ (df["board_instance"] == "xilinx_u280_xdma_201920_3") & (df["collective name"] != "Send/recv") & (df["number of nodes"] <= 4 )]
+    for num_node in num_nodes:
+        for collective in collectives:
+            if collective != "Send/recv":
+                for data_size in data_sizes:
+                    subsubset = subset[(subset["collective name"] == collective) &(subset["segment_size[KB]"] == 1024) & (subset["number of banks"] == 6) & (subset["buffer size[KB]"] == data_size) & (subset["number of nodes"] == num_node)]
+                    print(subsubset)
+                    mean = subsubset["execution_time[us]"].mean()
+                    count = subsubset["execution_time[us]"].count()
+                    std = subsubset["execution_time[us]"].std()
+                    if count < 100:
+                        print(f"U280, {collective}, num nodes:{num_node}, seg size:{1024}, num banks:{6}, data size:{data_size}, mean:{mean}, std:{std}, count:{count}")
+
+    #check U250 collectives (<= 4 nodes)
+    # subset = df[(df["board_instance"] == "xilinx_u250_gen3x16_xdma_shell_3_1") & (df["collective name"] != "Send/recv") & (df["number of nodes"] <= 4 )]
+    # # print(subset)
+    # for num_node in num_nodes:
+    #     for collective in collectives:
+    #         if collective != "Send/recv":
+    #             for data_size in data_sizes:
+    #                 subsubset = subset[(subset["collective name"] == collective) &(subset["segment_size[KB]"] == 1024) & (subset["number of banks"] == 3) & (subset["buffer size[KB]"] == data_size) & (subset["number of nodes"] == num_node)]
+    #                 # print(subsubset)
+    #                 mean = subsubset["execution_time[us]"].mean()
+    #                 count = subsubset["execution_time[us]"].count()
+    #                 std = subsubset["execution_time[us]"].std()
+    #                 print(f"U250, {collective}, num nodes:{num_node}, seg size:{1024}, num banks:{3}, data size:{data_size}, mean:{mean}, std:{std}, count:{count}")
+        
+    #check collectives (> 4 nodes)
+    # num_nodes = (5,6,7,8)
+    # subset = df[(df["collective name"] != "Send/recv") & (df["number of nodes"] > 4 )]
+    # for num_node in num_nodes:
+    #     for collective in collectives:
+    #         if collective != "Send/recv":
+    #             for data_size in data_sizes:
+    #                 subsubset = subset[(subset["collective name"] == collective) & (subset["segment_size[KB]"] == 1024) & (subset["buffer size[KB]"] == data_size) & (subset["number of nodes"] == num_node)]
+    #                 print(subsubset)
+    #                 mean = subsubset["execution_time[us]"].mean()
+    #                 count = subsubset["execution_time[us]"].count()
+    #                 std = subsubset["execution_time[us]"].std()
+    #                 print(f"{collective}, num nodes:{num_node}, seg size:{1024}, data size:{data_size}, mean:{mean}, std:{std}, count:{count}")
+
+
+
+
 def compare_board(df):
     df              = df[ (df["rank id"] == 0) & ( (df["number of nodes"]==4)  | (df["collective name"] == "Send/recv"))]
     collectives     = df["collective name"].unique()
@@ -239,3 +313,4 @@ if __name__ == "__main__":
         compare_board(df)
     if args.compare_rank_number:
         compare_rank_number(df)
+    get_statistics(df)
