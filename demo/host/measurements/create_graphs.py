@@ -51,10 +51,10 @@ def plot_lines(title, x_datas, y_datas, y_labels, y_styles=None, logx=True, logy
     plt.grid(axis='y')
     # Add some text for labels, title and custom x-axis tick labels, etc.
     if throughput:
-        ax.set_ylabel('Throughput [Gbps]', fontsize=)
+        ax.set_ylabel('Throughput [Gbps]', fontsize=14)
         ax.axis(ymin=0,ymax=100)
     else:
-        ax.set_ylabel('Latency [us]')
+        ax.set_ylabel('Latency [us]' , fontsize=14)
     #ax.set_title(title)
     if logy:
         ax.set_yscale('log')
@@ -64,15 +64,16 @@ def plot_lines(title, x_datas, y_datas, y_labels, y_styles=None, logx=True, logy
         
     if legend_loc is None :
         if logy:
-            ax.legend(loc="lower right")
+            ax.legend(loc="lower right", fontsize=14)
         else:
-            ax.legend(loc="upper left")
+            ax.legend(loc="upper left", fontsize=14)
     else:
-        ax.legend(loc=legend_loc)
+        ax.legend(loc=legend_loc, fontsize=14)
     if x_label == "Message Size":
         ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: sizeof_fmt(y)))
-    plt.xticks(rotation=0)
-    ax.set_xlabel(x_label)
+    plt.xticks(rotation=0, fontsize = 12)
+    plt.yticks(fontsize = 12)
+    ax.set_xlabel(x_label, fontsize=14)
     plt.show()
     plt.savefig(f"{title}.png", format='png')
 
@@ -733,5 +734,5 @@ if __name__ == "__main__":
         compare_openMPI(df, F2F=False)
     if args.sendrecv_banks:
         sendrecv_banks(df)
-    if args.sendrecv_segmentation:
+    if args.sendrecv_seg:
         sendrecv_segmentation(df)
