@@ -27,7 +27,7 @@ def plot_clustered_bars(title, x_datas, y_datas, y_labels):
     plt.show()
     #plt.savefig(f"{title}.png")
 
-def plot_lines(title, x_datas, y_datas, y_labels, y_styles=None, logx=True, logy=True, y_errors=None, x_label='Message Size', legend_loc=None):
+def plot_lines(title, x_datas, y_datas, y_labels, y_styles=None, logx=True, logy=True, y_errors=None, x_label='Message Size', legend_loc=None, throughput = False):
     if not(y_styles):
         y_styles = [None for _ in range(len(y_labels))]
     
@@ -39,24 +39,28 @@ def plot_lines(title, x_datas, y_datas, y_labels, y_styles=None, logx=True, logy
     for x, y, y_label, y_style, y_error in zip(x_datas, y_datas, y_labels, y_styles, y_errors):
         if y_style:
             if not y_error is None:
-                ax.errorbar(x, y,  yerr = y_error, fmt=y_style, label=y_label, capsize=2.0, linewidth=1)
+                ax.errorbar(x, y,  yerr = y_error, fmt=y_style, label=y_label, capsize=3.0, linewidth=2)
             else:
                 ax.plot(x, y, y_style, label=y_label)
         else:
             if not y_error is None:
-                ax.errorbar(x, y,  yerr = y_error, fmt=y_style, label=y_label, capsize=2.0, linewidth=1)
+                ax.errorbar(x, y,  yerr = y_error, fmt=y_style, label=y_label, capsize=3.0, linewidth=2)
             else:
                 ax.plot(x, y, label=y_label)
 
     plt.grid(axis='y')
     # Add some text for labels, title and custom x-axis tick labels, etc.
-    ax.set_ylabel('Latency [us]')
+    if throughput:
+        ax.set_ylabel('Throughput [Gbps]', fontsize=)
+        ax.axis(ymin=0,ymax=100)
+    else:
+        ax.set_ylabel('Latency [us]')
     #ax.set_title(title)
     if logy:
         ax.set_yscale('log')
     
     if logx:
-        ax.set_xscale('log', base=2)
+        ax.set_xscale('log', basex=2)
         
     if legend_loc is None :
         if logy:
@@ -415,6 +419,98 @@ def compare_board(df,H2H=True, F2F=True):
         plot_lines("board_comparison"+("H2H" if H2H else "") + ("F2F" if F2F else "")+collective.replace("/", ""), series_x, series_y, series_label, styles, y_errors=stdevs, logx=True)
         #plot_clustered_bars(collective, series_x, series_y, series_label)
 
+def sendrecv_banks(df,H2H=False, F2F=True):
+    df              = df[(df["experiment"] == "u280_sendrecv") & (df["rank id"] == 0) & (df["number of nodes"]==2)  & (df["collective name"] == "Send/recv")]
+    collectives     = df["collective name"].unique()
+    segment_size    = 1024
+    for collective in collectives:
+        print(collective)
+        subset              = df[(df["collective name"] == collective) & (df["segment_size[KB]"] == segment_size)]
+        grouped             = subset.groupby(["number of banks", "buffer size[KB]" ]).agg({'throughput[Gbps]':['mean','std'], 'throughput_fullpath[Gbps]':['mean','std']})
+        grouped.reset_index(inplace=True)
+        grouped             = grouped.groupby(["number of banks"])
+        series_label = []
+        series_y     = []
+        series_x     = []
+        styles       = []
+        stdevs       = []
+
+        i = 0
+        for banks, group in grouped:
+            print(group)
+            exe          = group['throughput[Gbps]']['mean'].to_numpy()
+            exe_std      = group['throughput[Gbps]']['std'].to_numpy()
+            bufsize      = group['buffer size[KB]'].to_numpy()*1024
+            exe_full     = group['throughput_fullpath[Gbps]']['mean'].to_numpy()
+            exe_full_std = group['throughput_fullpath[Gbps]']['std'].to_numpy()
+
+            i+=1
+            spare_buffer_bank = banks - 1
+            if np.any(exe != 0) and F2F:
+                series_label.append(f"U280 {spare_buffer_bank} banks F2F")
+                series_y.append(exe)
+                series_x.append(bufsize)
+                stdevs.append(exe_std)
+                styles.append(f"C{i}-")
+            if np.any(exe_full != 0) and H2H:
+                series_label.append(f"U280 {spare_buffer_bank} banks H2H")
+                series_y.append(exe_full)
+                series_x.append(bufsize)
+                stdevs.append(exe_full_std)
+                styles.append(f"C{i}--")
+
+        
+        plot_lines("U280_Bank"+("H2H" if H2H else "") + ("F2F" if F2F else "")+collective.replace("/", ""), series_x, series_y, series_label, styles, y_errors=stdevs, logx=True, logy=False, throughput=True)
+        #plot_clustered_bars(collective, series_x, series_y, series_label)
+            
+
+def sendrecv_segmentation(df,H2H=False, F2F=True):
+    df              = df[(df["experiment"] == "u280_sendrecv") & (df["rank id"] == 0) & (df["number of nodes"]==2)  & (df["collective name"] == "Send/recv")]
+    collectives     = df["collective name"].unique()
+    segment_size    = (1024,512,256,128)
+    num_bank        = 6
+    for collective in collectives:
+        print(collective)
+        subset              = df[(df["collective name"] == collective) & (df["number of banks"] == num_bank)]
+        grouped             = subset.groupby(["segment_size[KB]", "buffer size[KB]" ]).agg({'throughput[Gbps]':['mean','std'], 'throughput_fullpath[Gbps]':['mean','std']})
+        grouped.reset_index(inplace=True)
+        grouped             = grouped.groupby(["segment_size[KB]"])
+        series_label = []
+        series_y     = []
+        series_x     = []
+        styles       = []
+        stdevs       = []
+
+        i = 0
+        for seg_size, group in grouped:
+            print(group)
+            exe          = group['throughput[Gbps]']['mean'].to_numpy()
+            exe_std      = group['throughput[Gbps]']['std'].to_numpy()
+            bufsize      = group['buffer size[KB]'].to_numpy()*1024
+            exe_full     = group['throughput_fullpath[Gbps]']['mean'].to_numpy()
+            exe_full_std = group['throughput_fullpath[Gbps]']['std'].to_numpy()
+
+            i+=1
+            if np.any(exe != 0) and F2F:
+                series_label.append(f"U280 Seg Size {seg_size} KB  F2F")
+                series_y.append(exe)
+                series_x.append(bufsize)
+                stdevs.append(exe_std)
+                styles.append(f"C{i}-")
+            if np.any(exe_full != 0) and H2H:
+                series_label.append(f"U280 Seg Size {seg_size} KB H2H")
+                series_y.append(exe_full)
+                series_x.append(bufsize)
+                stdevs.append(exe_full_std)
+                styles.append(f"C{i}--")
+
+        
+        plot_lines("U280_Segment"+("H2H" if H2H else "") + ("F2F" if F2F else "")+collective.replace("/", ""), series_x, series_y, series_label, styles, y_errors=stdevs, logx=True, logy=False, throughput=True)
+        #plot_clustered_bars(collective, series_x, series_y, series_label)
+            
+
+
+
 def compare_rank_number(df, H2H=False, F2F=True):
     df              = df[ (df["rank id"] == 0) ]
     collectives     = df["collective name"].unique()
@@ -597,6 +693,8 @@ if __name__ == "__main__":
     parser.add_argument('--norm'                , action='store_true', default=False,     help='test normality'                          )
     parser.add_argument('--ssize'               , action='store_true', default=False,     help='ssize vs buffer size'                     )
     parser.add_argument('--statistic'           , action='store_true', default=False,     help='count runs of experiments'                     )
+    parser.add_argument('--sendrecv_banks'      , action='store_true', default=False,     help='send recv throughput with different number of banks'                     )
+    parser.add_argument('--sendrecv_seg'        , action='store_true', default=False,     help='send recv throughput with different number of segmentation size'                     )
     parser.add_argument('--compare_board'       , action='store_true', default=False,     help='comapre performance of different alveo'   )
     parser.add_argument('--compare_openMPI'     , action='store_true', default=False,     help='comapre performance against OpenMPI'   )
     parser.add_argument('--compare_rank_number' , action='store_true', default=False,     help='comapre performance of different number of ranks'   )
@@ -633,3 +731,7 @@ if __name__ == "__main__":
         compare_openMPI(df)
         compare_openMPI(df, H2H=False)
         compare_openMPI(df, F2F=False)
+    if args.sendrecv_banks:
+        sendrecv_banks(df)
+    if args.sendrecv_segmentation:
+        sendrecv_segmentation(df)
