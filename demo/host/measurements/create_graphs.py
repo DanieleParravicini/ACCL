@@ -51,12 +51,11 @@ def plot_lines(title, x_datas, y_datas, y_series_labels, y_styles=None, logx=Tru
 
     plt.grid(axis='y')
     # Add some text for labels, title and custom x-axis tick labels, etc.
-    ax.set_ylabel(y_label)
+    ax.set_ylabel(y_label,  fontsize=14)
     if throughput:
         ax.set_ylabel('Throughput [Gbps]', fontsize=14)
         ax.axis(ymin=0,ymax=100)
-    else:
-        ax.set_ylabel('Latency [us]' , fontsize=14)
+
     #ax.set_title(title)
     if logy:
         ax.set_yscale('log')
@@ -73,7 +72,7 @@ def plot_lines(title, x_datas, y_datas, y_series_labels, y_styles=None, logx=Tru
         ax.legend(loc=legend_loc, fontsize=14)
     if x_label == "Message Size":
         ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: sizeof_fmt(y)))
-    plt.xticks(rotation=0, fontsize = 12)
+    plt.xticks(rotation=0)
     plt.yticks(fontsize = 12)
     ax.set_xlabel(x_label, fontsize=14)
     plt.show()
@@ -297,7 +296,7 @@ def get_statistics(df):
     #                 std = subsubset["execution_time[us]"].std()
     #                 print(f"{collective}, num nodes:{num_node}, seg size:{1024}, data size:{data_size}, mean:{mean}, std:{std}, count:{count}")
 
-def compare_openMPI(df, H2H=True, F2F=True):
+def compare_openMPI(df, H2H=True, F2F=True, error=True):
     df              = df[ (df["rank id"] == 0) & ( (df["number of nodes"]==4)  | (df["collective name"] == "Send/recv"))]
     collectives     = df["collective name"].unique()
     segment_size    = 1024
@@ -374,10 +373,10 @@ def compare_openMPI(df, H2H=True, F2F=True):
                     styles.append(f"C{i}--")
 
         
-        plot_lines("compare_OMPI"+("H2H" if H2H else "") + ("F2F" if F2F else "")+collective.replace("/", ""), series_x, series_y, series_label, styles, y_label='Latency [us]', logx=True, legend_loc ="upper left")
+        plot_lines("compare_OMPI"+("H2H" if H2H else "") + ("F2F" if F2F else "")+collective.replace("/", ""), series_x, series_y, series_label, styles, y_label='Latency [us]', logx=True, legend_loc ="upper left", y_errors=(stdevs if error else None))
         #plot_clustered_bars(collective, series_x, series_y, series_label)
 
-def compare_board(df,H2H=True, F2F=True):
+def compare_board(df,H2H=True, F2F=True, error =False):
     df              = df[ (df["rank id"] == 0) & ( (df["number of nodes"]==4)  | (df["collective name"] == "Send/recv"))]
     collectives     = df["collective name"].unique()
     segment_size    = 1024
@@ -424,7 +423,7 @@ def compare_board(df,H2H=True, F2F=True):
                 stdevs.append(exe_full_std)
                 styles.append(f"C{i}--")
         
-        plot_lines("board_comparison"+("H2H" if H2H else "") + ("F2F" if F2F else "")+collective.replace("/", ""), series_x, series_y, series_label, styles, y_label='Latency [us]', logx=True, legend_loc ="upper left")
+        plot_lines("board_comparison"+("H2H" if H2H else "") + ("F2F" if F2F else "")+collective.replace("/", ""), series_x, series_y, series_label, styles, y_label='Latency [us]', logx=True, legend_loc ="upper left", y_errors=(stdevs if error else None))
         #plot_clustered_bars(collective, series_x, series_y, series_label)
 
 def sendrecv_banks(df,H2H=False, F2F=True):
@@ -519,7 +518,7 @@ def sendrecv_segmentation(df,H2H=False, F2F=True):
 
 
 
-def compare_rank_number_and_bsize(df, H2H=False, F2F=True):
+def compare_rank_number_and_bsize(df, H2H=False, F2F=True, error = False):
     df              = df[ (df["rank id"] == 0) ]
     collectives     = df["collective name"].unique()
     segment_size    = 1024
@@ -601,11 +600,11 @@ def compare_rank_number_and_bsize(df, H2H=False, F2F=True):
             j+=1
      
         
-        plot_lines("rank_comparison"+collective.replace("/", ""), series_x, series_y, series_label, styles, y_label='Latency [us]',legend_loc ="upper left")
+        plot_lines("rank_comparison"+collective.replace("/", ""), series_x, series_y, series_label, styles, y_label='Latency [us]',legend_loc ="upper left" , y_errors=(stdevs if error else None))
 
         #plot_clustered_bars(collective, series_x, series_y, series_label)
 
-def compare_rank_with_fixed_bsize(df, H2H=True, F2F=True):
+def compare_rank_with_fixed_bsize(df, H2H=True, F2F=True, error=False):
     df              = df[ (df["rank id"] == 0) ]
     collectives     = df["collective name"].unique()
     bsizes           = df[ "buffer size[KB]"].unique()
@@ -678,7 +677,7 @@ def compare_rank_with_fixed_bsize(df, H2H=True, F2F=True):
                     styles.append(f"C3--+")
 
             
-            plot_lines("rank_comparison"+collective.replace("/", "")+str(bsize), series_x, series_y, series_label, styles, x_label="Number of ranks", y_label='Latency [us]', legend_loc ="upper left", logx=False, logy = False)
+            plot_lines("rank_comparison"+collective.replace("/", "")+str(bsize), series_x, series_y, series_label, styles, x_label="Number of ranks", y_label='Latency [us]', legend_loc ="upper left", logx=False, logy = False, y_errors=(stdevs if error else None))
 
             #plot_clustered_bars(collective, series_x, series_y, series_label)
 def simplify_board_name(name):
@@ -692,14 +691,12 @@ def simplify_board_name(name):
 def compare_throughput(df, F2F=True, H2H=True):
     df              = df[ (df["rank id"] == 0)  & ( df["collective name"] == "Send/recv")]
   
-    
     segment_size    = 1024
     series_label = []
     series_y     = []
     series_x     = []
     styles       = []
     stdevs       = []
-    average_delta = None
 
     subset              = df[
                                 (df["segment_size[KB]"] == segment_size) & 
@@ -757,6 +754,56 @@ def compare_throughput(df, F2F=True, H2H=True):
 
         
     plot_lines("throughput_comparsion", series_x, series_y, series_label, styles, x_label="Message Size", y_label='Throughput [Gbps]', legend_loc ="upper left", logx=True, logy = False)
+
+def segment_vs_membank(df):
+    df              = df[ (df["rank id"] == 0)  & ( df["collective name"] == "Send/recv")]
+    for bsize in df["buffer size[KB]"].unique():
+        for board in ["xilinx_u280_xdma_201920_3" , "xilinx_u250_gen3x16_xdma_shell_3_1"]:
+            data_to_be_plotted  = []
+            subset          = df[(df["board_instance"] == board) & (df["buffer size[KB]"] == bsize)]
+            max_banks       = subset["number of banks"].max()
+            min_banks       = subset["number of banks"].min()
+            
+            banks           = list(range(min_banks,max_banks+1))
+            segment_sizes   = list(sorted(subset["segment_size[KB]"].unique()))
+            grouped         = subset.groupby(["number of banks", "segment_size[KB]"]).agg({'throughput[Gbps]':['mean','std'], 'throughput_fullpath[Gbps]':['mean','std']})
+            
+            for _ in banks:
+                data_to_be_plotted.append([ 0 for _ in segment_sizes])
+
+            grouped.reset_index(inplace=True)
+            for ((curr_num_banks, curr_segment ),  group) in grouped.groupby(["number of banks", "segment_size[KB]"]):
+                
+                thr          = group['throughput[Gbps]']['mean'].to_numpy()
+
+                data_to_be_plotted[curr_num_banks-min_banks][np.argwhere(segment_sizes == curr_segment)[0][0]] = thr[0]
+            
+
+
+            fig, ax = plt.subplots()
+            im = ax.imshow(data_to_be_plotted, cmap="Wistia" )
+            #im = ax.imshow(data_to_be_plotted, cmap="Wistia", vmin=0, vmax=100 )
+            ax.invert_yaxis()
+            #ax.invert_xaxis()
+            ax.figure.colorbar(im, ax=ax)
+            # We want to show all ticks...
+            ax.set_yticks(np.arange(len(banks)))
+            ax.set_xticks(np.arange(len(segment_sizes)))
+            # ... and label them with the respective list entries
+            ax.set_yticklabels(banks)
+            ax.set_xticklabels(segment_sizes)
+            ax.set_ylabel("Number of Banks")
+            ax.set_xlabel("Segment size [KB]")
+            # Loop over data dimensions and create text annotations.
+            for i in range(len(banks)):
+                for j in range(len(segment_sizes)):
+                    if data_to_be_plotted[i][j] > 0:
+                        d = data_to_be_plotted[i][j]
+                        ax.text(j, i, f"{d:.1f}", ha="center", va="center")
+            
+            ax.set_title("Throughput [Gbps]")
+            plt.show()
+            plt.savefig(f"segment_vs_bank_{board}_{bsize}.png", format='png', bbox_inches='tight')
 
 
 
@@ -833,3 +880,5 @@ if __name__ == "__main__":
         sendrecv_banks(df)
     if args.sendrecv_seg:
         sendrecv_segmentation(df)
+    if args.segment_vs_membank:
+        segment_vs_membank(df)
