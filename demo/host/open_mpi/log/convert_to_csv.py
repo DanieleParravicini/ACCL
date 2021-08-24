@@ -48,7 +48,8 @@ if __name__ == "__main__":
                 if len(line_parts) == 0 or len(line_parts) > 1:
                     continue
 
-                execution_time_fullpath = float(line_parts[0][1]) * pow(10,6)                
-
+                execution_time_fullpath  = float(line_parts[0][1]) * pow(10,6)                
+                if collective_name == "Send/recv":
+                    throughput_fullpath      = float(buffer_size) *1024*8/(execution_time_fullpath*1000)
                 csv_writer.writerow([experiment, board_instance, number_of_nodes, rank_id, number_of_banks, buffer_size, segment_size, collective_name, execution_time, throughput, execution_time_fullpath, throughput_fullpath])
         

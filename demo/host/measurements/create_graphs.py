@@ -27,29 +27,31 @@ def plot_clustered_bars(title, x_datas, y_datas, y_labels):
     plt.show()
     #plt.savefig(f"{title}.png")
 
-def plot_lines(title, x_datas, y_datas, y_labels, y_styles=None, logx=True, logy=True, y_errors=None, x_label='Message Size', legend_loc=None, throughput = False):
+
+def plot_lines(title, x_datas, y_datas, y_series_labels, y_styles=None, logx=True, logy=True, x_label='Message Size', y_label='Latency [us]', y_errors=None, legend_loc=None, throughput=False):
     if not(y_styles):
-        y_styles = [None for _ in range(len(y_labels))]
+        y_styles = [None for _ in range(len(y_series_labels))]
     
     if not(y_errors):
-        y_errors = [None for _ in range(len(y_labels))]
+        y_errors = [None for _ in range(len(y_series_labels))]
 
     fig, ax = plt.subplots(figsize=(9,6))
 
-    for x, y, y_label, y_style, y_error in zip(x_datas, y_datas, y_labels, y_styles, y_errors):
+    for x, y, y_series_label, y_style, y_error in zip(x_datas, y_datas, y_series_labels, y_styles, y_errors):
         if y_style:
             if not y_error is None:
                 ax.errorbar(x, y,  yerr = y_error, fmt=y_style, label=y_label, capsize=4.0, linewidth=3)
             else:
-                ax.plot(x, y, y_style, label=y_label)
+                ax.plot(x, y, y_style, label=y_series_label)
         else:
             if not y_error is None:
                 ax.errorbar(x, y,  yerr = y_error, fmt=y_style, label=y_label, capsize=4.0, linewidth=3)
             else:
-                ax.plot(x, y, label=y_label)
+                ax.plot(x, y, label=y_series_label)
 
     plt.grid(axis='y')
     # Add some text for labels, title and custom x-axis tick labels, etc.
+    ax.set_ylabel(y_label)
     if throughput:
         ax.set_ylabel('Throughput [Gbps]', fontsize=20)
         ax.axis(ymin=0,ymax=100)
@@ -60,7 +62,7 @@ def plot_lines(title, x_datas, y_datas, y_labels, y_styles=None, logx=True, logy
         ax.set_yscale('log')
     
     if logx:
-        ax.set_xscale('log', basex=2)
+        ax.set_xscale('log', base=2)
         
     if legend_loc is None :
         if logy:
@@ -295,16 +297,17 @@ def get_statistics(df):
     #                 std = subsubset["execution_time[us]"].std()
     #                 print(f"{collective}, num nodes:{num_node}, seg size:{1024}, data size:{data_size}, mean:{mean}, std:{std}, count:{count}")
 
-
-
-
-def compare_board(df):
+def compare_openMPI(df, H2H=True, F2F=True):
     df              = df[ (df["rank id"] == 0) & ( (df["number of nodes"]==4)  | (df["collective name"] == "Send/recv"))]
     collectives     = df["collective name"].unique()
     segment_size    = 1024
     for collective in collectives:
         print(collective)
-        subset              = df[(df["collective name"] == collective) & ((df["segment_size[KB]"] == segment_size) | (df["board_instance"] != "OpenMPI" ))]
+        subset              = df[(df["collective name"] == collective) & (df["segment_size[KB]"] == segment_size) &
+                                    (  
+                                    ( ( df["board_instance"] == "xilinx_u280_xdma_201920_3") & (df["number of banks"] == 6)) |
+                                    ( ( df["board_instance"] == "xilinx_u250_gen3x16_xdma_shell_3_1") & (df["number of banks"] == 3))                                     
+                                    )]
         grouped             = subset.groupby(["board_instance", "buffer size[KB]"]).agg({'execution_time[us]':['mean','std'], 'execution_time_fullpath[us]':['mean','std']})
         grouped.reset_index(inplace=True)
         grouped             = grouped.groupby(["board_instance"])
@@ -371,7 +374,7 @@ def compare_board(df):
                     styles.append(f"C{i}--")
 
         
-        plot_lines("compare_OMPI"+("H2H" if H2H else "") + ("F2F" if F2F else "")+collective.replace("/", ""), series_x, series_y, series_label, styles, y_errors=stdevs, logx=True)
+        plot_lines("compare_OMPI"+("H2H" if H2H else "") + ("F2F" if F2F else "")+collective.replace("/", ""), series_x, series_y, series_label, styles, y_label='Latency [us]', logx=True, legend_loc ="upper left")
         #plot_clustered_bars(collective, series_x, series_y, series_label)
 
 def compare_board(df,H2H=True, F2F=True):
@@ -380,7 +383,14 @@ def compare_board(df,H2H=True, F2F=True):
     segment_size    = 1024
     for collective in collectives:
         print(collective)
-        subset              = df[(df["collective name"] == collective) & ((df["segment_size[KB]"] == segment_size) | (df["board_instance"] != "OpenMPI" ))]
+        subset              = df[   (df["collective name"] == collective) & 
+                                    (
+                                        ((df["segment_size[KB]"] == segment_size) &
+                                            (  
+                                                ( ( df["board_instance"] == "xilinx_u280_xdma_201920_3") & (df["number of banks"] == 6)) |
+                                                ( ( df["board_instance"] == "xilinx_u250_gen3x16_xdma_shell_3_1") & (df["number of banks"] == 3))                                     
+                                            )
+                                        )| (df["board_instance"] != "OpenMPI" ))]
         grouped             = subset.groupby(["board_instance", "buffer size[KB]"]).agg({'execution_time[us]':['mean','std'], 'execution_time_fullpath[us]':['mean','std']})
         grouped.reset_index(inplace=True)
         grouped             = grouped.groupby(["board_instance"])
@@ -413,11 +423,8 @@ def compare_board(df,H2H=True, F2F=True):
                 series_x.append(bufsize)
                 stdevs.append(exe_full_std)
                 styles.append(f"C{i}--")
-
-            if board.find("U280") != -1:
-                average_delta = np.abs(exe_full - exe)
         
-        plot_lines("board_comparison"+("H2H" if H2H else "") + ("F2F" if F2F else "")+collective.replace("/", ""), series_x, series_y, series_label, styles, y_errors=stdevs, logx=True)
+        plot_lines("board_comparison"+("H2H" if H2H else "") + ("F2F" if F2F else "")+collective.replace("/", ""), series_x, series_y, series_label, styles, y_label='Latency [us]', logx=True, legend_loc ="upper left")
         #plot_clustered_bars(collective, series_x, series_y, series_label)
 
 def sendrecv_banks(df,H2H=False, F2F=True):
@@ -512,22 +519,28 @@ def sendrecv_segmentation(df,H2H=False, F2F=True):
 
 
 
-def compare_rank_number(df, H2H=False, F2F=True):
+def compare_rank_number_and_bsize(df, H2H=False, F2F=True):
     df              = df[ (df["rank id"] == 0) ]
     collectives     = df["collective name"].unique()
     segment_size    = 1024
     for collective in collectives:
-        print(collective)
-        subset              = df[(df["collective name"] == collective) & ((df["segment_size[KB]"] == segment_size) | (df["board_instance"] != "OpenMPI" ))]
-        grouped             = subset.groupby(["number of nodes", "buffer size[KB]"]).agg({'execution_time[us]':['mean','std'], 'execution_time_fullpath[us]':['mean','std']})
-        grouped.reset_index(inplace=True)
-        print(grouped)
         series_label = []
         series_y     = []
         series_x     = []
         styles       = []
         stdevs       = []
         average_delta = None
+        subset              = df[ (df["collective name"] == collective) & 
+                                  (
+                                    ((df["segment_size[KB]"] == segment_size) & 
+                                     (  
+                                        ( ( df["board_instance"] == "xilinx_u280_xdma_201920_3") & (df["number of banks"] == 6)) |
+                                        ( ( df["board_instance"] == "xilinx_u250_gen3x16_xdma_shell_3_1") & (df["number of banks"] == 3))                                     
+                                     )
+                                    ) | (df["board_instance"] != "OpenMPI" ))]
+        grouped             = subset.groupby(["number of nodes", "buffer size[KB]"]).agg({'execution_time[us]':['mean','std'], 'execution_time_fullpath[us]':['mean','std']})
+        grouped.reset_index(inplace=True)
+        print(collective, grouped)
         nodes_available = [4,5,6,7]
         ls = ['-', '--', '-.', ':']
         j=0
@@ -588,11 +601,11 @@ def compare_rank_number(df, H2H=False, F2F=True):
             j+=1
      
         
-        plot_lines("rank_comparison"+collective.replace("/", ""), series_x, series_y, series_label, styles)
+        plot_lines("rank_comparison"+collective.replace("/", ""), series_x, series_y, series_label, styles, y_label='Latency [us]',legend_loc ="upper left")
 
         #plot_clustered_bars(collective, series_x, series_y, series_label)
 
-def compare_rank1_number(df, H2H=True, F2F=True):
+def compare_rank_with_fixed_bsize(df, H2H=True, F2F=True):
     df              = df[ (df["rank id"] == 0) ]
     collectives     = df["collective name"].unique()
     bsizes           = df[ "buffer size[KB]"].unique()
@@ -606,7 +619,14 @@ def compare_rank1_number(df, H2H=True, F2F=True):
             styles       = []
             stdevs       = []
             average_delta = None
-            subset              = df[(df["collective name"] == collective) & (df[ "buffer size[KB]"] == bsize) & (df["segment_size[KB]"] == segment_size) & (df["number of nodes"] > 2)]
+            subset              = df[(df["collective name"] == collective) &
+                                     (df["buffer size[KB]"] == bsize) & 
+                                     (df["segment_size[KB]"] == segment_size) & 
+                                     (df["number of nodes"] > 2) &
+                                     (  
+                                        ( ( df["board_instance"] == "xilinx_u280_xdma_201920_3")            & (df["number of banks"] == 6)) |
+                                        ( ( df["board_instance"] == "xilinx_u250_gen3x16_xdma_shell_3_1")   & (df["number of banks"] == 3))                                     
+                                     )]
             grouped             = subset.groupby(["number of nodes"]).agg({'execution_time[us]':['mean','std'], 'execution_time_fullpath[us]':['mean','std']})
             grouped.reset_index(inplace=True)
             print(collective, bsize, grouped)
@@ -629,7 +649,7 @@ def compare_rank1_number(df, H2H=True, F2F=True):
                 series_x.append(num_nodes)
                 stdevs.append(exe_full_std)
                 styles.append(f"C4--+")
-            
+            average_delta = np.abs(exe_full - exe)
             #OpenMPI
             subset              = df[(df["collective name"] == collective) & (df[ "buffer size[KB]"] == bsize) & (df["board_instance"] == "OpenMPI" ) & (df["number of nodes"] > 2)]
             grouped             = subset.groupby(["number of nodes"]).agg({'execution_time[us]':['mean','std'], 'execution_time_fullpath[us]':['mean','std']})
@@ -658,7 +678,7 @@ def compare_rank1_number(df, H2H=True, F2F=True):
                     styles.append(f"C3--+")
 
             
-            plot_lines("rank_comparison"+collective.replace("/", "")+str(bsize), series_x, series_y, series_label, styles, y_errors=stdevs, x_label="Number of ranks", legend_loc ="upper left", logx=False)
+            plot_lines("rank_comparison"+collective.replace("/", "")+str(bsize), series_x, series_y, series_label, styles, x_label="Number of ranks", y_label='Latency [us]', legend_loc ="upper left", logx=False, logy = False)
 
             #plot_clustered_bars(collective, series_x, series_y, series_label)
 def simplify_board_name(name):
@@ -668,6 +688,77 @@ def simplify_board_name(name):
         return "U280"
     else:
         return name
+
+def compare_throughput(df, F2F=True, H2H=True):
+    df              = df[ (df["rank id"] == 0)  & ( df["collective name"] == "Send/recv")]
+  
+    
+    segment_size    = 1024
+    series_label = []
+    series_y     = []
+    series_x     = []
+    styles       = []
+    stdevs       = []
+    average_delta = None
+
+    subset              = df[
+                                (df["segment_size[KB]"] == segment_size) & 
+                                (  
+                                ( ( df["board_instance"] == "xilinx_u280_xdma_201920_3")            & (df["number of banks"] == 6)) |
+                                ( ( df["board_instance"] == "xilinx_u250_gen3x16_xdma_shell_3_1")   & (df["number of banks"] == 3))                                     
+                                )]
+    grouped             = subset.groupby(["board_instance", "buffer size[KB]"]).agg({'throughput[Gbps]':['mean','std'], 'throughput_fullpath[Gbps]':['mean','std']})
+    grouped.reset_index(inplace=True)
+    grouped             = grouped.groupby(["board_instance"])
+    for i,(board, group) in enumerate(grouped):
+        print(group)
+        thr          = group['throughput[Gbps]']['mean'].to_numpy()
+        thr_std      = group['throughput[Gbps]']['std'].to_numpy()
+        bufsize      = group['buffer size[KB]'].to_numpy()*1024
+        thr_full     = group['throughput_fullpath[Gbps]']['mean'].to_numpy()
+        thr_full_std = group['throughput_fullpath[Gbps]']['std'].to_numpy()
+        board = simplify_board_name(board)
+        if np.any(thr != 0) and F2F:
+            series_label.append(f"{board} F2F")
+            series_y.append(thr)
+            series_x.append(bufsize)
+            stdevs.append(thr_std)
+            styles.append(f"C{i+1}-+")
+        if np.any(thr_full != 0) and H2H:
+            series_label.append(f"{board} H2H")
+            series_y.append(thr_full)
+            series_x.append(bufsize)
+            stdevs.append(thr_full_std)
+            styles.append(f"C{i+1}--+")
+        
+    #OpenMPI
+    subset              = df[( (df["rank id"] == 0) & (df["board_instance"] == "OpenMPI" ) & ( df["collective name"] == "Send/recv") )]
+    grouped             = subset.groupby(["buffer size[KB]"]).agg({'throughput[Gbps]':['mean','std'], 'throughput_fullpath[Gbps]':['mean','std']})
+    grouped.reset_index(inplace=True)
+
+    print(grouped)
+    thr          = grouped['throughput[Gbps]']['mean'].to_numpy()
+    thr_std      = grouped['throughput[Gbps]']['std'].to_numpy()
+    bufsize      = grouped['buffer size[KB]'].to_numpy()*1024
+    thr_full     = grouped['throughput_fullpath[Gbps]']['mean'].to_numpy()
+    thr_full_std = grouped['throughput_fullpath[Gbps]']['std'].to_numpy()
+    if np.any(thr != 0) and F2F:
+            series_label.append("OpenMPI F2F")
+            series_y.append(thr)
+            series_x.append(bufsize[:len(thr)])
+            stdevs.append(thr_std)
+            styles.append(f"C3-+")
+    if np.any(thr_full != 0) and H2H :
+            series_label.append("OpenMPI  H2H")
+            series_y.append(thr_full)
+            series_x.append(bufsize)
+            stdevs.append(thr_full_std)
+            styles.append(f"C3--+")
+
+        
+    plot_lines("throughput_comparsion", series_x, series_y, series_label, styles, x_label="Message Size", y_label='Throughput [Gbps]', legend_loc ="upper left", logx=True, logy = False)
+
+
 
 if __name__ == "__main__":
     #mypath ="C:\\Users\\danielep\\Documents\\github\\ACCL_measure"
@@ -690,16 +781,20 @@ if __name__ == "__main__":
     print(df.dtypes)
     import argparse
 
-    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser = argparse.ArgumentParser(description='Creates some graphs.')
+    parser.add_argument('--statistic'           , action='store_true', default=False,     help='count runs of experiments'                     )
+    parser.add_argument('--sendrecv_banks'      , action='store_true', default=False,     help='send recv throughput with different number of banks'                     )
+    parser.add_argument('--sendrecv_seg'        , action='store_true', default=False,     help='send recv throughput with different number of segmentation size'                     )
     parser.add_argument('--norm'                , action='store_true', default=False,     help='test normality'                          )
     parser.add_argument('--ssize'               , action='store_true', default=False,     help='ssize vs buffer size'                     )
-    parser.add_argument('--statistic'           , action='store_true', default=False,     help='count runs of experiments'                     )
-    parser.add_argument('--sendrecv_banks'      , action='store_true', default=True,     help='send recv throughput with different number of banks'                     )
-    parser.add_argument('--sendrecv_seg'        , action='store_true', default=True,     help='send recv throughput with different number of segmentation size'                     )
-    parser.add_argument('--compare_board'       , action='store_true', default=False,     help='comapre performance of different alveo'   )
-    parser.add_argument('--compare_openMPI'     , action='store_true', default=False,     help='comapre performance against OpenMPI'   )
-    parser.add_argument('--compare_rank_number' , action='store_true', default=False,     help='comapre performance of different number of ranks'   )
-    parser.add_argument('--compare_rank1_number', action='store_true', default=False,     help='comapre performance of different number of ranks'   )
+    parser.add_argument('--board'               , action='store_true', default=False,     help='compare performance of different alveo'   )
+    parser.add_argument('--openMPI'             , action='store_true', default=False,     help='compare performance against OpenMPI'   )
+    parser.add_argument('--rank1_number'        , action='store_true', default=False,    help='compare performance of different number of ranks'   )
+    parser.add_argument('--rank2_number'        , action='store_true', default=False,     help='compare performance of different number of ranks'   )
+    parser.add_argument('--throughput'          , action='store_true', default=False,     help='compare throughput'   )
+    parser.add_argument('--segment_vs_membank'  , action='store_true', default=False,     help='compare throughput'   )
+    
+
     #                                                                                                                       fig           data  
     #D)for every collectiveopen_mpi_and_fpga_at_different_ranks (probably 4-8 with fpga not full_path)                      6xfig         ok    
     #Z)send and receive throughput with different banks (1)                                                                 1xfig         ok
@@ -720,18 +815,20 @@ if __name__ == "__main__":
         normality_test(df)
     if args.ssize:
         compare_ssize(df)
-    if args.compare_board:
+    if args.board:
         compare_board(df)
-    if args.compare_rank_number:
-        compare_rank_number(df)
+    if args.rank1_number:
+        compare_rank_number_and_bsize(df)
+    if args.rank2_number:
+        compare_rank_with_fixed_bsize(df)
     if args.statistic:
         get_statistics(df)
-    if args.compare_rank1_number:
-        compare_rank1_number(df)
-    if args.compare_openMPI:
+    if args.openMPI:
         compare_openMPI(df)
         compare_openMPI(df, H2H=False)
         compare_openMPI(df, F2F=False)
+    if args.throughput:
+        compare_throughput(df)
     if args.sendrecv_banks:
         sendrecv_banks(df)
     if args.sendrecv_seg:
