@@ -296,7 +296,7 @@ def get_statistics(df):
     #                 std = subsubset["execution_time[us]"].std()
     #                 print(f"{collective}, num nodes:{num_node}, seg size:{1024}, data size:{data_size}, mean:{mean}, std:{std}, count:{count}")
 
-def compare_openMPI(df, H2H=True, F2F=True, error=True):
+def compare_openMPI(df, H2H=True, F2F=True, error=False):
     df              = df[ (df["rank id"] == 0) & ( (df["number of nodes"]==4)  | (df["collective name"] == "Send/recv"))]
     collectives     = df["collective name"].unique()
     segment_size    = 1024
@@ -328,13 +328,13 @@ def compare_openMPI(df, H2H=True, F2F=True, error=True):
             board = simplify_board_name(board)
             i+=1
             if np.any(exe != 0) and F2F:
-                series_label.append(f"{board} F2F")
+                series_label.append(f"ACCL {board} F2F")
                 series_y.append(exe)
                 series_x.append(bufsize)
                 stdevs.append(exe_std)
                 styles.append(f"C{i}-")
             if np.any(exe_full != 0) and H2H:
-                series_label.append(f"{board} H2H")
+                series_label.append(f"ACCL {board} H2H")
                 series_y.append(exe_full)
                 series_x.append(bufsize)
                 stdevs.append(exe_full_std)
@@ -411,13 +411,13 @@ def compare_board(df,H2H=True, F2F=True, error =False):
             board = simplify_board_name(board)
             i+=1
             if np.any(exe != 0) and F2F:
-                series_label.append(f"{board} F2F")
+                series_label.append(f"ACCL {board} F2F")
                 series_y.append(exe)
                 series_x.append(bufsize)
                 stdevs.append(exe_std)
                 styles.append(f"C{i}-")
             if np.any(exe_full != 0) and H2H:
-                series_label.append(f"{board} H2H")
+                series_label.append(f"ACCL {board} H2H")
                 series_y.append(exe_full)
                 series_x.append(bufsize)
                 stdevs.append(exe_full_std)
@@ -515,9 +515,6 @@ def sendrecv_segmentation(df,H2H=False, F2F=True):
         plot_lines("U280_Segment"+("H2H" if H2H else "") + ("F2F" if F2F else "")+collective.replace("/", ""), series_x, series_y, series_label, styles, y_errors=stdevs, logx=True, logy=False, throughput=True)
         #plot_clustered_bars(collective, series_x, series_y, series_label)
             
-
-
-
 def compare_rank_number_and_bsize(df, H2H=False, F2F=True, error = False):
     df              = df[ (df["rank id"] == 0) ]
     collectives     = df["collective name"].unique()
@@ -680,6 +677,7 @@ def compare_rank_with_fixed_bsize(df, H2H=True, F2F=True, error=False):
             plot_lines("rank_comparison"+collective.replace("/", "")+str(bsize), series_x, series_y, series_label, styles, x_label="Number of ranks", y_label='Latency [us]', legend_loc ="upper left", logx=False, logy = False, y_errors=(stdevs if error else None))
 
             #plot_clustered_bars(collective, series_x, series_y, series_label)
+
 def simplify_board_name(name):
     if   name == "xilinx_u250_gen3x16_xdma_shell_3_1":
         return "U250"
@@ -716,13 +714,13 @@ def compare_throughput(df, F2F=True, H2H=True):
         thr_full_std = group['throughput_fullpath[Gbps]']['std'].to_numpy()
         board = simplify_board_name(board)
         if np.any(thr != 0) and F2F:
-            series_label.append(f"{board} F2F")
+            series_label.append(f"ACCL {board} F2F")
             series_y.append(thr)
             series_x.append(bufsize)
             stdevs.append(thr_std)
             styles.append(f"C{i+1}-+")
         if np.any(thr_full != 0) and H2H:
-            series_label.append(f"{board} H2H")
+            series_label.append(f"ACCL {board} H2H")
             series_y.append(thr_full)
             series_x.append(bufsize)
             stdevs.append(thr_full_std)
@@ -756,13 +754,17 @@ def compare_throughput(df, F2F=True, H2H=True):
     plot_lines("throughput_comparsion", series_x, series_y, series_label, styles, x_label="Message Size", y_label='Throughput [Gbps]', legend_loc ="upper left", logx=True, logy = False)
 
 def segment_vs_membank(df):
-    df              = df[ (df["rank id"] == 0)  & ( df["collective name"] == "Send/recv")]
+    df              = df[ (df["experiment"] == "segment_bank") & (df["rank id"] == 0)  & ( df["collective name"] == "Send/recv")]
     for bsize in df["buffer size[KB]"].unique():
+        print(bsize)
         for board in ["xilinx_u280_xdma_201920_3" , "xilinx_u250_gen3x16_xdma_shell_3_1"]:
             data_to_be_plotted  = []
             subset          = df[(df["board_instance"] == board) & (df["buffer size[KB]"] == bsize)]
-            max_banks       = subset["number of banks"].max()
-            min_banks       = subset["number of banks"].min()
+            if subset["number of banks"].count() == 0:
+                continue
+            max_banks       = subset["number of banks"].max()-1
+            min_banks       = subset["number of banks"].min()-1
+
             
             banks           = list(range(min_banks,max_banks+1))
             segment_sizes   = list(sorted(subset["segment_size[KB]"].unique()))
@@ -773,10 +775,10 @@ def segment_vs_membank(df):
 
             grouped.reset_index(inplace=True)
             for ((curr_num_banks, curr_segment ),  group) in grouped.groupby(["number of banks", "segment_size[KB]"]):
-                
                 thr          = group['throughput[Gbps]']['mean'].to_numpy()
+                print(curr_num_banks, curr_segment, thr)
 
-                data_to_be_plotted[curr_num_banks-min_banks][np.argwhere(segment_sizes == curr_segment)[0][0]] = thr[0]
+                data_to_be_plotted[curr_num_banks-1-min_banks][np.argwhere(segment_sizes == curr_segment)[0][0]] = thr[0]
             
 
 
@@ -805,7 +807,56 @@ def segment_vs_membank(df):
             plt.show()
             plt.savefig(f"segment_vs_bank_{board}_{bsize}.png", format='png', bbox_inches='tight')
 
+def optimized_vs_base(df, selection_params, F2F=True, H2H=True, error = False):
+    df              = df[ (df["rank id"] == 0) ]
 
+    series_label = []
+    series_y     = []
+    series_x     = []
+    styles       = []
+    stdevs       = []
+    i=0
+    collectives  = []
+    for selection_param in selection_params:
+        label           = selection_param["label"]
+        collective_name = selection_param["collective name"]
+        seg_size        = selection_param["Segment_size[KB]"]
+        board           = selection_param["board_instance"]
+        num_banks       = selection_param["number of banks"]
+        collectives.append(collective_name.replace("/", ""))
+
+        subset              = df[(df["collective name"] == collective_name) & (df["segment_size[KB]"] == seg_size ) &
+                                 (df["board_instance"] == board)  & (df["number of banks"] == num_banks)]
+
+        grouped             = subset.groupby(["buffer size[KB]"]).agg({'execution_time[us]':['mean','std'], 'execution_time_fullpath[us]':['mean','std']})
+        grouped.reset_index(inplace=True)
+        
+        print(grouped)
+        exe          = grouped['execution_time[us]']['mean'].to_numpy()
+        exe_std      = grouped['execution_time[us]']['std'].to_numpy()
+        bufsize      = grouped['buffer size[KB]'].to_numpy()*1024
+        exe_full     = grouped['execution_time_fullpath[us]']['mean'].to_numpy()
+        exe_full_std = grouped['execution_time_fullpath[us]']['std'].to_numpy()
+
+        board = simplify_board_name(board)
+        i+=1
+        if np.any(exe != 0) and F2F:
+            series_label.append(f"{label} F2F")
+            series_y.append(exe)
+            series_x.append(bufsize)
+            stdevs.append(exe_std)
+            styles.append(f"C{i}-")
+        if np.any(exe_full != 0) and H2H:
+            series_label.append(f"{label} H2H")
+            series_y.append(exe_full)
+            series_x.append(bufsize)
+            stdevs.append(exe_full_std)
+            styles.append(f"C{i}--")
+
+    #optimized version
+
+    plot_lines("comparison"+"_".join(collectives), series_x, series_y, series_label, styles, y_label='Latency [us]', logx=True, legend_loc ="upper left", y_errors=(stdevs if error else None))
+        
 
 if __name__ == "__main__":
     #mypath ="C:\\Users\\danielep\\Documents\\github\\ACCL_measure"
@@ -839,7 +890,8 @@ if __name__ == "__main__":
     parser.add_argument('--rank1_number'        , action='store_true', default=False,    help='compare performance of different number of ranks'   )
     parser.add_argument('--rank2_number'        , action='store_true', default=False,     help='compare performance of different number of ranks'   )
     parser.add_argument('--throughput'          , action='store_true', default=False,     help='compare throughput'   )
-    parser.add_argument('--segment_vs_membank'  , action='store_true', default=False,     help='compare throughput'   )
+    parser.add_argument('--segment_vs_membank'  , action='store_true', default=False,     help='compare throughput changing segment size and number of memory banks used'   )
+    parser.add_argument('--optimized_vs_base'   , action='store_true', default=False,     help='comapre execution time of bcast when optimized'   )
     
 
     #                                                                                                                       fig           data  
@@ -882,3 +934,14 @@ if __name__ == "__main__":
         sendrecv_segmentation(df)
     if args.segment_vs_membank:
         segment_vs_membank(df)
+    if args.optimized_vs_base:
+        optimized_vs_base(df,[{"label":"baseline",
+                                "collective name":"Send/recv",
+                                "Segment_size[KB]":1024,
+                                "board_instance":"xilinx_u280_xdma_201920_3", 
+                                "number of banks":6}, 
+                                {"label":"alternative",
+                                "collective name":"Send/recv",
+                                "Segment_size[KB]":512,
+                                "board_instance":"xilinx_u280_xdma_201920_3", 
+                                "number of banks":6}])
