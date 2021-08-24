@@ -35,17 +35,17 @@ def plot_lines(title, x_datas, y_datas, y_series_labels, y_styles=None, logx=Tru
     if not(y_errors):
         y_errors = [None for _ in range(len(y_series_labels))]
 
-    fig, ax = plt.subplots(figsize=(5,6))
+    fig, ax = plt.subplots(figsize=(9,6))
 
     for x, y, y_series_label, y_style, y_error in zip(x_datas, y_datas, y_series_labels, y_styles, y_errors):
         if y_style:
             if not y_error is None:
-                ax.errorbar(x, y,  yerr = y_error, fmt=y_style, label=y_series_label, capsize=3.0, linewidth=2)
+                ax.errorbar(x, y,  yerr = y_error, fmt=y_style, label=y_label, capsize=4.0, linewidth=3)
             else:
                 ax.plot(x, y, y_style, label=y_series_label)
         else:
             if not y_error is None:
-                ax.errorbar(x, y,  yerr = y_error, fmt=y_style, label=y_series_label, capsize=3.0, linewidth=2)
+                ax.errorbar(x, y,  yerr = y_error, fmt=y_style, label=y_label, capsize=4.0, linewidth=3)
             else:
                 ax.plot(x, y, label=y_series_label)
 
@@ -53,10 +53,10 @@ def plot_lines(title, x_datas, y_datas, y_series_labels, y_styles=None, logx=Tru
     # Add some text for labels, title and custom x-axis tick labels, etc.
     ax.set_ylabel(y_label)
     if throughput:
-        ax.set_ylabel('Throughput [Gbps]', fontsize=14)
+        ax.set_ylabel('Throughput [Gbps]', fontsize=20)
         ax.axis(ymin=0,ymax=100)
     else:
-        ax.set_ylabel('Latency [us]' , fontsize=14)
+        ax.set_ylabel('Latency [us]' , fontsize=20)
     #ax.set_title(title)
     if logy:
         ax.set_yscale('log')
@@ -66,18 +66,18 @@ def plot_lines(title, x_datas, y_datas, y_series_labels, y_styles=None, logx=Tru
         
     if legend_loc is None :
         if logy:
-            ax.legend(loc="lower right", fontsize=14)
+            ax.legend(loc="lower right", fontsize=20)
         else:
-            ax.legend(loc="upper left", fontsize=14)
+            ax.legend(loc="upper left", fontsize=20)
     else:
-        ax.legend(loc=legend_loc, fontsize=14)
+        ax.legend(loc=legend_loc, fontsize=20)
     if x_label == "Message Size":
         ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: sizeof_fmt(y)))
-    plt.xticks(rotation=0, fontsize = 12)
-    plt.yticks(fontsize = 12)
-    ax.set_xlabel(x_label, fontsize=14)
-    plt.show()
-    plt.savefig(f"{title}.png", format='png', bbox_inches='tight')
+    plt.xticks(rotation=0, fontsize=18)
+    plt.yticks(fontsize=18)
+    ax.set_xlabel(x_label, fontsize=20)
+    # plt.show()
+    plt.savefig(f"{title}.png", format='png')
 
 def plot_lines2(title, x_datas, y_datas, y_labels, y_styles=None, logx=True, logy=True, y_errors=None):
     if not(y_styles):
