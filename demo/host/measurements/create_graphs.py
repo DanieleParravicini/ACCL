@@ -35,17 +35,17 @@ def plot_lines(title, x_datas, y_datas, y_series_labels, y_styles=None, logx=Tru
     if not(y_errors):
         y_errors = [None for _ in range(len(y_series_labels))]
 
-    fig, ax = plt.subplots(figsize=(5,6))
+    fig, ax = plt.subplots(figsize=(9,6))
 
     for x, y, y_series_label, y_style, y_error in zip(x_datas, y_datas, y_series_labels, y_styles, y_errors):
         if y_style:
             if not y_error is None:
-                ax.errorbar(x, y,  yerr = y_error, fmt=y_style, label=y_series_label, capsize=3.0, linewidth=2)
+                ax.errorbar(x, y,  yerr = y_error, fmt=y_style, label=y_label, capsize=4.0, linewidth=3)
             else:
                 ax.plot(x, y, y_style, label=y_series_label)
         else:
             if not y_error is None:
-                ax.errorbar(x, y,  yerr = y_error, fmt=y_style, label=y_series_label, capsize=3.0, linewidth=2)
+                ax.errorbar(x, y,  yerr = y_error, fmt=y_style, label=y_label, capsize=4.0, linewidth=3)
             else:
                 ax.plot(x, y, label=y_series_label)
 
@@ -53,9 +53,8 @@ def plot_lines(title, x_datas, y_datas, y_series_labels, y_styles=None, logx=Tru
     # Add some text for labels, title and custom x-axis tick labels, etc.
     ax.set_ylabel(y_label,  fontsize=14)
     if throughput:
-        ax.set_ylabel('Throughput [Gbps]', fontsize=14)
+        ax.set_ylabel('Throughput [Gbps]', fontsize=20)
         ax.axis(ymin=0,ymax=100)
-
     #ax.set_title(title)
     if logy:
         ax.set_yscale('log')
@@ -65,17 +64,17 @@ def plot_lines(title, x_datas, y_datas, y_series_labels, y_styles=None, logx=Tru
         
     if legend_loc is None :
         if logy:
-            ax.legend(loc="lower right", fontsize=14)
+            ax.legend(loc="lower right", fontsize=20)
         else:
-            ax.legend(loc="upper left", fontsize=14)
+            ax.legend(loc="upper left", fontsize=20)
     else:
-        ax.legend(loc=legend_loc, fontsize=14)
+        ax.legend(loc=legend_loc, fontsize=20)
     if x_label == "Message Size":
         ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: sizeof_fmt(y)))
-    plt.xticks(rotation=0)
-    plt.yticks(fontsize = 12)
-    ax.set_xlabel(x_label, fontsize=14)
-    plt.show()
+    plt.xticks(rotation=0, fontsize=18)
+    plt.yticks(fontsize=18)
+    ax.set_xlabel(x_label, fontsize=20)
+    # plt.show()
     plt.savefig(f"{title}.png", format='png', bbox_inches='tight')
 
 def plot_lines2(title, x_datas, y_datas, y_labels, y_styles=None, logx=True, logy=True, y_errors=None):
@@ -374,7 +373,81 @@ def compare_openMPI(df, H2H=True, F2F=True, error=False):
 
         
         plot_lines("compare_OMPI"+("H2H" if H2H else "") + ("F2F" if F2F else "")+collective.replace("/", ""), series_x, series_y, series_label, styles, y_label='Latency [us]', logx=True, legend_loc ="upper left", y_errors=(stdevs if error else None))
-        #plot_clustered_bars(collective, series_x, series_y, series_label)
+
+def plot_box_plot(title,xs, ys, y_labels, xlabel, ylabel):
+
+    def set_box_color(bp, color):
+        plt.setp(bp['boxes'],    color=color)
+        plt.setp(bp['whiskers'], color=color)
+        plt.setp(bp['caps'],     color=color)
+        plt.setp(bp['medians'],  color=color)
+    colours = ['#D7191C', '#2C7BB6', '#2C7BB6']
+    plt.figure()
+    for (i, ( y, y_label, colour)) in enumerate(zip( ys, y_labels, colours)):
+        print(y)
+        positions = np.array(range(i, len(y)*len(ys), len(ys)))
+        print(positions)
+        bpl = plt.boxplot(y, positions=positions, sym='', widths=(1/len(ys)))
+
+        set_box_color(bpl, colour) 
+        plt.plot([], c=colour, label=y_label)
+
+    plt.legend()
+
+    plt.xticks(range(0, len(xs[0]) * 2, 2), xs[0])
+    plt.xlim(-2, len(xs[0])*2)
+    plt.savefig(f"{title}.png", format='png',bbox_inches='tight')
+
+def compare_box_plot(df, F2F=True, H2H=True):
+    selection_params = [{"collective name":"Send/recv",
+                        "Segment_size[KB]":1024,
+                        "board_instance":"xilinx_u280_xdma_201920_3", 
+                        "number of banks":6}, 
+                        {"collective name":"Send/recv",
+                        "Segment_size[KB]":0,
+                        "board_instance":"openMPI", 
+                        "number of banks":0}]
+    series_label    = []
+    series_y        = []
+    series_x        = []
+
+    for selection_param in selection_params:
+
+        collective_name = selection_param["collective name"]
+        seg_size        = selection_param["Segment_size[KB]"]
+        board           = selection_param["board_instance"]
+        num_banks       = selection_param["number of banks"]
+
+        subset              = df[(df["collective name"] == collective_name) & (df["segment_size[KB]"] == seg_size ) &
+                                 (df["board_instance"] == board)  & (df["number of banks"] == num_banks)]
+        tmp_0y = []
+        tmp_0x = []
+        tmp_1y = []
+        tmp_1x = []
+        grouped             = subset.groupby(["buffer size[KB]"])
+        for bsize, group in grouped:
+            exe          = group['execution_time[us]'].to_numpy()
+            exe_full     = group['execution_time_fullpath[us]'].to_numpy()
+            board = simplify_board_name(board)
+            print("data:",exe, np.any(exe != 0))
+            if np.any(exe != 0) and F2F:
+                tmp_0y.append(exe)
+                tmp_0x.append(bsize)
+            if np.any(exe_full != 0) and H2H:
+                tmp_1y.append(exe_full)
+                tmp_1x.append(bsize)
+        
+        if F2F:
+            series_label.append(f"{board} F2F")
+            series_y.append(tmp_0y)
+            series_x.append(tmp_0x)
+        if H2H:
+            series_label.append(f"{board} H2H")
+            series_y.append(tmp_1y)
+            series_x.append(tmp_1x)
+    print(series_y)
+    plot_box_plot("send_recv_distribution", series_x, series_y, series_label,  "Buffer size [KB]", "Latency [uS]")
+
 
 def compare_board(df,H2H=True, F2F=True, error =False):
     df              = df[ (df["rank id"] == 0) & ( (df["number of nodes"]==4)  | (df["collective name"] == "Send/recv"))]
@@ -686,7 +759,7 @@ def simplify_board_name(name):
     else:
         return name
 
-def compare_throughput(df, F2F=True, H2H=True):
+def compare_throughput(df):
     df              = df[ (df["rank id"] == 0)  & ( df["collective name"] == "Send/recv")]
   
     segment_size    = 1024
@@ -713,18 +786,19 @@ def compare_throughput(df, F2F=True, H2H=True):
         thr_full     = group['throughput_fullpath[Gbps]']['mean'].to_numpy()
         thr_full_std = group['throughput_fullpath[Gbps]']['std'].to_numpy()
         board = simplify_board_name(board)
-        if np.any(thr != 0) and F2F:
+        #if np.any(thr != 0) and F2F:
+        if np.any(thr != 0):
             series_label.append(f"ACCL {board} F2F")
             series_y.append(thr)
             series_x.append(bufsize)
             stdevs.append(thr_std)
             styles.append(f"C{i+1}-+")
-        if np.any(thr_full != 0) and H2H:
-            series_label.append(f"ACCL {board} H2H")
-            series_y.append(thr_full)
-            series_x.append(bufsize)
-            stdevs.append(thr_full_std)
-            styles.append(f"C{i+1}--+")
+        #if np.any(thr_full != 0) and H2H:
+        #    series_label.append(f"ACCL {board} H2H")
+        #    series_y.append(thr_full)
+        #    series_x.append(bufsize)
+        #    stdevs.append(thr_full_std)
+        #    styles.append(f"C{i+1}--+")
         
     #OpenMPI
     subset              = df[( (df["rank id"] == 0) & (df["board_instance"] == "OpenMPI" ) & ( df["collective name"] == "Send/recv") )]
@@ -737,13 +811,14 @@ def compare_throughput(df, F2F=True, H2H=True):
     bufsize      = grouped['buffer size[KB]'].to_numpy()*1024
     thr_full     = grouped['throughput_fullpath[Gbps]']['mean'].to_numpy()
     thr_full_std = grouped['throughput_fullpath[Gbps]']['std'].to_numpy()
-    if np.any(thr != 0) and F2F:
-            series_label.append("OpenMPI F2F")
-            series_y.append(thr)
-            series_x.append(bufsize[:len(thr)])
-            stdevs.append(thr_std)
-            styles.append(f"C3-+")
-    if np.any(thr_full != 0) and H2H :
+    #if np.any(thr != 0) and F2F:
+    #        series_label.append("OpenMPI F2F")
+    #        series_y.append(thr)
+    #        series_x.append(bufsize[:len(thr)])
+    #        stdevs.append(thr_std)
+    #        styles.append(f"C3-+")
+    #if np.any(thr_full != 0) and H2H :
+    if np.any(thr_full != 0) :
             series_label.append("OpenMPI  H2H")
             series_y.append(thr_full)
             series_x.append(bufsize)
@@ -755,57 +830,56 @@ def compare_throughput(df, F2F=True, H2H=True):
 
 def segment_vs_membank(df):
     df              = df[ (df["experiment"] == "segment_bank") & (df["rank id"] == 0)  & ( df["collective name"] == "Send/recv")]
-    for bsize in df["buffer size[KB]"].unique():
-        print(bsize)
-        for board in ["xilinx_u280_xdma_201920_3" , "xilinx_u250_gen3x16_xdma_shell_3_1"]:
-            data_to_be_plotted  = []
-            subset          = df[(df["board_instance"] == board) & (df["buffer size[KB]"] == bsize)]
-            if subset["number of banks"].count() == 0:
-                continue
-            max_banks       = subset["number of banks"].max()-1
-            min_banks       = subset["number of banks"].min()-1
+    
+    for board in ["xilinx_u280_xdma_201920_3" , "xilinx_u250_gen3x16_xdma_shell_3_1"]:
+        data_to_be_plotted  = []
+        subset          = df[(df["board_instance"] == board)]
+        if subset["number of banks"].count() == 0:
+            continue
+        max_banks       = subset["number of banks"].max()-1
+        min_banks       = subset["number of banks"].min()-1
 
-            
-            banks           = list(range(min_banks,max_banks+1))
-            segment_sizes   = list(sorted(subset["segment_size[KB]"].unique()))
-            grouped         = subset.groupby(["number of banks", "segment_size[KB]"]).agg({'throughput[Gbps]':['mean','std'], 'throughput_fullpath[Gbps]':['mean','std']})
-            
-            for _ in banks:
-                data_to_be_plotted.append([ 0 for _ in segment_sizes])
+        
+        banks           = list(range(min_banks,max_banks+1))
+        segment_sizes   = list(sorted(subset["segment_size[KB]"].unique()))
+        grouped         = subset.groupby(["number of banks", "segment_size[KB]", "buffer size[KB]"]).agg({'throughput[Gbps]':['mean','std'], 'throughput_fullpath[Gbps]':['mean','std']})
+        
+        for _ in banks:
+            data_to_be_plotted.append([ 0 for _ in segment_sizes])
 
-            grouped.reset_index(inplace=True)
-            for ((curr_num_banks, curr_segment ),  group) in grouped.groupby(["number of banks", "segment_size[KB]"]):
-                thr          = group['throughput[Gbps]']['mean'].to_numpy()
-                print(curr_num_banks, curr_segment, thr)
+        grouped.reset_index(inplace=True)
+        for ((curr_num_banks, curr_segment ),  group) in grouped.groupby(["number of banks", "segment_size[KB]"]):
+            thr          = group['throughput[Gbps]']['mean'].max()
+            print(curr_num_banks, curr_segment, thr)
 
-                data_to_be_plotted[curr_num_banks-1-min_banks][np.argwhere(segment_sizes == curr_segment)[0][0]] = thr[0]
-            
+            data_to_be_plotted[curr_num_banks-1-min_banks][np.argwhere(segment_sizes == curr_segment)[0][0]] = thr
+        
 
 
-            fig, ax = plt.subplots()
-            im = ax.imshow(data_to_be_plotted, cmap="Wistia" )
-            #im = ax.imshow(data_to_be_plotted, cmap="Wistia", vmin=0, vmax=100 )
-            ax.invert_yaxis()
-            #ax.invert_xaxis()
-            ax.figure.colorbar(im, ax=ax)
-            # We want to show all ticks...
-            ax.set_yticks(np.arange(len(banks)))
-            ax.set_xticks(np.arange(len(segment_sizes)))
-            # ... and label them with the respective list entries
-            ax.set_yticklabels(banks)
-            ax.set_xticklabels(segment_sizes)
-            ax.set_ylabel("Number of Banks")
-            ax.set_xlabel("Segment size [KB]")
-            # Loop over data dimensions and create text annotations.
-            for i in range(len(banks)):
-                for j in range(len(segment_sizes)):
-                    if data_to_be_plotted[i][j] > 0:
-                        d = data_to_be_plotted[i][j]
-                        ax.text(j, i, f"{d:.1f}", ha="center", va="center")
-            
-            ax.set_title("Throughput [Gbps]")
-            plt.show()
-            plt.savefig(f"segment_vs_bank_{board}_{bsize}.png", format='png', bbox_inches='tight')
+        fig, ax = plt.subplots()
+        im = ax.imshow(data_to_be_plotted, cmap="Wistia" )
+        #im = ax.imshow(data_to_be_plotted, cmap="Wistia", vmin=0, vmax=100 )
+        ax.invert_yaxis()
+        #ax.invert_xaxis()
+        ax.figure.colorbar(im, ax=ax)
+        # We want to show all ticks...
+        ax.set_yticks(np.arange(len(banks)))
+        ax.set_xticks(np.arange(len(segment_sizes)))
+        # ... and label them with the respective list entries
+        ax.set_yticklabels(banks)
+        ax.set_xticklabels(segment_sizes)
+        ax.set_ylabel("Number of Banks")
+        ax.set_xlabel("Segment size [KB]")
+        # Loop over data dimensions and create text annotations.
+        for i in range(len(banks)):
+            for j in range(len(segment_sizes)):
+                if data_to_be_plotted[i][j] > 0:
+                    d = data_to_be_plotted[i][j]
+                    ax.text(j, i, f"{d:.1f}", ha="center", va="center")
+        
+        ax.set_title("Throughput [Gbps]")
+        plt.show()
+        plt.savefig(f"segment_vs_bank_{board}.png", format='png', bbox_inches='tight')
 
 def optimized_vs_base(df, selection_params, F2F=True, H2H=True, error = False):
     df              = df[ (df["rank id"] == 0) ]
@@ -923,9 +997,10 @@ if __name__ == "__main__":
     if args.statistic:
         get_statistics(df)
     if args.openMPI:
-        compare_openMPI(df)
-        compare_openMPI(df, H2H=False)
-        compare_openMPI(df, F2F=False)
+        #compare_openMPI(df)
+        #compare_openMPI(df, H2H=False)
+        #compare_openMPI(df, F2F=False)
+        compare_box_plot(df)
     if args.throughput:
         compare_throughput(df)
     if args.sendrecv_banks:
@@ -945,3 +1020,4 @@ if __name__ == "__main__":
                                 "Segment_size[KB]":512,
                                 "board_instance":"xilinx_u280_xdma_201920_3", 
                                 "number of banks":6}])
+    
