@@ -36,25 +36,28 @@ def plot_lines(title, x_datas, y_datas, y_series_labels, y_styles=None, logx=Tru
         y_errors = [None for _ in range(len(y_series_labels))]
 
     fig, ax = plt.subplots(figsize=(9,6))
-
+    series  = []
     for x, y, y_series_label, y_style, y_error in zip(x_datas, y_datas, y_series_labels, y_styles, y_errors):
         if y_style:
             if not y_error is None:
-                ax.errorbar(x, y,  yerr = y_error, fmt=y_style, label=y_label, capsize=4.0, linewidth=3)
+                series.append(ax.errorbar(x, y,  yerr = y_error, fmt=y_style, label=y_series_label, capsize=4.0, linewidth=3))
             else:
-                ax.plot(x, y, y_style, label=y_series_label)
+                line, = ax.plot(x, y, y_style, label=y_series_label)
+                series.append(line)
         else:
             if not y_error is None:
-                ax.errorbar(x, y,  yerr = y_error, fmt=y_style, label=y_label, capsize=4.0, linewidth=3)
+                series.append(ax.errorbar(x, y,  yerr = y_error, fmt=y_style, label=y_series_label, capsize=4.0, linewidth=3))
             else:
-                ax.plot(x, y, label=y_series_label)
+                line, = ax.plot(x, y, label=y_series_label)
+                series.append(line)
 
     plt.grid(axis='y')
     # Add some text for labels, title and custom x-axis tick labels, etc.
-    ax.set_ylabel(y_label,  fontsize=14)
     if throughput:
         ax.set_ylabel('Throughput [Gbps]', fontsize=20)
         ax.axis(ymin=0,ymax=100)
+    else:
+        ax.set_ylabel(y_label,  fontsize=20)
     #ax.set_title(title)
     if logy:
         ax.set_yscale('log')
@@ -64,11 +67,12 @@ def plot_lines(title, x_datas, y_datas, y_series_labels, y_styles=None, logx=Tru
         
     if legend_loc is None :
         if logy:
-            ax.legend(loc="lower right", fontsize=20)
+            ax.legend(series, y_series_labels, loc="lower right")
         else:
-            ax.legend(loc="upper left", fontsize=20)
+            ax.legend(series, y_series_labels, loc="upper left")
     else:
-        ax.legend(loc=legend_loc, fontsize=20)
+        ax.legend(    series, y_series_labels, loc=legend_loc, fontsize=14)
+
     if x_label == "Message Size":
         ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: sizeof_fmt(y)))
     plt.xticks(rotation=0, fontsize=18)
@@ -386,38 +390,54 @@ def compare_openMPI(df, H2H=True, F2F=True, error=False):
         
         plot_lines("compare_OMPI"+("H2H" if H2H else "") + ("F2F" if F2F else "")+collective.replace("/", ""), series_x, series_y, series_label, styles, y_label='Latency [us]', logx=True, legend_loc ="upper left", y_errors=(stdevs if error else None))
 
-def plot_box_plot(title,xs, ys, y_labels, xlabel, ylabel):
+def plot_box_plot(title,xs, ys, y_labels, xlabel, ylabel, logy=False, logx=True):
 
     def set_box_color(bp, color):
         plt.setp(bp['boxes'],    color=color)
         plt.setp(bp['whiskers'], color=color)
         plt.setp(bp['caps'],     color=color)
         plt.setp(bp['medians'],  color=color)
-    colours = ['#D7191C', '#2C7BB6', '#2C7BB6']
+    colours = ['#d7191c', '#fdae61', '#abd9e9', '#2c7bb6', "#7b3294"]
     plt.figure()
-    for (i, ( y, y_label, colour)) in enumerate(zip( ys, y_labels, colours)):
-        print(y)
-        positions = np.array(range(i, len(y)*len(ys), len(ys)))
-        print(positions)
-        bpl = plt.boxplot(y, positions=positions, sym='', widths=(1/len(ys)))
-
+    if xs is None:
+        xs = [None for _ in y_labels]
+    for (i, ( y,x,  y_label, colour)) in enumerate(zip( ys,xs, y_labels, colours)):
+        #positions = np.array(range(i, len(y)*len(ys), len(ys)))
+        #print(positions)
+        if x is not None:
+            bpl = plt.boxplot(y, positions=x, widths=1/len(ys))
+        else:
+            bpl = plt.boxplot(y,  widths=1/len(ys))
         set_box_color(bpl, colour) 
         plt.plot([], c=colour, label=y_label)
 
+    plt.ylabel(ylabel,  fontsize=20)
+    plt.xlabel(xlabel,  fontsize=20)
+    #ax.set_title(title)
+    if logy:
+        plt.yscale('log')
+    if logx:
+        plt.xscale('log', base=2)
+    if xlabel == "Message Size":
+        plt.gca().xaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: sizeof_fmt(y)))
     plt.legend()
 
-    plt.xticks(range(0, len(xs[0]) * 2, 2), xs[0])
-    plt.xlim(-2, len(xs[0])*2)
+    #plt.xticks(range(0, len(xs[0]) * 2, 2), xs[0])
+    #plt.xlim(-2, len(xs[0])*2)
     plt.savefig(f"{title}.png", format='png',bbox_inches='tight')
 
 def compare_box_plot(df, F2F=True, H2H=True):
     selection_params = [{"collective name":"Send/recv",
                         "Segment_size[KB]":1024,
                         "board_instance":"xilinx_u280_xdma_201920_3", 
-                        "number of banks":6}, 
+                        "number of banks":6},
+                        {"collective name":"Send/recv",
+                        "Segment_size[KB]":1024,
+                        "board_instance":"xilinx_u250_gen3x16_xdma_shell_3_1", 
+                        "number of banks":3}, 
                         {"collective name":"Send/recv",
                         "Segment_size[KB]":0,
-                        "board_instance":"openMPI", 
+                        "board_instance":"OpenMPI", 
                         "number of banks":0}]
     series_label    = []
     series_y        = []
@@ -430,8 +450,10 @@ def compare_box_plot(df, F2F=True, H2H=True):
         board           = selection_param["board_instance"]
         num_banks       = selection_param["number of banks"]
 
-        subset              = df[(df["collective name"] == collective_name) & (df["segment_size[KB]"] == seg_size ) &
-                                 (df["board_instance"] == board)  & (df["number of banks"] == num_banks)]
+        subset              = df[   (df["rank id"]         == 0) & 
+                                    (df["collective name"] == collective_name) & (df["segment_size[KB]"] == seg_size ) &
+                                    (df["board_instance"]  == board)           & (df["number of banks"]  == num_banks)
+                                ]
         tmp_0y = []
         tmp_0x = []
         tmp_1y = []
@@ -441,25 +463,90 @@ def compare_box_plot(df, F2F=True, H2H=True):
             exe          = group['execution_time[us]'].to_numpy()
             exe_full     = group['execution_time_fullpath[us]'].to_numpy()
             board = simplify_board_name(board)
-            print("data:",exe, np.any(exe != 0))
+        
             if np.any(exe != 0) and F2F:
                 tmp_0y.append(exe)
-                tmp_0x.append(bsize)
+                tmp_0x.append(bsize*1024)
             if np.any(exe_full != 0) and H2H:
                 tmp_1y.append(exe_full)
-                tmp_1x.append(bsize)
+                tmp_1x.append(bsize*1024)
         
-        if F2F:
+        if F2F and len(tmp_0x) > 0:
             series_label.append(f"{board} F2F")
             series_y.append(tmp_0y)
             series_x.append(tmp_0x)
-        if H2H:
+        if H2H  and len(tmp_1x) > 0:
             series_label.append(f"{board} H2H")
             series_y.append(tmp_1y)
             series_x.append(tmp_1x)
-    print(series_y)
-    plot_box_plot("send_recv_distribution", series_x, series_y, series_label,  "Buffer size [KB]", "Latency [uS]")
 
+    plot_box_plot("send_recv_distribution", series_x, series_y, series_label,  "Message Size", "Latency [uS]", logy=True)
+
+def compare_box_plot_with_fixed_bsize(df):
+    selection_params = [{"collective name":"Send/recv",
+                        "Segment_size[KB]":1024,
+                        "board_instance":"xilinx_u280_xdma_201920_3", 
+                        "number of banks":6},
+                        {"collective name":"Send/recv",
+                        "Segment_size[KB]":1024,
+                        "board_instance":"xilinx_u250_gen3x16_xdma_shell_3_1", 
+                        "number of banks":3}, 
+                        {"collective name":"Send/recv",
+                        "Segment_size[KB]":0,
+                        "board_instance":"OpenMPI", 
+                        "number of banks":0}]
+
+    for bsize in df["buffer size[KB]"].unique():
+        series_label    = []
+        series_y        = []
+        series_x        = []
+        i = 0
+        for selection_param in selection_params:
+
+            collective_name = selection_param["collective name"]
+            seg_size        = selection_param["Segment_size[KB]"]
+            board           = selection_param["board_instance"]
+            num_banks       = selection_param["number of banks"]
+
+            subset              = df[   (df["rank id"]         == 0)               & (df["buffer size[KB]"]  == bsize)     &
+                                        (df["collective name"] == collective_name) & (df["segment_size[KB]"] == seg_size ) &
+                                        (df["board_instance"]  == board)           & (df["number of banks"]  == num_banks) ]
+            if board in ["xilinx_u280_xdma_201920_3","xilinx_u250_gen3x16_xdma_shell_3_1"]:
+                F2F = True
+                H2H = False
+            else:
+                F2F = False
+                H2H = True
+            print(subset)
+            tmp_0y = []
+            tmp_0x = []
+            tmp_1y = []
+            tmp_1x = []
+            grouped             = subset.groupby(["buffer size[KB]"])
+            for bsize, group in grouped:
+                exe          = group['execution_time[us]'].to_numpy()
+                exe_full     = group['execution_time_fullpath[us]'].to_numpy()
+                print(board, F2F, H2H, exe)
+                if np.any(exe != 0) and F2F:
+                    tmp_0y.append(exe)
+                    tmp_0x.append(i)
+                    i+=1
+                if np.any(exe_full != 0) and H2H:
+                    tmp_1y.append(exe_full)
+                    tmp_1x.append(i)
+                    i+=1
+            
+            board = simplify_board_name(board)
+            if len(tmp_0y) > 0:
+                series_label.append(f"{board}")
+                series_y.append(tmp_0y)
+                series_x.append(tmp_0x)
+            if len(tmp_1y) > 0:
+                series_label.append(f"{board}")
+                series_y.append(tmp_1y)
+                series_x.append(tmp_1x)
+
+        plot_box_plot(f"send_recv_distribution_bsize{bsize}", series_x, series_y, series_label,  "", "Latency [uS]", logy=False, logx=False)
 
 def compare_board(df,H2H=True, F2F=True, error =False):
     df              = df[ (df["rank id"] == 0) & ( (df["number of nodes"]==4)  | (df["collective name"] == "Send/recv"))]
@@ -841,7 +928,7 @@ def compare_throughput(df):
     plot_lines("throughput_comparsion", series_x, series_y, series_label, styles, x_label="Message Size", y_label='Throughput [Gbps]', legend_loc ="upper left", logx=True, logy = False)
 
 def segment_vs_membank(df):
-    df              = df[ (df["experiment"] == "segment_bank") & (df["rank id"] == 0)  & ( df["collective name"] == "Send/recv")]
+    df              = df[ (df["experiment"] == "u280_sendrecv") & (df["rank id"] == 0)  & ( df["collective name"] == "Send/recv")]
     
     for board in ["xilinx_u280_xdma_201920_3" , "xilinx_u250_gen3x16_xdma_shell_3_1"]:
         data_to_be_plotted  = []
@@ -889,7 +976,7 @@ def segment_vs_membank(df):
                     d = data_to_be_plotted[i][j]
                     ax.text(j, i, f"{d:.1f}", ha="center", va="center")
         
-        ax.set_title("Throughput [Gbps]")
+        ax.set_title("Peak throughput [Gbps]")
         plt.show()
         plt.savefig(f"segment_vs_bank_{board}.png", format='png', bbox_inches='tight')
 
@@ -904,20 +991,24 @@ def optimized_vs_base(df, selection_params, F2F=True, H2H=True, error = False):
     i=0
     collectives  = []
     for selection_param in selection_params:
+        exp             = selection_param["experiment"]
         label           = selection_param["label"]
         collective_name = selection_param["collective name"]
         seg_size        = selection_param["Segment_size[KB]"]
         board           = selection_param["board_instance"]
         num_banks       = selection_param["number of banks"]
+        num_nodes       = selection_param["number of nodes"]
         collectives.append(collective_name.replace("/", ""))
 
-        subset              = df[(df["collective name"] == collective_name) & (df["segment_size[KB]"] == seg_size ) &
-                                 (df["board_instance"] == board)  & (df["number of banks"] == num_banks)]
-
+        subset              = df[(df["experiment"]      == exp)             &
+                                 (df["collective name"] == collective_name) & (df["segment_size[KB]"]   == seg_size ) &
+                                 (df["board_instance"]  == board)           & (df["number of banks"]    == num_banks) &
+                                 (df["number of nodes"] == num_nodes)]
         grouped             = subset.groupby(["buffer size[KB]"]).agg({'execution_time[us]':['mean','std'], 'execution_time_fullpath[us]':['mean','std']})
         grouped.reset_index(inplace=True)
-        
         print(grouped)
+        
+
         exe          = grouped['execution_time[us]']['mean'].to_numpy()
         exe_std      = grouped['execution_time[us]']['std'].to_numpy()
         bufsize      = grouped['buffer size[KB]'].to_numpy()*1024
@@ -941,28 +1032,32 @@ def optimized_vs_base(df, selection_params, F2F=True, H2H=True, error = False):
 
     #optimized version
 
-    plot_lines("comparison"+"_".join(collectives), series_x, series_y, series_label, styles, y_label='Latency [us]', logx=True, legend_loc ="upper left", y_errors=(stdevs if error else None))
+    plot_lines("comparison"+"_".join(collectives), series_x, series_y, series_label, styles, y_label='Latency [us]', logx=True, logy=False, legend_loc ="upper left", y_errors=(stdevs if error else None))
         
-
-if __name__ == "__main__":
-    #mypath ="C:\\Users\\danielep\\Documents\\github\\ACCL_measure"
-    accl                 ="accl"
-    openmpi              ="open_mpi"
-    csv_files_accl       = [join(accl, f) for f in listdir(accl) if (isfile(join(accl, f)) and f.find(".csv") != -1)]
-    csv_files_openmpi    = [join(openmpi, f) for f in listdir(openmpi) if (isfile(join(openmpi, f)) and f.find(".csv") != -1)]
-    
-    csv_files            = csv_files_accl + csv_files_openmpi
-    print(csv_files)
-    csvs = []
-    for csv_path in csv_files:
-        csvs.append(pd.read_csv(csv_path))
-    df = pd.concat(csvs)
-    #filter multiple headers
+def remove_multiple_headers(df):
     headers = df.columns.tolist()
     df = df[df[headers[0]]!=headers[0]].reset_index(drop=True)
     for column_name in ["number of nodes","rank id","number of banks","buffer size[KB]","segment_size[KB]","execution_time[us]","throughput[Gbps]","execution_time_fullpath[us]","throughput_fullpath[Gbps]"]:
         df[column_name] = pd.to_numeric(df[column_name])
-    print(df.dtypes)
+    return df
+def load_csvs_under(path):
+
+    csv_files    = [join(path, f) for f in listdir(path)  if (isfile(join(path, f)) and f.find(".csv") != -1)]
+    print("csv files ingested", csv_files)
+    csvs = []
+    for csv_path in csv_files:
+        csvs.append(pd.read_csv(csv_path))
+    return pd.concat(csvs)
+
+if __name__ == "__main__":
+    #mypath ="C:\\Users\\danielep\\Documents\\github\\ACCL_measure"
+    accl_path            ="accl"
+    openmpi_path         ="open_mpi"
+
+    df = pd.concat([load_csvs_under(accl_path), load_csvs_under(openmpi_path)])
+    #filter multiple headers
+    df = remove_multiple_headers(df)
+
     import argparse
 
     parser = argparse.ArgumentParser(description='Creates some graphs.')
@@ -1005,14 +1100,15 @@ if __name__ == "__main__":
     if args.rank1_number:
         compare_rank_number_and_bsize(df)
     if args.rank2_number:
-        compare_rank_with_fixed_bsize(df)
+        compare_rank_with_fixed_bsize(df, error=True)
     if args.statistic:
         get_statistics(df)
     if args.openMPI:
         #compare_openMPI(df)
         #compare_openMPI(df, H2H=False)
         #compare_openMPI(df, F2F=False)
-        compare_box_plot(df)
+        #compare_box_plot(df)
+        compare_box_plot_with_fixed_bsize(df)
     if args.throughput:
         compare_throughput(df)
     if args.sendrecv_banks:
@@ -1022,14 +1118,50 @@ if __name__ == "__main__":
     if args.segment_vs_membank:
         segment_vs_membank(df)
     if args.optimized_vs_base:
-        optimized_vs_base(df,[{"label":"baseline",
-                                "collective name":"Send/recv",
+        other = pd.concat([df, load_csvs_under("accl/dual_path")])
+        other = remove_multiple_headers(other)
+
+        optimized_vs_base(other,[{ "experiment":"u280_dual_path_bcast",
+                                "label":"baseline",
+                                "collective name":"Broadcast",
                                 "Segment_size[KB]":1024,
                                 "board_instance":"xilinx_u280_xdma_201920_3", 
-                                "number of banks":6}, 
-                                {"label":"alternative",
-                                "collective name":"Send/recv",
-                                "Segment_size[KB]":512,
+                                "number of banks":6,
+                                "number of nodes": 4}, 
+                                { "experiment":"u280_bcast",
+                                "label":"alternative",
+                                "collective name":"Broadcast",
+                                "Segment_size[KB]":1024,
                                 "board_instance":"xilinx_u280_xdma_201920_3", 
-                                "number of banks":6}])
-    
+                                "number of banks":6,
+                                "number of nodes": 4}], H2H = False)
+
+        optimized_vs_base(other,[{ "experiment":"u280_dual_path_scatter",
+                                "label":"baseline",
+                                "collective name":"Scatter",
+                                "Segment_size[KB]":1024,
+                                "board_instance":"xilinx_u280_xdma_201920_3", 
+                                "number of banks":6,
+                                "number of nodes": 4}, 
+                                { "experiment":"u280_scatter",
+                                "label":"alternative",
+                                "collective name":"Scatter",
+                                "Segment_size[KB]":1024,
+                                "board_instance":"xilinx_u280_xdma_201920_3", 
+                                "number of banks":6,
+                                "number of nodes": 4}], H2H = False)
+
+        optimized_vs_base(other,[{ "experiment":"u280_dual_path_reduce",
+                                "label":"baseline",
+                                "collective name":"Reduce",
+                                "Segment_size[KB]":1024,
+                                "board_instance":"xilinx_u280_xdma_201920_3", 
+                                "number of banks":6,
+                                "number of nodes": 4}, 
+                                { "experiment":"u280_reduce",
+                                "label":"alternative",
+                                "collective name":"Reduce",
+                                "Segment_size[KB]":1024,
+                                "board_instance":"xilinx_u280_xdma_201920_3", 
+                                "number of banks":6,
+                                "number of nodes": 4}], H2H = False)
