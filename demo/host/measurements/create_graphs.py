@@ -40,15 +40,15 @@ def plot_lines(title, x_datas, y_datas, y_series_labels, y_styles=None, logx=Tru
     for x, y, y_series_label, y_style, y_error in zip(x_datas, y_datas, y_series_labels, y_styles, y_errors):
         if y_style:
             if not y_error is None:
-                series.append(ax.errorbar(x, y,  yerr = y_error, fmt=y_style, label=y_series_label, capsize=4.0, linewidth=3))
+                series.append(ax.errorbar(x, y,  yerr = y_error, fmt=y_style, label=y_series_label, capsize=4.0, linewidth=3, markersize=8, markeredgewidth=3))
             else:
-                line, = ax.plot(x, y, y_style, label=y_series_label)
+                line, = ax.plot(x, y, y_style, label=y_series_label, linewidth=3, markersize=8, markeredgewidth=3)
                 series.append(line)
         else:
             if not y_error is None:
-                series.append(ax.errorbar(x, y,  yerr = y_error, fmt=y_style, label=y_series_label, capsize=4.0, linewidth=3))
+                series.append(ax.errorbar(x, y,  yerr = y_error, fmt=y_style, label=y_series_label, capsize=4.0, linewidth=3, markersize=8, markeredgewidth=3))
             else:
-                line, = ax.plot(x, y, label=y_series_label)
+                line, = ax.plot(x, y, label=y_series_label, linewidth=3, markersize=8, markeredgewidth=3)
                 series.append(line)
 
     plt.grid(axis='y')
@@ -67,11 +67,11 @@ def plot_lines(title, x_datas, y_datas, y_series_labels, y_styles=None, logx=Tru
         
     if legend_loc is None :
         if logy:
-            ax.legend(series, y_series_labels, loc="lower right")
+            ax.legend(series, y_series_labels, loc="lower right", handlelength=4)
         else:
-            ax.legend(series, y_series_labels, loc="upper left")
+            ax.legend(series, y_series_labels, loc="upper left", handlelength=4)
     else:
-        ax.legend(    series, y_series_labels, loc=legend_loc, fontsize=14)
+        ax.legend(    series, y_series_labels, loc=legend_loc, fontsize=14, handlelength=4)
 
     if x_label == "Message Size":
         ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: sizeof_fmt(y)))
@@ -319,8 +319,7 @@ def compare_openMPI(df, H2H=True, F2F=True, error=False):
         print(collective)
         subset              = df[(df["collective name"] == collective) & (df["segment_size[KB]"] == segment_size) &
                                     (  
-                                    ( ( df["board_instance"] == "xilinx_u280_xdma_201920_3") & (df["number of banks"] == 6)) |
-                                    ( ( df["board_instance"] == "xilinx_u250_gen3x16_xdma_shell_3_1") & (df["number of banks"] == 3))                                     
+                                    ( ( df["board_instance"] == "xilinx_u280_xdma_201920_3") & (df["number of banks"] == 6))                                   
                                     )]
         grouped             = subset.groupby(["board_instance", "buffer size[KB]"]).agg({'execution_time[us]':['mean','std'], 'execution_time_fullpath[us]':['mean','std']})
         grouped.reset_index(inplace=True)
@@ -343,17 +342,17 @@ def compare_openMPI(df, H2H=True, F2F=True, error=False):
             board = simplify_board_name(board)
             i+=1
             if np.any(exe != 0) and F2F:
-                series_label.append(f"ACCL {board} F2F")
+                series_label.append(f"ACCL F2F")
                 series_y.append(exe)
                 series_x.append(bufsize)
                 stdevs.append(exe_std)
-                styles.append(f"C{i}-")
+                styles.append(f"C{2}+-")
             if np.any(exe_full != 0) and H2H:
-                series_label.append(f"ACCL {board} H2H")
+                series_label.append(f"ACCL H2H")
                 series_y.append(exe_full)
                 series_x.append(bufsize)
                 stdevs.append(exe_full_std)
-                styles.append(f"C{i}--")
+                styles.append(f"C{2}+--")
 
             if board.find("U280") != -1:
                 average_delta = np.abs(exe_full - exe)
@@ -362,7 +361,7 @@ def compare_openMPI(df, H2H=True, F2F=True, error=False):
         grouped             = subset.groupby(["board_instance", "buffer size[KB]"]).agg({'execution_time[us]':['mean','std'], 'execution_time_fullpath[us]':['mean','std']})
         grouped.reset_index(inplace=True)
         grouped             = grouped.groupby(["board_instance"])
-
+        i = 3
         for board, group in grouped:
             exe          = group['execution_time[us]']['mean'].to_numpy()
             exe_std      = group['execution_time[us]']['std'].to_numpy()
@@ -379,13 +378,13 @@ def compare_openMPI(df, H2H=True, F2F=True, error=False):
                     series_y.append(exe)
                     series_x.append(bufsize[:len(exe)])
                     stdevs.append(None)
-                    styles.append(f"C{i}-")
+                    styles.append(f"C{3}+-")
                 if H2H:
                     series_label.append(f"{board} H2H")
                     series_y.append(exe_full)
                     series_x.append(bufsize)
                     stdevs.append(exe_full_std)
-                    styles.append(f"C{i}--")
+                    styles.append(f"C{3}+--")
 
         
         plot_lines("compare_OMPI"+("H2H" if H2H else "") + ("F2F" if F2F else "")+collective.replace("/", ""), series_x, series_y, series_label, styles, y_label='Latency [us]', logx=True, legend_loc ="upper left", y_errors=(stdevs if error else None))
@@ -810,13 +809,13 @@ def compare_rank_with_fixed_bsize(df, H2H=True, F2F=True, error=False):
                 series_y.append(exe)
                 series_x.append(num_nodes)
                 stdevs.append(exe_std)
-                styles.append(f"C4-+")
+                styles.append(f"C2-+")
             if np.any(exe_full != 0) and H2H:
                 series_label.append("ACCL H2H")
                 series_y.append(exe_full)
                 series_x.append(num_nodes)
                 stdevs.append(exe_full_std)
-                styles.append(f"C4--+")
+                styles.append(f"C2--+")
             average_delta = np.abs(exe_full - exe)
             #OpenMPI
             subset              = df[(df["collective name"] == collective) & (df[ "buffer size[KB]"] == bsize) & (df["board_instance"] == "OpenMPI" ) & (df["number of nodes"] > 2)]
@@ -1108,7 +1107,7 @@ if __name__ == "__main__":
     if args.statistic:
         get_statistics(df)
     if args.openMPI:
-        #compare_openMPI(df)
+        compare_openMPI(df)
         #compare_openMPI(df, H2H=False)
         #compare_openMPI(df, F2F=False)
         #compare_box_plot(df)
