@@ -7,133 +7,133 @@ PATH              : /opt/xilinx/xrt/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/b
 LD_LIBRARY_PATH   : /opt/xilinx/xrt/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:
 PYTHONPATH        : /opt/xilinx/xrt/python:
 XILINX_XRT        : /opt/xilinx/xrt
-PATH              : /opt/xilinx/xrt/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+PATH              : /opt/xilinx/xrt/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
 LD_LIBRARY_PATH   : /opt/xilinx/xrt/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:
 PYTHONPATH        : /opt/xilinx/xrt/python:
 XILINX_XRT        : /opt/xilinx/xrt
-PATH              : /opt/xilinx/xrt/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
+PATH              : /opt/xilinx/xrt/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
 LD_LIBRARY_PATH   : /opt/xilinx/xrt/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:
 PYTHONPATH        : /opt/xilinx/xrt/python:
 XILINX_XRT        : /opt/xilinx/xrt
 PATH              : /opt/xilinx/xrt/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/opt/tools/external/anaconda/envs/pynq-dask/bin:/opt/tools/external/anaconda/condabin:/opt/xilinx/xrt/bin:/opt/xilinx/xrt/bin:/opt/tools/Xilinx/Vitis/2019.2/bin:/opt/tools/Xilinx/Vitis/2019.2/gnu/microblaze/lin/bin:/opt/tools/Xilinx/Vitis/2019.2/gnu/arm/lin/bin:/opt/tools/Xilinx/Vitis/2019.2/gnu/microblaze/linux_toolchain/lin64_le/bin:/opt/tools/Xilinx/Vitis/2019.2/gnu/aarch32/lin/gcc-arm-linux-gnueabi/bin:/opt/tools/Xilinx/Vitis/2019.2/gnu/aarch32/lin/gcc-arm-none-eabi/bin:/opt/tools/Xilinx/Vitis/2019.2/gnu/aarch64/lin/aarch64-linux/bin:/opt/tools/Xilinx/Vitis/2019.2/gnu/aarch64/lin/aarch64-none/bin:/opt/tools/Xilinx/Vitis/2019.2/gnu/armr5/lin/gcc-arm-none-eabi/bin:/opt/tools/Xilinx/Vitis/2019.2/tps/lnx64/cmake-3.3.2/bin:/opt/tools/Xilinx/Vivado/2019.2/bin:/opt/xilinx/xrt/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/mnt/local/altera_pro/16.0/quartus/bin:/mnt/local/mentor/questasim/linux_x86_64:/mnt/local/aal/bin:/opt/tools/Xilinx/Vitis/2019.2/bin:/opt/Xilinx/Vitis/2020.2/bin:/home/zhe/bin
 LD_LIBRARY_PATH   : /opt/xilinx/xrt/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:/opt/xilinx/xrt/lib:/opt/xilinx/xrt/lib:/opt/tools/Xilinx/Vitis/2019.2/lib/lnx64.o/Ubuntu/18:/opt/tools/Xilinx/Vitis/2019.2/lib/lnx64.o/Ubuntu:/opt/tools/Xilinx/Vitis/2019.2/lib/lnx64.o:/opt/tools/Xilinx/Vitis/2019.2/runtime/lib/x86_64:/opt/xilinx/xrt/lib::/mnt/local/aal/lib:/home/zhe/centaur/libs
 PYTHONPATH        : /opt/xilinx/xrt/python:/opt/xilinx/xrt/python:/opt/xilinx/xrt/python:/opt/xilinx/xrt/python:
-alveo3b
-alveo2b
 alveo2a
+alveo3b
 alveo1b
+alveo2b
 alveo1a
+alveo2a, device on u250. Finished loading bitstream
+alveo2a, bytes:2097152, num_elements:524288, num_trials:100
+alveo2b, device on u250. Finished loading bitstream
+alveo2b, bytes:2097152, num_elements:524288, num_trials:100
+alveo1b, device on u250. Finished loading bitstream
+alveo1b, bytes:2097152, num_elements:524288, num_trials:100
 alveo3b, device on u280. Finished loading bitstream
 alveo3b, bytes:2097152, num_elements:524288, num_trials:100
 alveo1a, device on u250. Finished loading bitstream
 alveo1a, bytes:2097152, num_elements:524288, num_trials:100
 Start Bcast test:
-alveo2b, device on u250. Finished loading bitstream
-alveo2b, bytes:2097152, num_elements:524288, num_trials:100
-alveo2a, device on u250. Finished loading bitstream
-alveo2a, bytes:2097152, num_elements:524288, num_trials:100
-alveo1b, device on u250. Finished loading bitstream
-alveo1b, bytes:2097152, num_elements:524288, num_trials:100
-iteration:0, time[s]:0.006860
-iteration:1, time[s]:0.003773
-iteration:2, time[s]:0.003570
-iteration:3, time[s]:0.003760
-iteration:4, time[s]:0.003635
-iteration:5, time[s]:0.003545
-iteration:6, time[s]:0.003563
-iteration:7, time[s]:0.003268
-iteration:8, time[s]:0.003609
-iteration:9, time[s]:0.003638
-iteration:10, time[s]:0.003966
-iteration:11, time[s]:0.003743
-iteration:12, time[s]:0.003978
-iteration:13, time[s]:0.003550
-iteration:14, time[s]:0.003677
-iteration:15, time[s]:0.003837
-iteration:16, time[s]:0.003714
-iteration:17, time[s]:0.003592
-iteration:18, time[s]:0.003466
-iteration:19, time[s]:0.003356
-iteration:20, time[s]:0.003117
-iteration:21, time[s]:0.003494
-iteration:22, time[s]:0.003909
-iteration:23, time[s]:0.003563
-iteration:24, time[s]:0.003387
-iteration:25, time[s]:0.003432
-iteration:26, time[s]:0.003771
-iteration:27, time[s]:0.003515
-iteration:28, time[s]:0.003541
-iteration:29, time[s]:0.003488
-iteration:30, time[s]:0.003691
-iteration:31, time[s]:0.003797
-iteration:32, time[s]:0.018447
-iteration:33, time[s]:0.003673
-iteration:34, time[s]:0.003466
-iteration:35, time[s]:0.003423
-iteration:36, time[s]:0.003752
-iteration:37, time[s]:0.003560
-iteration:38, time[s]:0.003440
-iteration:39, time[s]:0.003625
-iteration:40, time[s]:0.003680
-iteration:41, time[s]:0.003797
-iteration:42, time[s]:0.003642
-iteration:43, time[s]:0.003192
-iteration:44, time[s]:0.003351
-iteration:45, time[s]:0.003382
-iteration:46, time[s]:0.003256
-iteration:47, time[s]:0.003263
-iteration:48, time[s]:0.003718
-iteration:49, time[s]:0.003277
-iteration:50, time[s]:0.003609
-iteration:51, time[s]:0.003287
-iteration:52, time[s]:0.003469
-iteration:53, time[s]:0.003599
-iteration:54, time[s]:0.003409
-iteration:55, time[s]:0.003594
-iteration:56, time[s]:0.003555
-iteration:57, time[s]:0.003787
-iteration:58, time[s]:0.003609
-iteration:59, time[s]:0.003233
-iteration:60, time[s]:0.003582
-iteration:61, time[s]:0.003498
-iteration:62, time[s]:0.003338
-iteration:63, time[s]:0.003479
-iteration:64, time[s]:0.003304
-iteration:65, time[s]:0.003644
-iteration:66, time[s]:0.003652
-iteration:67, time[s]:0.003095
-iteration:68, time[s]:0.003441
-iteration:69, time[s]:0.003554
-iteration:70, time[s]:0.003242
-iteration:71, time[s]:0.003548
-iteration:72, time[s]:0.003654
-iteration:73, time[s]:0.003736
-iteration:74, time[s]:0.003469
-iteration:75, time[s]:0.003467
-iteration:76, time[s]:0.003368
-iteration:77, time[s]:0.003449
-iteration:78, time[s]:0.003344
-iteration:79, time[s]:0.003371
-iteration:80, time[s]:0.003573
-iteration:81, time[s]:0.017300
-iteration:82, time[s]:0.003694
-iteration:83, time[s]:0.003687
-iteration:84, time[s]:0.003423
-iteration:85, time[s]:0.003711
-iteration:86, time[s]:0.003041
-iteration:87, time[s]:0.003301
-iteration:88, time[s]:0.003428
-iteration:89, time[s]:0.003317
-iteration:90, time[s]:0.003314
-iteration:91, time[s]:0.003464
-iteration:92, time[s]:0.003498
-iteration:93, time[s]:0.003184
-iteration:94, time[s]:0.003241
-iteration:95, time[s]:0.003289
-iteration:96, time[s]:0.003502
-iteration:97, time[s]:0.003553
-iteration:98, time[s]:0.003253
-iteration:99, time[s]:0.003215
-iteration:100, time[s]:0.003251
+iteration:0, time[s]:0.008372
+iteration:1, time[s]:0.004886
+iteration:2, time[s]:0.004134
+iteration:3, time[s]:0.004183
+iteration:4, time[s]:0.003675
+iteration:5, time[s]:0.003547
+iteration:6, time[s]:0.003546
+iteration:7, time[s]:0.003502
+iteration:8, time[s]:0.003695
+iteration:9, time[s]:0.003772
+iteration:10, time[s]:0.003577
+iteration:11, time[s]:0.003486
+iteration:12, time[s]:0.003660
+iteration:13, time[s]:0.003574
+iteration:14, time[s]:0.003384
+iteration:15, time[s]:0.003452
+iteration:16, time[s]:0.003646
+iteration:17, time[s]:0.003556
+iteration:18, time[s]:0.003633
+iteration:19, time[s]:0.003400
+iteration:20, time[s]:0.003485
+iteration:21, time[s]:0.019144
+iteration:22, time[s]:0.003336
+iteration:23, time[s]:0.003648
+iteration:24, time[s]:0.033695
+iteration:25, time[s]:0.003767
+iteration:26, time[s]:0.003991
+iteration:27, time[s]:0.003537
+iteration:28, time[s]:0.003725
+iteration:29, time[s]:0.003280
+iteration:30, time[s]:0.003638
+iteration:31, time[s]:0.003479
+iteration:32, time[s]:0.003502
+iteration:33, time[s]:0.003496
+iteration:34, time[s]:0.003366
+iteration:35, time[s]:0.003472
+iteration:36, time[s]:0.003802
+iteration:37, time[s]:0.004124
+iteration:38, time[s]:0.003678
+iteration:39, time[s]:0.003683
+iteration:40, time[s]:0.003444
+iteration:41, time[s]:0.003581
+iteration:42, time[s]:0.003628
+iteration:43, time[s]:0.003423
+iteration:44, time[s]:0.003500
+iteration:45, time[s]:0.003240
+iteration:46, time[s]:0.003476
+iteration:47, time[s]:0.003518
+iteration:48, time[s]:0.003516
+iteration:49, time[s]:0.003518
+iteration:50, time[s]:0.003456
+iteration:51, time[s]:0.003465
+iteration:52, time[s]:0.003426
+iteration:53, time[s]:0.003484
+iteration:54, time[s]:0.003815
+iteration:55, time[s]:0.003432
+iteration:56, time[s]:0.003726
+iteration:57, time[s]:0.003370
+iteration:58, time[s]:0.003776
+iteration:59, time[s]:0.003768
+iteration:60, time[s]:0.003545
+iteration:61, time[s]:0.003590
+iteration:62, time[s]:0.003536
+iteration:63, time[s]:0.003612
+iteration:64, time[s]:0.003305
+iteration:65, time[s]:0.003289
+iteration:66, time[s]:0.003664
+iteration:67, time[s]:0.003558
+iteration:68, time[s]:0.003788
+iteration:69, time[s]:0.003619
+iteration:70, time[s]:0.003660
+iteration:71, time[s]:0.003560
+iteration:72, time[s]:0.003555
+iteration:73, time[s]:0.003513
+iteration:74, time[s]:0.003436
+iteration:75, time[s]:0.003492
+iteration:76, time[s]:0.003348
+iteration:77, time[s]:0.003622
+iteration:78, time[s]:0.003547
+iteration:79, time[s]:0.003533
+iteration:80, time[s]:0.003378
+iteration:81, time[s]:0.003787
+iteration:82, time[s]:0.003573
+iteration:83, time[s]:0.003688
+iteration:84, time[s]:0.003659
+iteration:85, time[s]:0.003666
+iteration:86, time[s]:0.003455
+iteration:87, time[s]:0.003515
+iteration:88, time[s]:0.003552
+iteration:89, time[s]:0.003549
+iteration:90, time[s]:0.003551
+iteration:91, time[s]:0.003638
+iteration:92, time[s]:0.003485
+iteration:93, time[s]:0.003561
+iteration:94, time[s]:0.003357
+iteration:95, time[s]:0.003525
+iteration:96, time[s]:0.003493
+iteration:97, time[s]:0.003694
+iteration:98, time[s]:0.003793
+iteration:99, time[s]:0.003516
+iteration:100, time[s]:0.003342
 Data size = 2097152, Trials = 100
-Avg MPI time [us]= *3795.114740, throughput [Gbps] = 4.420740
+Avg MPI time [us]= *4042.656030, throughput [Gbps] = 4.150048

@@ -21,119 +21,119 @@ PYTHONPATH        : /opt/xilinx/xrt/python:/opt/xilinx/xrt/python:/opt/xilinx/xr
 alveo2b
 alveo3b
 alveo1a
-alveo1b
 alveo2a
+alveo1b
+alveo2a, device on u250. Finished loading bitstream
+alveo2a, bytes:8192, num_elements:2048, num_trials:100
 alveo3b, device on u280. Finished loading bitstream
 alveo3b, bytes:8192, num_elements:2048, num_trials:100
 alveo2b, device on u250. Finished loading bitstream
 alveo2b, bytes:8192, num_elements:2048, num_trials:100
-alveo1b, device on u250. Finished loading bitstream
-alveo1b, bytes:8192, num_elements:2048, num_trials:100
 alveo1a, device on u250. Finished loading bitstream
 alveo1a, bytes:8192, num_elements:2048, num_trials:100
 Start Bcast test:
-alveo2a, device on u250. Finished loading bitstream
-alveo2a, bytes:8192, num_elements:2048, num_trials:100
-iteration:0, time[s]:0.000971
-iteration:1, time[s]:0.000248
-iteration:2, time[s]:0.000214
-iteration:3, time[s]:0.000178
-iteration:4, time[s]:0.000183
-iteration:5, time[s]:0.000147
-iteration:6, time[s]:0.000155
-iteration:7, time[s]:0.000172
-iteration:8, time[s]:0.000185
-iteration:9, time[s]:0.000166
-iteration:10, time[s]:0.000153
-iteration:11, time[s]:0.000146
-iteration:12, time[s]:0.000143
-iteration:13, time[s]:0.000153
-iteration:14, time[s]:0.001717
-iteration:15, time[s]:0.000196
-iteration:16, time[s]:0.000253
-iteration:17, time[s]:0.000233
-iteration:18, time[s]:0.000235
-iteration:19, time[s]:0.000225
-iteration:20, time[s]:0.000186
-iteration:21, time[s]:0.000235
-iteration:22, time[s]:0.000217
-iteration:23, time[s]:0.000230
-iteration:24, time[s]:0.000253
-iteration:25, time[s]:0.000225
-iteration:26, time[s]:0.000227
-iteration:27, time[s]:0.000227
-iteration:28, time[s]:0.000169
-iteration:29, time[s]:0.000217
-iteration:30, time[s]:0.000266
-iteration:31, time[s]:0.000235
-iteration:32, time[s]:0.000236
-iteration:33, time[s]:0.000236
-iteration:34, time[s]:0.000244
-iteration:35, time[s]:0.000233
-iteration:36, time[s]:0.000245
-iteration:37, time[s]:0.000244
-iteration:38, time[s]:0.000244
-iteration:39, time[s]:0.000243
-iteration:40, time[s]:0.000263
-iteration:41, time[s]:0.000246
-iteration:42, time[s]:0.000306
-iteration:43, time[s]:0.000301
-iteration:44, time[s]:0.000301
-iteration:45, time[s]:0.000245
-iteration:46, time[s]:0.000298
-iteration:47, time[s]:0.000314
-iteration:48, time[s]:0.000296
-iteration:49, time[s]:0.000319
-iteration:50, time[s]:0.000331
-iteration:51, time[s]:0.000314
-iteration:52, time[s]:0.000314
-iteration:53, time[s]:0.000305
-iteration:54, time[s]:0.000311
-iteration:55, time[s]:0.000299
-iteration:56, time[s]:0.000311
-iteration:57, time[s]:0.000288
-iteration:58, time[s]:0.000308
-iteration:59, time[s]:0.000284
-iteration:60, time[s]:0.000296
-iteration:61, time[s]:0.000298
-iteration:62, time[s]:0.000318
-iteration:63, time[s]:0.000296
-iteration:64, time[s]:0.000239
-iteration:65, time[s]:0.000242
-iteration:66, time[s]:0.000250
-iteration:67, time[s]:0.000239
-iteration:68, time[s]:0.000246
-iteration:69, time[s]:0.000229
-iteration:70, time[s]:0.000243
-iteration:71, time[s]:0.000230
-iteration:72, time[s]:0.000228
-iteration:73, time[s]:0.000240
-iteration:74, time[s]:0.000247
-iteration:75, time[s]:0.000226
-iteration:76, time[s]:0.000237
-iteration:77, time[s]:0.000236
-iteration:78, time[s]:0.000235
-iteration:79, time[s]:0.000224
-iteration:80, time[s]:0.000225
-iteration:81, time[s]:0.000224
-iteration:82, time[s]:0.000224
-iteration:83, time[s]:0.000238
-iteration:84, time[s]:0.000234
-iteration:85, time[s]:0.000236
-iteration:86, time[s]:0.000223
-iteration:87, time[s]:0.000233
-iteration:88, time[s]:0.000237
-iteration:89, time[s]:0.000224
-iteration:90, time[s]:0.000237
-iteration:91, time[s]:0.000245
-iteration:92, time[s]:0.000147
-iteration:93, time[s]:0.000227
-iteration:94, time[s]:0.000241
-iteration:95, time[s]:0.000244
-iteration:96, time[s]:0.000241
-iteration:97, time[s]:0.000160
-iteration:98, time[s]:0.000226
-iteration:99, time[s]:0.000255
-iteration:100, time[s]:0.000257
+alveo1b, device on u250. Finished loading bitstream
+alveo1b, bytes:8192, num_elements:2048, num_trials:100
+iteration:0, time[s]:0.000386
+iteration:1, time[s]:0.000212
+iteration:2, time[s]:0.000262
+iteration:3, time[s]:0.000269
+iteration:4, time[s]:0.000279
+iteration:5, time[s]:0.000269
+iteration:6, time[s]:0.000256
+iteration:7, time[s]:0.000254
+iteration:8, time[s]:0.000264
+iteration:9, time[s]:0.000261
+iteration:10, time[s]:0.000256
+iteration:11, time[s]:0.000261
+iteration:12, time[s]:0.000263
+iteration:13, time[s]:0.000263
+iteration:14, time[s]:0.000260
+iteration:15, time[s]:0.000278
+iteration:16, time[s]:0.000265
+iteration:17, time[s]:0.000270
+iteration:18, time[s]:0.000258
+iteration:19, time[s]:0.000273
+iteration:20, time[s]:0.000252
+iteration:21, time[s]:0.000252
+iteration:22, time[s]:0.000253
+iteration:23, time[s]:0.000267
+iteration:24, time[s]:0.000245
+iteration:25, time[s]:0.000248
+iteration:26, time[s]:0.000241
+iteration:27, time[s]:0.000284
+iteration:28, time[s]:0.000280
+iteration:29, time[s]:0.000246
+iteration:30, time[s]:0.000250
+iteration:31, time[s]:0.000249
+iteration:32, time[s]:0.000248
+iteration:33, time[s]:0.000245
+iteration:34, time[s]:0.000241
+iteration:35, time[s]:0.000242
+iteration:36, time[s]:0.000243
+iteration:37, time[s]:0.000250
+iteration:38, time[s]:0.000236
+iteration:39, time[s]:0.000242
+iteration:40, time[s]:0.000239
+iteration:41, time[s]:0.000236
+iteration:42, time[s]:0.000240
+iteration:43, time[s]:0.000243
+iteration:44, time[s]:0.000239
+iteration:45, time[s]:0.000237
+iteration:46, time[s]:0.000244
+iteration:47, time[s]:0.000243
+iteration:48, time[s]:0.000230
+iteration:49, time[s]:0.000214
+iteration:50, time[s]:0.000228
+iteration:51, time[s]:0.000229
+iteration:52, time[s]:0.000226
+iteration:53, time[s]:0.000229
+iteration:54, time[s]:0.000229
+iteration:55, time[s]:0.000219
+iteration:56, time[s]:0.000235
+iteration:57, time[s]:0.000242
+iteration:58, time[s]:0.000249
+iteration:59, time[s]:0.000144
+iteration:60, time[s]:0.000133
+iteration:61, time[s]:0.000131
+iteration:62, time[s]:0.000134
+iteration:63, time[s]:0.000135
+iteration:64, time[s]:0.000142
+iteration:65, time[s]:0.000135
+iteration:66, time[s]:0.000130
+iteration:67, time[s]:0.000131
+iteration:68, time[s]:0.000152
+iteration:69, time[s]:0.000222
+iteration:70, time[s]:0.000217
+iteration:71, time[s]:0.000253
+iteration:72, time[s]:0.000229
+iteration:73, time[s]:0.000157
+iteration:74, time[s]:0.000159
+iteration:75, time[s]:0.000256
+iteration:76, time[s]:0.000251
+iteration:77, time[s]:0.000267
+iteration:78, time[s]:0.000253
+iteration:79, time[s]:0.000250
+iteration:80, time[s]:0.000248
+iteration:81, time[s]:0.000262
+iteration:82, time[s]:0.000240
+iteration:83, time[s]:0.000237
+iteration:84, time[s]:0.000261
+iteration:85, time[s]:0.000261
+iteration:86, time[s]:0.000263
+iteration:87, time[s]:0.000250
+iteration:88, time[s]:0.000217
+iteration:89, time[s]:0.000248
+iteration:90, time[s]:0.000264
+iteration:91, time[s]:0.000250
+iteration:92, time[s]:0.000248
+iteration:93, time[s]:0.000213
+iteration:94, time[s]:0.000192
+iteration:95, time[s]:0.000213
+iteration:96, time[s]:0.000213
+iteration:97, time[s]:0.000201
+iteration:98, time[s]:0.000175
+iteration:99, time[s]:0.000134
+iteration:100, time[s]:0.000132
 Data size = 8192, Trials = 100
-Avg MPI time [us]= *254.440170, throughput [Gbps] = 0.257569
+Avg MPI time [us]= *230.356040, throughput [Gbps] = 0.284499

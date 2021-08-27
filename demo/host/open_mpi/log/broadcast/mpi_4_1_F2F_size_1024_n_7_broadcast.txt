@@ -2,10 +2,14 @@ XILINX_XRT        : /opt/xilinx/xrt
 PATH              : /opt/xilinx/xrt/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
 LD_LIBRARY_PATH   : /opt/xilinx/xrt/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:
 PYTHONPATH        : /opt/xilinx/xrt/python:
-XILINX_XRT      : /opt/xilinx/xrt
-PATH            : /opt/xilinx/xrt/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
-LD_LIBRARY_PATH : /opt/xilinx/xrt/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:
-PYTHONPATH     : /opt/xilinx/xrt/python:
+XILINX_XRT        : /opt/xilinx/xrt
+PATH              : /opt/xilinx/xrt/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
+LD_LIBRARY_PATH   : /opt/xilinx/xrt/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:
+PYTHONPATH        : /opt/xilinx/xrt/python:
+XILINX_XRT        : /opt/xilinx/xrt
+PATH              : /opt/xilinx/xrt/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
+LD_LIBRARY_PATH   : /opt/xilinx/xrt/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:
+PYTHONPATH        : /opt/xilinx/xrt/python:
 XILINX_XRT        : /opt/xilinx/xrt
 PATH              : /opt/xilinx/xrt/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
 LD_LIBRARY_PATH   : /opt/xilinx/xrt/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:
@@ -15,14 +19,135 @@ PATH              : /opt/xilinx/xrt/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/b
 LD_LIBRARY_PATH   : /opt/xilinx/xrt/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:
 PYTHONPATH        : /opt/xilinx/xrt/python:
 XILINX_XRT        : /opt/xilinx/xrt
-PATH              : /opt/xilinx/xrt/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/opt/tools/external/anaconda/envs/pynq-dask/bin:/opt/tools/external/anaconda/condabin:/opt/xilinx/xrt/bin:/opt/xilinx/xrt/bin:/opt/tools/Xilinx/Vitis/2019.2/bin:/opt/tools/Xilinx/Vitis/2019.2/gnu/microblaze/lin/bin:/opt/tools/Xilinx/Vitis/2019.2/gnu/arm/lin/bin:/opt/tools/Xilinx/Vitis/2019.2/gnu/microblaze/linux_toolchain/lin64_le/bin:/opt/tools/Xilinx/Vitis/2019.2/gnu/aarch32/lin/gcc-arm-linux-gnueabi/bin:/opt/tools/Xilinx/Vitis/2019.2/gnu/aarch32/lin/gcc-arm-none-eabi/bin:/opt/tools/Xilinx/Vitis/2019.2/gnu/aarch64/lin/aarch64-linux/bin:/opt/tools/Xilinx/Vitis/2019.2/gnu/aarch64/lin/aarch64-none/bin:/opt/tools/Xilinx/Vitis/2019.2/gnu/armr5/lin/gcc-arm-none-eabi/bin:/opt/tools/Xilinx/Vitis/2019.2/tps/lnx64/cmake-3.3.2/bin:/opt/tools/Xilinx/Vivado/2019.2/bin:/opt/xilinx/xrt/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/mnt/local/altera_pro/16.0/quartus/bin:/mnt/local/mentor/questasim/linux_x86_64:/mnt/local/aal/bin:/opt/tools/Xilinx/Vitis/2019.2/bin:/opt/Xilinx/Vitis/2020.2/bin:/home/zhe/bin
-XILINX_XRT        : /opt/xilinx/xrt
 PATH              : /opt/xilinx/xrt/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
 LD_LIBRARY_PATH   : /opt/xilinx/xrt/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:
 PYTHONPATH        : /opt/xilinx/xrt/python:
+XILINX_XRT        : /opt/xilinx/xrt
+PATH              : /opt/xilinx/xrt/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/opt/tools/external/anaconda/envs/pynq-dask/bin:/opt/tools/external/anaconda/condabin:/opt/xilinx/xrt/bin:/opt/xilinx/xrt/bin:/opt/tools/Xilinx/Vitis/2019.2/bin:/opt/tools/Xilinx/Vitis/2019.2/gnu/microblaze/lin/bin:/opt/tools/Xilinx/Vitis/2019.2/gnu/arm/lin/bin:/opt/tools/Xilinx/Vitis/2019.2/gnu/microblaze/linux_toolchain/lin64_le/bin:/opt/tools/Xilinx/Vitis/2019.2/gnu/aarch32/lin/gcc-arm-linux-gnueabi/bin:/opt/tools/Xilinx/Vitis/2019.2/gnu/aarch32/lin/gcc-arm-none-eabi/bin:/opt/tools/Xilinx/Vitis/2019.2/gnu/aarch64/lin/aarch64-linux/bin:/opt/tools/Xilinx/Vitis/2019.2/gnu/aarch64/lin/aarch64-none/bin:/opt/tools/Xilinx/Vitis/2019.2/gnu/armr5/lin/gcc-arm-none-eabi/bin:/opt/tools/Xilinx/Vitis/2019.2/tps/lnx64/cmake-3.3.2/bin:/opt/tools/Xilinx/Vivado/2019.2/bin:/opt/xilinx/xrt/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/mnt/local/altera_pro/16.0/quartus/bin:/mnt/local/mentor/questasim/linux_x86_64:/mnt/local/aal/bin:/opt/tools/Xilinx/Vitis/2019.2/bin:/opt/Xilinx/Vitis/2020.2/bin:/home/zhe/bin
 LD_LIBRARY_PATH   : /opt/xilinx/xrt/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:/opt/xilinx/xrt/lib:/opt/xilinx/xrt/lib:/opt/tools/Xilinx/Vitis/2019.2/lib/lnx64.o/Ubuntu/18:/opt/tools/Xilinx/Vitis/2019.2/lib/lnx64.o/Ubuntu:/opt/tools/Xilinx/Vitis/2019.2/lib/lnx64.o:/opt/tools/Xilinx/Vitis/2019.2/runtime/lib/x86_64:/opt/xilinx/xrt/lib::/mnt/local/aal/lib:/home/zhe/centaur/libs
 PYTHONPATH        : /opt/xilinx/xrt/python:/opt/xilinx/xrt/python:/opt/xilinx/xrt/python:/opt/xilinx/xrt/python:
-XILINX_XRT        : /opt/xilinx/xrt
-PATH              : /opt/xilinx/xrt/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
-LD_LIBRARY_PATH   : /opt/xilinx/xrt/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:
-PYTHONPATH        : /opt/xilinx/xrt/python:
+alveo3b
+alveo4c
+alveo4b
+alveo2a
+alveo1b
+alveo1a
+alveo2b
+alveo1a, device on u250. Finished loading bitstream
+alveo1a, bytes:1048576, num_elements:262144, num_trials:100
+Start Bcast test:
+alveo2b, device on u250. Finished loading bitstream
+alveo2b, bytes:1048576, num_elements:262144, num_trials:100
+alveo4c, device on u280. Finished loading bitstream
+alveo4c, bytes:1048576, num_elements:262144, num_trials:100
+alveo3b, device on u280. Finished loading bitstream
+alveo3b, bytes:1048576, num_elements:262144, num_trials:100
+alveo4b, device on u280. Finished loading bitstream
+alveo4b, bytes:1048576, num_elements:262144, num_trials:100
+alveo2a, device on u250. Finished loading bitstream
+alveo2a, bytes:1048576, num_elements:262144, num_trials:100
+alveo1b, device on u250. Finished loading bitstream
+alveo1b, bytes:1048576, num_elements:262144, num_trials:100
+iteration:0, time[s]:0.006854
+iteration:1, time[s]:0.004033
+iteration:2, time[s]:0.003217
+iteration:3, time[s]:0.003448
+iteration:4, time[s]:0.003211
+iteration:5, time[s]:0.003215
+iteration:6, time[s]:0.003135
+iteration:7, time[s]:0.003128
+iteration:8, time[s]:0.002899
+iteration:9, time[s]:0.003000
+iteration:10, time[s]:0.003003
+iteration:11, time[s]:0.002965
+iteration:12, time[s]:0.002796
+iteration:13, time[s]:0.003046
+iteration:14, time[s]:0.003022
+iteration:15, time[s]:0.003061
+iteration:16, time[s]:0.003121
+iteration:17, time[s]:0.003210
+iteration:18, time[s]:0.002938
+iteration:19, time[s]:0.003083
+iteration:20, time[s]:0.003017
+iteration:21, time[s]:0.003000
+iteration:22, time[s]:0.002866
+iteration:23, time[s]:0.002909
+iteration:24, time[s]:0.002995
+iteration:25, time[s]:0.002903
+iteration:26, time[s]:0.003155
+iteration:27, time[s]:0.002803
+iteration:28, time[s]:0.002819
+iteration:29, time[s]:0.002897
+iteration:30, time[s]:0.002786
+iteration:31, time[s]:0.002653
+iteration:32, time[s]:0.002717
+iteration:33, time[s]:0.002806
+iteration:34, time[s]:0.002866
+iteration:35, time[s]:0.002828
+iteration:36, time[s]:0.002874
+iteration:37, time[s]:0.002849
+iteration:38, time[s]:0.002996
+iteration:39, time[s]:0.002795
+iteration:40, time[s]:0.002645
+iteration:41, time[s]:0.002982
+iteration:42, time[s]:0.002891
+iteration:43, time[s]:0.002783
+iteration:44, time[s]:0.002845
+iteration:45, time[s]:0.002972
+iteration:46, time[s]:0.002880
+iteration:47, time[s]:0.002948
+iteration:48, time[s]:0.002787
+iteration:49, time[s]:0.003011
+iteration:50, time[s]:0.002954
+iteration:51, time[s]:0.002901
+iteration:52, time[s]:0.002904
+iteration:53, time[s]:0.002995
+iteration:54, time[s]:0.002984
+iteration:55, time[s]:0.002880
+iteration:56, time[s]:0.002858
+iteration:57, time[s]:0.002954
+iteration:58, time[s]:0.002950
+iteration:59, time[s]:0.002852
+iteration:60, time[s]:0.002874
+iteration:61, time[s]:0.002949
+iteration:62, time[s]:0.002969
+iteration:63, time[s]:0.002886
+iteration:64, time[s]:0.002875
+iteration:65, time[s]:0.002849
+iteration:66, time[s]:0.002976
+iteration:67, time[s]:0.002853
+iteration:68, time[s]:0.002721
+iteration:69, time[s]:0.002832
+iteration:70, time[s]:0.002768
+iteration:71, time[s]:0.002769
+iteration:72, time[s]:0.002851
+iteration:73, time[s]:0.002867
+iteration:74, time[s]:0.002750
+iteration:75, time[s]:0.002827
+iteration:76, time[s]:0.002892
+iteration:77, time[s]:0.002893
+iteration:78, time[s]:0.002920
+iteration:79, time[s]:0.002758
+iteration:80, time[s]:0.002856
+iteration:81, time[s]:0.002753
+iteration:82, time[s]:0.002812
+iteration:83, time[s]:0.002716
+iteration:84, time[s]:0.002703
+iteration:85, time[s]:0.002837
+iteration:86, time[s]:0.002725
+iteration:87, time[s]:0.002880
+iteration:88, time[s]:0.002829
+iteration:89, time[s]:0.002818
+iteration:90, time[s]:0.002722
+iteration:91, time[s]:0.002808
+iteration:92, time[s]:0.003034
+iteration:93, time[s]:0.002908
+iteration:94, time[s]:0.002750
+iteration:95, time[s]:0.002774
+iteration:96, time[s]:0.002820
+iteration:97, time[s]:0.002885
+iteration:98, time[s]:0.002791
+iteration:99, time[s]:0.002837
+iteration:100, time[s]:0.002856
+Data size = 1048576, Trials = 100
+Avg MPI time [us]= *2912.377220, throughput [Gbps] = 2.880330
