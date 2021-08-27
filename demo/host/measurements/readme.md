@@ -1,9 +1,9 @@
 # Prerequisite
 1. ACCL: move csv created by test_tcp_cmac_seq_mpi.py under measurements/accl
 2. OpenMPI from ../openmpi/log 
-    a. remove measurements/openmpi : ```rm openmpi/*.csv```
-    b. go into ../open_mpi/log:      ```cd ../openmpi/log```
-    c. run convert_to_csv:           ```python convert_to_csv.py```
+    1. remove measurements/openmpi : ```rm openmpi/*.csv```
+    1. go into ../open_mpi/log:      ```cd ../openmpi/log```
+    1. run convert_to_csv:           ```python convert_to_csv.py```
 # How to make graphs out of measurements
 
 To graph latency for openMPI vs ACCL use:   ```python create_graphs.py --openMPI```
