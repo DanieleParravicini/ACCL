@@ -357,11 +357,11 @@ def compare_openMPI(df, H2H=True, F2F=True, error=False):
             if board.find("U280") != -1:
                 average_delta = np.abs(exe_full - exe)
         #For OpenMPI
-        subset              = df[(df["collective name"] == collective) & (df["board_instance"] == "OpenMPI" )]
+        subset              = df[(df["collective name"] == collective) & (df["board_instance"].str.contains("OpenMPI") )]
         grouped             = subset.groupby(["board_instance", "buffer size[KB]"]).agg({'execution_time[us]':['mean','std'], 'execution_time_fullpath[us]':['mean','std']})
         grouped.reset_index(inplace=True)
         grouped             = grouped.groupby(["board_instance"])
-        i = 3
+        i = 2
         for board, group in grouped:
             exe          = group['execution_time[us]']['mean'].to_numpy()
             exe_std      = group['execution_time[us]']['std'].to_numpy()
@@ -371,20 +371,19 @@ def compare_openMPI(df, H2H=True, F2F=True, error=False):
 
             board = simplify_board_name(board)
             i+=1
-            if np.any(exe_full != 0):
-                if average_delta is not None and F2F:
-                    series_label.append(f"{board} F2F")
-                    exe = list(map(sum, zip(exe_full,average_delta)))
-                    series_y.append(exe)
-                    series_x.append(bufsize[:len(exe)])
-                    stdevs.append(None)
-                    styles.append(f"C{3}+-")
-                if H2H:
-                    series_label.append(f"{board} H2H")
-                    series_y.append(exe_full)
-                    series_x.append(bufsize)
-                    stdevs.append(exe_full_std)
-                    styles.append(f"C{3}+--")
+            
+            if np.any(exe) and F2F:
+                series_label.append(f"{board}")
+                series_y.append(exe)
+                series_x.append(bufsize)
+                stdevs.append(None)
+                styles.append(f"C{i}+-")
+            if np.any(exe_full != 0) and H2H:
+                series_label.append(f"{board} H2H")
+                series_y.append(exe_full)
+                series_x.append(bufsize)
+                stdevs.append(exe_full_std)
+                styles.append(f"C{i}+--")
 
         
         plot_lines("compare_OMPI"+("H2H" if H2H else "") + ("F2F" if F2F else "")+collective.replace("/", ""), series_x, series_y, series_label, styles, y_label='Latency [us]', logx=True, legend_loc ="upper left", y_errors=(stdevs if error else None))
@@ -816,33 +815,34 @@ def compare_rank_with_fixed_bsize(df, H2H=True, F2F=True, error=False):
                 series_x.append(num_nodes)
                 stdevs.append(exe_full_std)
                 styles.append(f"C2--+")
-            average_delta = np.abs(exe_full - exe)
+            
             #OpenMPI
-            subset              = df[(df["collective name"] == collective) & (df[ "buffer size[KB]"] == bsize) & (df["board_instance"] == "OpenMPI" ) & (df["number of nodes"] > 2)]
-            grouped             = subset.groupby(["number of nodes"]).agg({'execution_time[us]':['mean','std'], 'execution_time_fullpath[us]':['mean','std']})
-            grouped.reset_index(inplace=True)
+            subset              = df[(df["collective name"] == collective) & (df[ "buffer size[KB]"] == bsize) & (df["board_instance"].str.contains("OpenMPI") ) & (df["number of nodes"] > 2)]
+            i=2
+            for board_name, group in subset.groupby(["board_instance"]): 
+                grouped             = group.groupby(["number of nodes"]).agg({'execution_time[us]':['mean','std'], 'execution_time_fullpath[us]':['mean','std']})
+                grouped.reset_index(inplace=True)
 
- 
-            exe          = grouped['execution_time[us]']['mean'].to_numpy()
-            exe_std      = grouped['execution_time[us]']['std'].to_numpy()
-            num_nodes    = grouped['number of nodes'].to_numpy()
-            exe_full     = grouped['execution_time_fullpath[us]']['mean'].to_numpy()
-            exe_full_std = grouped['execution_time_fullpath[us]']['std'].to_numpy()
-            if np.any(exe_full != 0):
-                if average_delta is not None and F2F:
-                    series_label.append("OpenMPI F2F")
-                    exe = list(map(sum, zip(exe_full,average_delta)))
+    
+                exe          = grouped['execution_time[us]']['mean'].to_numpy()
+                exe_std      = grouped['execution_time[us]']['std'].to_numpy()
+                num_nodes    = grouped['number of nodes'].to_numpy()
+                exe_full     = grouped['execution_time_fullpath[us]']['mean'].to_numpy()
+                exe_full_std = grouped['execution_time_fullpath[us]']['std'].to_numpy()
+                i+=1
+                if np.any(exe != 0) and F2F:
+                    series_label.append(f"{board_name}")
                     series_y.append(exe)
                     series_x.append(num_nodes[:len(exe)])
                     stdevs.append(None)
-                    styles.append(f"C3-+")
+                    styles.append(f"C{i}-+")
 
-                if H2H or F2F and average_delta is None:
-                    series_label.append("OpenMPI  H2H")
-                    series_y.append(exe_full)
-                    series_x.append(num_nodes)
-                    stdevs.append(exe_full_std)
-                    styles.append(f"C3--+")
+                if np.any(exe_full) and H2H:
+                        series_label.append(f"{board_name} H2H")
+                        series_y.append(exe_full)
+                        series_x.append(num_nodes)
+                        stdevs.append(exe_full_std)
+                        styles.append(f"C{i}--+")
 
             
             plot_lines("rank_comparison"+collective.replace("/", "")+str(bsize), series_x, series_y, series_label, styles, x_label="Number of ranks", y_label='Latency [us]', legend_loc ="upper left", logx=False, logy = False, y_errors=(stdevs if error else None))
