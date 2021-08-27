@@ -960,27 +960,28 @@ def segment_vs_membank(df):
         #im = ax.imshow(data_to_be_plotted, cmap="Wistia", vmin=0, vmax=100 )
         ax.invert_yaxis()
         #ax.invert_xaxis()
-        ax.figure.colorbar(im, ax=ax)
+        cbar = ax.figure.colorbar(im, ax=ax)
+        cbar.ax.tick_params(labelsize=14)
         # We want to show all ticks...
         ax.set_yticks(np.arange(len(banks)))
         ax.set_xticks(np.arange(len(segment_sizes)))
         # ... and label them with the respective list entries
-        ax.set_yticklabels(banks)
-        ax.set_xticklabels(segment_sizes)
-        ax.set_ylabel("Number of Banks")
-        ax.set_xlabel("Segment size [KB]")
+        ax.set_yticklabels(banks,           fontsize=14)
+        ax.set_xticklabels(segment_sizes,   fontsize=14)
+        ax.set_ylabel("Number of Banks",    fontsize=16)
+        ax.set_xlabel("Segment size [KB]",  fontsize=16)
         # Loop over data dimensions and create text annotations.
         for i in range(len(banks)):
             for j in range(len(segment_sizes)):
                 if data_to_be_plotted[i][j] > 0:
                     d = data_to_be_plotted[i][j]
-                    ax.text(j, i, f"{d:.1f}", ha="center", va="center")
+                    ax.text(j, i, f"{d:.1f}", ha="center", va="center", fontsize=14)
         
-        ax.set_title("Peak throughput [Gbps]")
+        ax.set_title("Peak throughput [Gbps]", fontsize=16)
         plt.show()
         plt.savefig(f"segment_vs_bank_{board}.png", format='png', bbox_inches='tight')
 
-def optimized_vs_base(df, selection_params, F2F=True, H2H=True, error = False):
+def optimized_vs_base(df, selection_params,  error = False, logy=False):
     df              = df[ (df["rank id"] == 0) ]
 
     series_label = []
@@ -998,6 +999,8 @@ def optimized_vs_base(df, selection_params, F2F=True, H2H=True, error = False):
         board           = selection_param["board_instance"]
         num_banks       = selection_param["number of banks"]
         num_nodes       = selection_param["number of nodes"]
+        F2F             = selection_param["F2F"]
+        H2H             = selection_param["H2H"]
         collectives.append(collective_name.replace("/", ""))
 
         subset              = df[(df["experiment"]      == exp)             &
@@ -1016,23 +1019,24 @@ def optimized_vs_base(df, selection_params, F2F=True, H2H=True, error = False):
         exe_full_std = grouped['execution_time_fullpath[us]']['std'].to_numpy()
 
         board = simplify_board_name(board)
-        i+=1
         if np.any(exe != 0) and F2F:
             series_label.append(f"{label} F2F")
             series_y.append(exe)
             series_x.append(bufsize)
             stdevs.append(exe_std)
             styles.append(f"C{i}-")
+            i+=1
         if np.any(exe_full != 0) and H2H:
             series_label.append(f"{label} H2H")
             series_y.append(exe_full)
             series_x.append(bufsize)
             stdevs.append(exe_full_std)
-            styles.append(f"C{i}--")
+            styles.append(f"C{i}-")
+            i+=1
 
     #optimized version
 
-    plot_lines("comparison"+"_".join(collectives), series_x, series_y, series_label, styles, y_label='Latency [us]', logx=True, logy=False, legend_loc ="upper left", y_errors=(stdevs if error else None))
+    plot_lines("comparison"+"_".join(collectives), series_x, series_y, series_label, styles, y_label='Latency [us]', logx=True, logy=logy, legend_loc ="upper left", y_errors=(stdevs if error else None))
         
 def remove_multiple_headers(df):
     headers = df.columns.tolist()
@@ -1121,20 +1125,51 @@ if __name__ == "__main__":
         other = pd.concat([df, load_csvs_under("accl/dual_path")])
         other = remove_multiple_headers(other)
 
-        optimized_vs_base(other,[{ "experiment":"u280_dual_path_bcast",
-                                "label":"baseline",
+        optimized_vs_base(other,[{ "experiment":"bcast",
+                                "label":"baseline: dual datapath",
                                 "collective name":"Broadcast",
                                 "Segment_size[KB]":1024,
                                 "board_instance":"xilinx_u280_xdma_201920_3", 
                                 "number of banks":6,
-                                "number of nodes": 4}, 
+                                "number of nodes": 4,
+                                "F2F":True,
+                                "H2H":False},
+                                { "experiment":"bcast1",
+                                "label":"baseline: dual datapath 2",
+                                "collective name":"Broadcast",
+                                "Segment_size[KB]":1024,
+                                "board_instance":"xilinx_u280_xdma_201920_3", 
+                                "number of banks":6,
+                                "number of nodes": 4,
+                                "F2F":True,
+                                "H2H":False}, 
+                                { "experiment":"bcast_rr",
+                                "label":"baseline: dual datapath rr",
+                                "collective name":"Broadcast",
+                                "Segment_size[KB]":1024,
+                                "board_instance":"xilinx_u280_xdma_201920_3", 
+                                "number of banks":6,
+                                "number of nodes": 4,
+                                "F2F":True,
+                                "H2H":False},
                                 { "experiment":"u280_bcast",
-                                "label":"alternative",
+                                "label":"single datapath: bcast rr",
                                 "collective name":"Broadcast",
                                 "Segment_size[KB]":1024,
                                 "board_instance":"xilinx_u280_xdma_201920_3", 
                                 "number of banks":6,
-                                "number of nodes": 4}], H2H = False)
+                                "number of nodes": 4,
+                                "F2F":True,
+                                "H2H":False}, 
+                                { "experiment":"converted from log",
+                                "label":"OpenMPI",
+                                "collective name":"Broadcast",
+                                "Segment_size[KB]":0,
+                                "board_instance":"OpenMPI", 
+                                "number of banks": 0,
+                                "number of nodes": 4,
+                                "F2F":False,
+                                "H2H":True}], logy=True)
 
         optimized_vs_base(other,[{ "experiment":"u280_dual_path_scatter",
                                 "label":"baseline",
@@ -1142,14 +1177,18 @@ if __name__ == "__main__":
                                 "Segment_size[KB]":1024,
                                 "board_instance":"xilinx_u280_xdma_201920_3", 
                                 "number of banks":6,
-                                "number of nodes": 4}, 
+                                "number of nodes": 4,
+                                "F2F":True,
+                                "H2H":False}, 
                                 { "experiment":"u280_scatter",
                                 "label":"alternative",
                                 "collective name":"Scatter",
                                 "Segment_size[KB]":1024,
                                 "board_instance":"xilinx_u280_xdma_201920_3", 
                                 "number of banks":6,
-                                "number of nodes": 4}], H2H = False)
+                                "number of nodes": 4,
+                                "F2F":True,
+                                "H2H":False}])
 
         optimized_vs_base(other,[{ "experiment":"u280_dual_path_reduce",
                                 "label":"baseline",
@@ -1157,11 +1196,15 @@ if __name__ == "__main__":
                                 "Segment_size[KB]":1024,
                                 "board_instance":"xilinx_u280_xdma_201920_3", 
                                 "number of banks":6,
-                                "number of nodes": 4}, 
+                                "number of nodes": 4,
+                                "F2F":True,
+                                "H2H":False}, 
                                 { "experiment":"u280_reduce",
                                 "label":"alternative",
                                 "collective name":"Reduce",
                                 "Segment_size[KB]":1024,
                                 "board_instance":"xilinx_u280_xdma_201920_3", 
                                 "number of banks":6,
-                                "number of nodes": 4}], H2H = False)
+                                "number of nodes": 4,
+                                "F2F":True,
+                                "H2H":False}])
