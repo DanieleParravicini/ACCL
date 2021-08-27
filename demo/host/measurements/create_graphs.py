@@ -834,7 +834,7 @@ def compare_rank_with_fixed_bsize(df, H2H=True, F2F=True, error=False):
                     series_label.append(f"{board_name}")
                     series_y.append(exe)
                     series_x.append(num_nodes[:len(exe)])
-                    stdevs.append(None)
+                    stdevs.append(exe_std)
                     styles.append(f"C{i}-+")
 
                 if np.any(exe_full) and H2H:

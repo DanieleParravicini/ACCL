@@ -5,7 +5,6 @@ alveo1b, bytes:8388608, num_elements:2097152, num_trials:100
 iteration:0, time[s]:0.021475
 iteration:1, time[s]:0.012668
 iteration:2, time[s]:0.011310
-iteration:3, time[s]:0.220521
 iteration:4, time[s]:0.012170
 iteration:5, time[s]:0.010261
 iteration:6, time[s]:0.011036
