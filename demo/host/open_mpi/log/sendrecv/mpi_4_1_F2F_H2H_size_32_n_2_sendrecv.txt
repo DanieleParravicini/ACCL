@@ -1,0 +1,28 @@
+XILINX_XRT        : /opt/xilinx/xrt
+PATH              : /opt/xilinx/xrt/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/opt/tools/external/anaconda/envs/pynq-dask/bin:/opt/tools/external/anaconda/condabin:/opt/xilinx/xrt/bin:/opt/xilinx/xrt/bin:/opt/tools/Xilinx/Vitis/2019.2/bin:/opt/tools/Xilinx/Vitis/2019.2/gnu/microblaze/lin/bin:/opt/tools/Xilinx/Vitis/2019.2/gnu/arm/lin/bin:/opt/tools/Xilinx/Vitis/2019.2/gnu/microblaze/linux_toolchain/lin64_le/bin:/opt/tools/Xilinx/Vitis/2019.2/gnu/aarch32/lin/gcc-arm-linux-gnueabi/bin:/opt/tools/Xilinx/Vitis/2019.2/gnu/aarch32/lin/gcc-arm-none-eabi/bin:/opt/tools/Xilinx/Vitis/2019.2/gnu/aarch64/lin/aarch64-linux/bin:/opt/tools/Xilinx/Vitis/2019.2/gnu/aarch64/lin/aarch64-none/bin:/opt/tools/Xilinx/Vitis/2019.2/gnu/armr5/lin/gcc-arm-none-eabi/bin:/opt/tools/Xilinx/Vitis/2019.2/tps/lnx64/cmake-3.3.2/bin:/opt/tools/Xilinx/Vivado/2019.2/bin:/opt/xilinx/xrt/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/mnt/local/altera_pro/16.0/quartus/bin:/mnt/local/mentor/questasim/linux_x86_64:/mnt/local/aal/bin:/opt/tools/Xilinx/Vitis/2019.2/bin:/opt/Xilinx/Vitis/2020.2/bin:/home/zhe/bin
+LD_LIBRARY_PATH   : /opt/xilinx/xrt/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:/opt/xilinx/xrt/lib:/opt/xilinx/xrt/lib:/opt/tools/Xilinx/Vitis/2019.2/lib/lnx64.o/Ubuntu/18:/opt/tools/Xilinx/Vitis/2019.2/lib/lnx64.o/Ubuntu:/opt/tools/Xilinx/Vitis/2019.2/lib/lnx64.o:/opt/tools/Xilinx/Vitis/2019.2/runtime/lib/x86_64:/opt/xilinx/xrt/lib::/mnt/local/aal/lib:/home/zhe/centaur/libs
+PYTHONPATH        : /opt/xilinx/xrt/python:/opt/xilinx/xrt/python:/opt/xilinx/xrt/python:/opt/xilinx/xrt/python:
+XILINX_XRT        : /opt/xilinx/xrt
+PATH              : /opt/xilinx/xrt/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
+LD_LIBRARY_PATH   : /opt/xilinx/xrt/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:
+PYTHONPATH        : /opt/xilinx/xrt/python:
+alveo1a
+alveo2a
+alveo1a, device on u250. Finished loading bitstream
+alveo1a, bytes:32768, num_elements:8192, num_trials:10
+Start Send/Recv test:
+alveo2a, device on u250. Finished loading bitstream
+alveo2a, bytes:32768, num_elements:8192, num_trials:10
+iteration:0, F2F_time[s]:0.020126, H2H_time:0.010022, sync_time:0.010103
+iteration:1, F2F_time[s]:0.010068, H2H_time:0.009944, sync_time:0.000124
+iteration:2, F2F_time[s]:0.010044, H2H_time:0.009920, sync_time:0.000124
+iteration:3, F2F_time[s]:0.010030, H2H_time:0.009917, sync_time:0.000113
+iteration:4, F2F_time[s]:0.010051, H2H_time:0.009922, sync_time:0.000129
+iteration:5, F2F_time[s]:0.010040, H2H_time:0.009928, sync_time:0.000113
+iteration:6, F2F_time[s]:0.010050, H2H_time:0.009957, sync_time:0.000093
+iteration:7, F2F_time[s]:0.010024, H2H_time:0.009919, sync_time:0.000106
+iteration:8, F2F_time[s]:0.010016, H2H_time:0.009905, sync_time:0.000111
+iteration:9, F2F_time[s]:0.010046, H2H_time:0.009921, sync_time:0.000125
+iteration:10, F2F_time[s]:0.010027, H2H_time:0.009920, sync_time:0.000107
+Data size = 32768, Trials = 10
+Avg MPI F2F time [us]= *10039.598200, H2H time= 9925.196000, sync time= 114.402200, H2H throughput [Gbps] = 0.026412
