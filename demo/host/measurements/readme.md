@@ -7,4 +7,5 @@
 # How to make graphs out of measurements
 
 To graph latency for openMPI vs ACCL use:   ```python create_graphs.py --openMPI```
+
 To graph latency for all collectives at all buffer size available at different communicator size use:   ```python create_graphs.py --rank2```
