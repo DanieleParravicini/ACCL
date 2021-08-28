@@ -11,7 +11,7 @@ done
 
 for i in "${ele[@]}"  
 do
-    for n in {3..4}
+    for n in {3..8}
     do
         /mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin/mpiexec -np $n --hostfile hostfile_alveo -- bash mpi_F2F_bash.sh $i $numrun 2 | tee ./log/broadcast/mpi_4_1_F2F_size_${i}_n_${n}_broadcast.txt 
     done
@@ -19,7 +19,7 @@ done
 
 for i in "${ele[@]}"  
 do
-    for n in {3..4}
+    for n in {3..8}
     do
         /mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin/mpiexec -np $n --hostfile hostfile_alveo -- bash mpi_F2F_bash.sh $i $numrun 3 | tee ./log/scatter/mpi_4_1_F2F_size_${i}_n_${n}_scatter.txt 
     done
@@ -27,7 +27,7 @@ done
 
 for i in "${ele[@]}"  
 do
-    for n in {3..4}
+    for n in {3..8}
     do
         /mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin/mpiexec -np $n --hostfile hostfile_alveo -- bash mpi_F2F_bash.sh $i $numrun 4 | tee ./log/reduce/mpi_4_1_F2F_size_${i}_n_${n}_reduce.txt 
     done
@@ -35,7 +35,7 @@ done
 
 for i in "${ele[@]}"  
 do
-    for n in {3..4}
+    for n in {3..8}
     do
         /mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin/mpiexec -np $n --hostfile hostfile_alveo -- bash mpi_F2F_bash.sh $i $numrun 5 | tee ./log/all_reduce/mpi_4_1_F2F_size_${i}_n_${n}_all_reduce.txt 
     done
@@ -43,7 +43,7 @@ done
 
 for i in "${ele[@]}"  
 do
-    for n in {3..4}
+    for n in {3..8}
     do
         /mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin/mpiexec -np $n --hostfile hostfile_alveo -- bash mpi_F2F_bash.sh $i $numrun 6 | tee ./log/gather/mpi_4_1_F2F_size_${i}_n_${n}_gather.txt 
     done
@@ -51,7 +51,7 @@ done
 
 for i in "${ele[@]}"  
 do
-    for n in {3..4}
+    for n in {3..8}
     do
         /mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin/mpiexec -np $n --hostfile hostfile_alveo -- bash mpi_F2F_bash.sh $i $numrun 7 | tee ./log/all_gather/mpi_4_1_F2F_size_${i}_n_${n}_all_gather.txt 
     done
