@@ -357,7 +357,7 @@ def compare_openMPI(df, H2H=True, F2F=True, error=False):
             if board.find("U280") != -1:
                 average_delta = np.abs(exe_full - exe)
         #For OpenMPI
-        subset              = df[(df["collective name"] == collective) & (df["board_instance"].str.contains("OpenMPI") )]
+        subset              = df[(df["collective name"] == collective) & ((df["board_instance"] == "OpenMPI" ) | (df["board_instance"] == "OpenMPI 4_1 new" ) | (df["board_instance"] == "OpenMPI 4_1 mc" ))]
         grouped             = subset.groupby(["board_instance", "buffer size[KB]"]).agg({'execution_time[us]':['mean','std'], 'execution_time_fullpath[us]':['mean','std']})
         grouped.reset_index(inplace=True)
         grouped             = grouped.groupby(["board_instance"])
@@ -373,7 +373,7 @@ def compare_openMPI(df, H2H=True, F2F=True, error=False):
             i+=1
             
             if np.any(exe) and F2F:
-                series_label.append(f"{board}")
+                series_label.append(f"{board} F2F")
                 series_y.append(exe)
                 series_x.append(bufsize)
                 stdevs.append(None)
@@ -817,7 +817,7 @@ def compare_rank_with_fixed_bsize(df, H2H=True, F2F=True, error=False):
                 styles.append(f"C2--+")
             
             #OpenMPI
-            subset              = df[(df["collective name"] == collective) & (df[ "buffer size[KB]"] == bsize) & (df["board_instance"].str.contains("OpenMPI") ) & (df["number of nodes"] > 2)]
+            subset              = df[(df["collective name"] == collective) & (df[ "buffer size[KB]"] == bsize) & ((df["board_instance"] == "OpenMPI" ) | (df["board_instance"] == "OpenMPI 4_1 new" ) | (df["board_instance"] == "OpenMPI 4_1 mc" )) & (df["number of nodes"] > 2)]
             i=2
             for board_name, group in subset.groupby(["board_instance"]): 
                 grouped             = group.groupby(["number of nodes"]).agg({'execution_time[us]':['mean','std'], 'execution_time_fullpath[us]':['mean','std']})
@@ -830,8 +830,9 @@ def compare_rank_with_fixed_bsize(df, H2H=True, F2F=True, error=False):
                 exe_full     = grouped['execution_time_fullpath[us]']['mean'].to_numpy()
                 exe_full_std = grouped['execution_time_fullpath[us]']['std'].to_numpy()
                 i+=1
+                board_name = simplify_board_name(board_name)
                 if np.any(exe != 0) and F2F:
-                    series_label.append(f"{board_name}")
+                    series_label.append(f"{board_name} F2F")
                     series_y.append(exe)
                     series_x.append(num_nodes[:len(exe)])
                     stdevs.append(exe_std)
@@ -854,6 +855,8 @@ def simplify_board_name(name):
         return "U250"
     elif name == "xilinx_u280_xdma_201920_3":
         return "U280"
+    elif name == "OpenMPI 4_1 new":
+        return "OpenMPI 4_1"
     else:
         return name
 
@@ -1107,7 +1110,7 @@ if __name__ == "__main__":
     if args.statistic:
         get_statistics(df)
     if args.openMPI:
-        compare_openMPI(df)
+        compare_openMPI(df, error=True)
         #compare_openMPI(df, H2H=False)
         #compare_openMPI(df, F2F=False)
         #compare_box_plot(df)

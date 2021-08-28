@@ -1,0 +1,260 @@
+XILINX_XRT        : /opt/xilinx/xrt
+PATH              : /opt/xilinx/xrt/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
+LD_LIBRARY_PATH   : /opt/xilinx/xrt/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:
+PYTHONPATH        : /opt/xilinx/xrt/python:
+XILINX_XRT        : /opt/xilinx/xrt
+PATH              : /opt/xilinx/xrt/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
+LD_LIBRARY_PATH   : /opt/xilinx/xrt/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:
+PYTHONPATH        : /opt/xilinx/xrt/python:
+XILINX_XRT        : /opt/xilinx/xrt
+PATH              : /opt/xilinx/xrt/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
+LD_LIBRARY_PATH   : /opt/xilinx/xrt/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:
+PYTHONPATH        : /opt/xilinx/xrt/python:
+XILINX_XRT        : /opt/xilinx/xrt
+PATH              : /opt/xilinx/xrt/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
+LD_LIBRARY_PATH   : /opt/xilinx/xrt/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:
+PYTHONPATH        : /opt/xilinx/xrt/python:
+XILINX_XRT        : /opt/xilinx/xrt
+PATH              : /opt/xilinx/xrt/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
+LD_LIBRARY_PATH   : /opt/xilinx/xrt/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:
+PYTHONPATH        : /opt/xilinx/xrt/python:
+XILINX_XRT        : /opt/xilinx/xrt
+PATH              : /opt/xilinx/xrt/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/opt/tools/external/anaconda/envs/pynq-dask/bin:/opt/tools/external/anaconda/condabin:/opt/tools/Xilinx/Vitis/2020.2/bin:/opt/tools/Xilinx/Vitis/2020.2/gnu/microblaze/lin/bin:/opt/tools/Xilinx/Vitis/2020.2/gnu/arm/lin/bin:/opt/tools/Xilinx/Vitis/2020.2/gnu/microblaze/linux_toolchain/lin64_le/bin:/opt/tools/Xilinx/Vitis/2020.2/gnu/aarch32/lin/gcc-arm-linux-gnueabi/bin:/opt/tools/Xilinx/Vitis/2020.2/gnu/aarch32/lin/gcc-arm-none-eabi/bin:/opt/tools/Xilinx/Vitis/2020.2/gnu/aarch64/lin/aarch64-linux/bin:/opt/tools/Xilinx/Vitis/2020.2/gnu/aarch64/lin/aarch64-none/bin:/opt/tools/Xilinx/Vitis/2020.2/gnu/armr5/lin/gcc-arm-none-eabi/bin:/opt/tools/Xilinx/Vitis/2020.2/tps/lnx64/cmake-3.3.2/bin:/opt/tools/Xilinx/Vitis/2020.2/aietools/bin:/opt/xilinx/xrt/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/dparravicini/bin
+LD_LIBRARY_PATH   : /opt/xilinx/xrt/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:/opt/xilinx/xrt/lib:
+PYTHONPATH        : /opt/xilinx/xrt/python:/opt/xilinx/xrt/python:
+XILINX_XRT        : /opt/xilinx/xrt
+PATH              : /opt/xilinx/xrt/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
+LD_LIBRARY_PATH   : /opt/xilinx/xrt/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:
+PYTHONPATH        : /opt/xilinx/xrt/python:
+XILINX_XRT        : /opt/xilinx/xrt
+PATH              : /opt/xilinx/xrt/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+LD_LIBRARY_PATH   : /opt/xilinx/xrt/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:/mnt/scratch/zhe/openmpi/openmpi-4.1.1/lib:
+PYTHONPATH        : /opt/xilinx/xrt/python:
+alveo2b
+alveo1a
+alveo2a
+alveo4c
+alveo4b
+alveo3c
+alveo3b
+alveo1b
+alveo3c, device on u280. Finished loading bitstream
+alveo3c, bytes:16777216, num_elements:4194304, num_trials:200
+alveo2b, device on u250. Finished loading bitstream
+alveo2b, bytes:16777216, num_elements:4194304, num_trials:200
+alveo1a, device on u250. Finished loading bitstream
+alveo1a, bytes:16777216, num_elements:4194304, num_trials:200
+alveo2a, device on u250. Finished loading bitstream
+alveo2a, bytes:16777216, num_elements:4194304, num_trials:200
+alveo1b, device on u250. Finished loading bitstream
+alveo1b, bytes:16777216, num_elements:4194304, num_trials:200
+alveo4c, device on u280. Finished loading bitstream
+alveo4c, bytes:16777216, num_elements:4194304, num_trials:200
+alveo3b, device on u280. Finished loading bitstream
+alveo3b, bytes:16777216, num_elements:4194304, num_trials:200
+alveo4b, device on u280. Finished loading bitstream
+alveo4b, bytes:16777216, num_elements:4194304, num_trials:200
+Start All-reduce test:
+iteration:0, F2F_time[s]:0.041669, H2H_time:0.034508, sync_time:0.007161
+iteration:1, F2F_time[s]:0.037847, H2H_time:0.030759, sync_time:0.007089
+iteration:2, F2F_time[s]:0.036403, H2H_time:0.029266, sync_time:0.007136
+iteration:3, F2F_time[s]:0.053529, H2H_time:0.046376, sync_time:0.007153
+iteration:4, F2F_time[s]:0.038366, H2H_time:0.031342, sync_time:0.007024
+iteration:5, F2F_time[s]:0.036554, H2H_time:0.029370, sync_time:0.007184
+iteration:6, F2F_time[s]:0.037098, H2H_time:0.029971, sync_time:0.007127
+iteration:7, F2F_time[s]:0.051757, H2H_time:0.044685, sync_time:0.007072
+iteration:8, F2F_time[s]:0.036706, H2H_time:0.029384, sync_time:0.007322
+iteration:9, F2F_time[s]:0.047137, H2H_time:0.039781, sync_time:0.007356
+iteration:10, F2F_time[s]:0.037576, H2H_time:0.030210, sync_time:0.007366
+iteration:11, F2F_time[s]:0.048319, H2H_time:0.040973, sync_time:0.007346
+iteration:12, F2F_time[s]:0.036654, H2H_time:0.029634, sync_time:0.007020
+iteration:13, F2F_time[s]:0.036460, H2H_time:0.029277, sync_time:0.007183
+iteration:14, F2F_time[s]:0.037363, H2H_time:0.030145, sync_time:0.007218
+iteration:15, F2F_time[s]:0.036688, H2H_time:0.029498, sync_time:0.007190
+iteration:16, F2F_time[s]:0.036979, H2H_time:0.029763, sync_time:0.007216
+iteration:17, F2F_time[s]:0.036581, H2H_time:0.029340, sync_time:0.007241
+iteration:18, F2F_time[s]:0.037046, H2H_time:0.029802, sync_time:0.007243
+iteration:19, F2F_time[s]:0.036825, H2H_time:0.029633, sync_time:0.007192
+iteration:20, F2F_time[s]:0.036530, H2H_time:0.029242, sync_time:0.007287
+iteration:21, F2F_time[s]:0.036927, H2H_time:0.029679, sync_time:0.007248
+iteration:22, F2F_time[s]:0.036852, H2H_time:0.029591, sync_time:0.007260
+iteration:23, F2F_time[s]:0.036974, H2H_time:0.029792, sync_time:0.007182
+iteration:24, F2F_time[s]:0.036308, H2H_time:0.029238, sync_time:0.007070
+iteration:25, F2F_time[s]:0.037472, H2H_time:0.030246, sync_time:0.007225
+iteration:26, F2F_time[s]:0.036703, H2H_time:0.029493, sync_time:0.007209
+iteration:27, F2F_time[s]:0.037082, H2H_time:0.029927, sync_time:0.007155
+iteration:28, F2F_time[s]:0.036802, H2H_time:0.029650, sync_time:0.007152
+iteration:29, F2F_time[s]:0.036725, H2H_time:0.029545, sync_time:0.007180
+iteration:30, F2F_time[s]:0.037247, H2H_time:0.030118, sync_time:0.007129
+iteration:31, F2F_time[s]:0.037047, H2H_time:0.029897, sync_time:0.007150
+iteration:32, F2F_time[s]:0.036739, H2H_time:0.029533, sync_time:0.007206
+iteration:33, F2F_time[s]:0.036287, H2H_time:0.029167, sync_time:0.007120
+iteration:34, F2F_time[s]:0.035989, H2H_time:0.028890, sync_time:0.007099
+iteration:35, F2F_time[s]:0.036232, H2H_time:0.028989, sync_time:0.007243
+iteration:36, F2F_time[s]:0.036331, H2H_time:0.029179, sync_time:0.007152
+iteration:37, F2F_time[s]:0.036579, H2H_time:0.029423, sync_time:0.007156
+iteration:38, F2F_time[s]:0.036300, H2H_time:0.029187, sync_time:0.007113
+iteration:39, F2F_time[s]:0.036306, H2H_time:0.029139, sync_time:0.007166
+iteration:40, F2F_time[s]:0.036357, H2H_time:0.029312, sync_time:0.007045
+iteration:41, F2F_time[s]:0.036872, H2H_time:0.029706, sync_time:0.007167
+iteration:42, F2F_time[s]:0.036414, H2H_time:0.029233, sync_time:0.007181
+iteration:43, F2F_time[s]:0.036446, H2H_time:0.029011, sync_time:0.007435
+iteration:44, F2F_time[s]:0.037404, H2H_time:0.030219, sync_time:0.007185
+iteration:45, F2F_time[s]:0.036720, H2H_time:0.029495, sync_time:0.007225
+iteration:46, F2F_time[s]:0.036455, H2H_time:0.029303, sync_time:0.007152
+iteration:47, F2F_time[s]:0.036582, H2H_time:0.029407, sync_time:0.007175
+iteration:48, F2F_time[s]:0.036644, H2H_time:0.029493, sync_time:0.007150
+iteration:49, F2F_time[s]:0.036607, H2H_time:0.029466, sync_time:0.007141
+iteration:50, F2F_time[s]:0.036941, H2H_time:0.029788, sync_time:0.007152
+iteration:51, F2F_time[s]:0.036510, H2H_time:0.029287, sync_time:0.007223
+iteration:52, F2F_time[s]:0.036238, H2H_time:0.029061, sync_time:0.007178
+iteration:53, F2F_time[s]:0.036155, H2H_time:0.029037, sync_time:0.007118
+iteration:54, F2F_time[s]:0.036244, H2H_time:0.029169, sync_time:0.007075
+iteration:55, F2F_time[s]:0.036456, H2H_time:0.029378, sync_time:0.007078
+iteration:56, F2F_time[s]:0.036195, H2H_time:0.028984, sync_time:0.007211
+iteration:57, F2F_time[s]:0.036378, H2H_time:0.029259, sync_time:0.007119
+iteration:58, F2F_time[s]:0.036341, H2H_time:0.029200, sync_time:0.007141
+iteration:59, F2F_time[s]:0.036067, H2H_time:0.028983, sync_time:0.007084
+iteration:60, F2F_time[s]:0.036107, H2H_time:0.029063, sync_time:0.007044
+iteration:61, F2F_time[s]:0.036708, H2H_time:0.029582, sync_time:0.007125
+iteration:62, F2F_time[s]:0.036196, H2H_time:0.029088, sync_time:0.007108
+iteration:63, F2F_time[s]:0.036869, H2H_time:0.029832, sync_time:0.007036
+iteration:64, F2F_time[s]:0.036634, H2H_time:0.029625, sync_time:0.007009
+iteration:65, F2F_time[s]:0.033600, H2H_time:0.026520, sync_time:0.007080
+iteration:66, F2F_time[s]:0.030990, H2H_time:0.023908, sync_time:0.007082
+iteration:67, F2F_time[s]:0.030564, H2H_time:0.023526, sync_time:0.007038
+iteration:68, F2F_time[s]:0.030897, H2H_time:0.023961, sync_time:0.006936
+iteration:69, F2F_time[s]:0.031446, H2H_time:0.024048, sync_time:0.007398
+iteration:70, F2F_time[s]:0.030995, H2H_time:0.023963, sync_time:0.007032
+iteration:71, F2F_time[s]:0.031259, H2H_time:0.023797, sync_time:0.007462
+iteration:72, F2F_time[s]:0.030764, H2H_time:0.023613, sync_time:0.007151
+iteration:73, F2F_time[s]:0.031618, H2H_time:0.024451, sync_time:0.007168
+iteration:74, F2F_time[s]:0.031842, H2H_time:0.024470, sync_time:0.007372
+iteration:75, F2F_time[s]:0.032189, H2H_time:0.025142, sync_time:0.007047
+iteration:76, F2F_time[s]:0.032088, H2H_time:0.024602, sync_time:0.007487
+iteration:77, F2F_time[s]:0.031408, H2H_time:0.024379, sync_time:0.007029
+iteration:78, F2F_time[s]:0.031021, H2H_time:0.023584, sync_time:0.007436
+iteration:79, F2F_time[s]:0.031263, H2H_time:0.024246, sync_time:0.007017
+iteration:80, F2F_time[s]:0.031948, H2H_time:0.024497, sync_time:0.007451
+iteration:81, F2F_time[s]:0.031585, H2H_time:0.024530, sync_time:0.007055
+iteration:82, F2F_time[s]:0.031605, H2H_time:0.024168, sync_time:0.007437
+iteration:83, F2F_time[s]:0.031596, H2H_time:0.024429, sync_time:0.007166
+iteration:84, F2F_time[s]:0.031702, H2H_time:0.024341, sync_time:0.007361
+iteration:85, F2F_time[s]:0.031481, H2H_time:0.024369, sync_time:0.007113
+iteration:86, F2F_time[s]:0.030732, H2H_time:0.023311, sync_time:0.007421
+iteration:87, F2F_time[s]:0.030967, H2H_time:0.023967, sync_time:0.007000
+iteration:88, F2F_time[s]:0.032267, H2H_time:0.024847, sync_time:0.007420
+iteration:89, F2F_time[s]:0.031307, H2H_time:0.024278, sync_time:0.007029
+iteration:90, F2F_time[s]:0.031422, H2H_time:0.024058, sync_time:0.007364
+iteration:91, F2F_time[s]:0.031175, H2H_time:0.024120, sync_time:0.007055
+iteration:92, F2F_time[s]:0.031810, H2H_time:0.024437, sync_time:0.007373
+iteration:93, F2F_time[s]:0.032026, H2H_time:0.024940, sync_time:0.007085
+iteration:94, F2F_time[s]:0.031117, H2H_time:0.023711, sync_time:0.007406
+iteration:95, F2F_time[s]:0.032113, H2H_time:0.025028, sync_time:0.007084
+iteration:96, F2F_time[s]:0.032060, H2H_time:0.024641, sync_time:0.007419
+iteration:97, F2F_time[s]:0.031897, H2H_time:0.024786, sync_time:0.007110
+iteration:98, F2F_time[s]:0.033843, H2H_time:0.026391, sync_time:0.007452
+iteration:99, F2F_time[s]:0.032196, H2H_time:0.025147, sync_time:0.007049
+iteration:100, F2F_time[s]:0.033157, H2H_time:0.025748, sync_time:0.007409
+iteration:101, F2F_time[s]:0.032930, H2H_time:0.025843, sync_time:0.007088
+iteration:102, F2F_time[s]:0.032975, H2H_time:0.025645, sync_time:0.007329
+iteration:103, F2F_time[s]:0.033139, H2H_time:0.026053, sync_time:0.007086
+iteration:104, F2F_time[s]:0.033430, H2H_time:0.026003, sync_time:0.007427
+iteration:105, F2F_time[s]:0.032493, H2H_time:0.025364, sync_time:0.007129
+iteration:106, F2F_time[s]:0.033517, H2H_time:0.026147, sync_time:0.007370
+iteration:107, F2F_time[s]:0.032691, H2H_time:0.025674, sync_time:0.007018
+iteration:108, F2F_time[s]:0.033006, H2H_time:0.025625, sync_time:0.007382
+iteration:109, F2F_time[s]:0.033216, H2H_time:0.026067, sync_time:0.007149
+iteration:110, F2F_time[s]:0.033254, H2H_time:0.025819, sync_time:0.007435
+iteration:111, F2F_time[s]:0.032677, H2H_time:0.025573, sync_time:0.007104
+iteration:112, F2F_time[s]:0.033194, H2H_time:0.025760, sync_time:0.007434
+iteration:113, F2F_time[s]:0.032154, H2H_time:0.025021, sync_time:0.007133
+iteration:114, F2F_time[s]:0.033368, H2H_time:0.026004, sync_time:0.007364
+iteration:115, F2F_time[s]:0.032398, H2H_time:0.025221, sync_time:0.007178
+iteration:116, F2F_time[s]:0.032058, H2H_time:0.024662, sync_time:0.007396
+iteration:117, F2F_time[s]:0.031642, H2H_time:0.024588, sync_time:0.007053
+iteration:118, F2F_time[s]:0.031974, H2H_time:0.024524, sync_time:0.007450
+iteration:119, F2F_time[s]:0.031116, H2H_time:0.024026, sync_time:0.007091
+iteration:120, F2F_time[s]:0.032276, H2H_time:0.024893, sync_time:0.007383
+iteration:121, F2F_time[s]:0.031962, H2H_time:0.024856, sync_time:0.007106
+iteration:122, F2F_time[s]:0.032635, H2H_time:0.025234, sync_time:0.007400
+iteration:123, F2F_time[s]:0.032767, H2H_time:0.025725, sync_time:0.007042
+iteration:124, F2F_time[s]:0.032900, H2H_time:0.025497, sync_time:0.007403
+iteration:125, F2F_time[s]:0.032120, H2H_time:0.025025, sync_time:0.007094
+iteration:126, F2F_time[s]:0.031004, H2H_time:0.023630, sync_time:0.007375
+iteration:127, F2F_time[s]:0.032405, H2H_time:0.025353, sync_time:0.007052
+iteration:128, F2F_time[s]:0.032219, H2H_time:0.024840, sync_time:0.007379
+iteration:129, F2F_time[s]:0.032453, H2H_time:0.025460, sync_time:0.006994
+iteration:130, F2F_time[s]:0.032202, H2H_time:0.024818, sync_time:0.007384
+iteration:131, F2F_time[s]:0.032354, H2H_time:0.025257, sync_time:0.007097
+iteration:132, F2F_time[s]:0.033152, H2H_time:0.025720, sync_time:0.007432
+iteration:133, F2F_time[s]:0.032980, H2H_time:0.025776, sync_time:0.007204
+iteration:134, F2F_time[s]:0.031357, H2H_time:0.023970, sync_time:0.007387
+iteration:135, F2F_time[s]:0.032464, H2H_time:0.025371, sync_time:0.007093
+iteration:136, F2F_time[s]:0.032710, H2H_time:0.025284, sync_time:0.007426
+iteration:137, F2F_time[s]:0.030984, H2H_time:0.023892, sync_time:0.007092
+iteration:138, F2F_time[s]:0.030696, H2H_time:0.023271, sync_time:0.007425
+iteration:139, F2F_time[s]:0.031836, H2H_time:0.024496, sync_time:0.007340
+iteration:140, F2F_time[s]:0.031552, H2H_time:0.024475, sync_time:0.007077
+iteration:141, F2F_time[s]:0.031226, H2H_time:0.023844, sync_time:0.007382
+iteration:142, F2F_time[s]:0.030182, H2H_time:0.023075, sync_time:0.007106
+iteration:143, F2F_time[s]:0.031060, H2H_time:0.023849, sync_time:0.007211
+iteration:144, F2F_time[s]:0.031194, H2H_time:0.023776, sync_time:0.007418
+iteration:145, F2F_time[s]:0.030436, H2H_time:0.023359, sync_time:0.007078
+iteration:146, F2F_time[s]:0.031081, H2H_time:0.023888, sync_time:0.007193
+iteration:147, F2F_time[s]:0.030808, H2H_time:0.023391, sync_time:0.007417
+iteration:148, F2F_time[s]:0.030263, H2H_time:0.023173, sync_time:0.007090
+iteration:149, F2F_time[s]:0.030727, H2H_time:0.023556, sync_time:0.007171
+iteration:150, F2F_time[s]:0.031096, H2H_time:0.023646, sync_time:0.007449
+iteration:151, F2F_time[s]:0.030502, H2H_time:0.023472, sync_time:0.007030
+iteration:152, F2F_time[s]:0.030938, H2H_time:0.023722, sync_time:0.007216
+iteration:153, F2F_time[s]:0.031593, H2H_time:0.024216, sync_time:0.007376
+iteration:154, F2F_time[s]:0.031187, H2H_time:0.024138, sync_time:0.007049
+iteration:155, F2F_time[s]:0.031042, H2H_time:0.023886, sync_time:0.007156
+iteration:156, F2F_time[s]:0.031291, H2H_time:0.023997, sync_time:0.007294
+iteration:157, F2F_time[s]:0.030424, H2H_time:0.023429, sync_time:0.006996
+iteration:158, F2F_time[s]:0.030828, H2H_time:0.023721, sync_time:0.007107
+iteration:159, F2F_time[s]:0.031211, H2H_time:0.023996, sync_time:0.007215
+iteration:160, F2F_time[s]:0.032777, H2H_time:0.025346, sync_time:0.007431
+iteration:161, F2F_time[s]:0.030797, H2H_time:0.023734, sync_time:0.007063
+iteration:162, F2F_time[s]:0.033517, H2H_time:0.026378, sync_time:0.007138
+iteration:163, F2F_time[s]:0.044704, H2H_time:0.037630, sync_time:0.007074
+iteration:164, F2F_time[s]:0.032380, H2H_time:0.025118, sync_time:0.007262
+iteration:165, F2F_time[s]:0.031165, H2H_time:0.024147, sync_time:0.007018
+iteration:166, F2F_time[s]:0.032142, H2H_time:0.025028, sync_time:0.007114
+iteration:167, F2F_time[s]:0.032552, H2H_time:0.025200, sync_time:0.007352
+iteration:168, F2F_time[s]:0.032845, H2H_time:0.025750, sync_time:0.007095
+iteration:169, F2F_time[s]:0.032197, H2H_time:0.024885, sync_time:0.007312
+iteration:170, F2F_time[s]:0.032561, H2H_time:0.025519, sync_time:0.007042
+iteration:171, F2F_time[s]:0.032665, H2H_time:0.025133, sync_time:0.007532
+iteration:172, F2F_time[s]:0.030911, H2H_time:0.023754, sync_time:0.007157
+iteration:173, F2F_time[s]:0.031554, H2H_time:0.024405, sync_time:0.007149
+iteration:174, F2F_time[s]:0.031169, H2H_time:0.024088, sync_time:0.007080
+iteration:175, F2F_time[s]:0.031296, H2H_time:0.023952, sync_time:0.007344
+iteration:176, F2F_time[s]:0.030685, H2H_time:0.023703, sync_time:0.006981
+iteration:177, F2F_time[s]:0.030046, H2H_time:0.022905, sync_time:0.007140
+iteration:178, F2F_time[s]:0.031229, H2H_time:0.024127, sync_time:0.007102
+iteration:179, F2F_time[s]:0.030583, H2H_time:0.023253, sync_time:0.007330
+iteration:180, F2F_time[s]:0.031362, H2H_time:0.024378, sync_time:0.006984
+iteration:181, F2F_time[s]:0.031767, H2H_time:0.024568, sync_time:0.007199
+iteration:182, F2F_time[s]:0.031787, H2H_time:0.024580, sync_time:0.007207
+iteration:183, F2F_time[s]:0.031355, H2H_time:0.024434, sync_time:0.006921
+iteration:184, F2F_time[s]:0.030940, H2H_time:0.023701, sync_time:0.007240
+iteration:185, F2F_time[s]:0.031588, H2H_time:0.024190, sync_time:0.007398
+iteration:186, F2F_time[s]:0.031051, H2H_time:0.023978, sync_time:0.007074
+iteration:187, F2F_time[s]:0.030309, H2H_time:0.023156, sync_time:0.007152
+iteration:188, F2F_time[s]:0.030963, H2H_time:0.023720, sync_time:0.007243
+iteration:189, F2F_time[s]:0.030288, H2H_time:0.023232, sync_time:0.007055
+iteration:190, F2F_time[s]:0.030351, H2H_time:0.022996, sync_time:0.007355
+iteration:191, F2F_time[s]:0.030180, H2H_time:0.023187, sync_time:0.006993
+iteration:192, F2F_time[s]:0.030631, H2H_time:0.023509, sync_time:0.007122
+iteration:193, F2F_time[s]:0.030616, H2H_time:0.023472, sync_time:0.007144
+iteration:194, F2F_time[s]:0.030765, H2H_time:0.023592, sync_time:0.007172
+iteration:195, F2F_time[s]:0.030867, H2H_time:0.023586, sync_time:0.007281
+iteration:196, F2F_time[s]:0.030683, H2H_time:0.023696, sync_time:0.006987
+iteration:197, F2F_time[s]:0.030791, H2H_time:0.023540, sync_time:0.007252
+iteration:198, F2F_time[s]:0.030915, H2H_time:0.023755, sync_time:0.007161
+iteration:199, F2F_time[s]:0.030444, H2H_time:0.023068, sync_time:0.007377
+iteration:200, F2F_time[s]:0.031527, H2H_time:0.024602, sync_time:0.006925
+Data size = 16777216, Trials = 200
+Avg MPI F2F time [us]= *33610.536725, H2H time= 26413.307435, sync time= 7197.229290, H2H throughput [Gbps] = 5.081443
