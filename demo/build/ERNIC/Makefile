@@ -32,8 +32,14 @@ endif
 .PHONY: xo
 xo: $(ERNIC_XO)
 
-$(ERNIC_XO): tcl/generate_bd.tcl
+$(ERNIC_XO): tcl/generate_bd.tcl ip
 	rm -rf project_ernic
+	rm -rf vivado*.jou
+	rm -rf vivado*.log
+	vivado -mode batch -source $< -tclargs $(FPGAPART) $(BOARDPART)
+
+ip: tcl/generate_pkt_filter.tcl hdl/src/*.sv
+	rm -rf project_pk_filter
 	rm -rf vivado*.jou
 	rm -rf vivado*.log
 	vivado -mode batch -source $< -tclargs $(FPGAPART) $(BOARDPART)
