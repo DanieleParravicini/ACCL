@@ -21,91 +21,85 @@ using namespace hls;
 using namespace std;
 
 
-void dma_enqueue_tcp(
-	stream<ap_uint<32>> &cmd_dma_tcp,
-	stream<ap_uint<64>> &inflight_queue,
-	volatile uint* exchange_mem
-);
-void dma_enqueue_udp(
-	stream<ap_uint<32>> &cmd_dma_udp,
-	stream<ap_uint<64>> &inflight_queue,
-	volatile uint* exchange_mem
-);
+//void dma_enqueue_internal(
+//	ap_uint<32> 		nbufs,
+//	stream<ap_uint<32>> &cmd_dma_queue,
+//	stream<ap_uint<32>> &inflight_queue,
+//	rx_buffer* rx_buffers
+//);
+
 
 void dma_enqueue(	
-				unsigned int use_tcp,
-				stream<ap_uint<32>> &cmd_dma_udp,
-				stream<ap_uint<32>> &cmd_dma_tcp,
-				stream<ap_uint<64>> &inflight_queue,
-				volatile uint* exchange_mem
+				ap_uint<32>  		use_tcp,
+				ap_uint<32>  		nbufs,
+				stream< ap_uint<32> > &cmd_dma_udp,
+				stream< ap_uint<32> > &cmd_dma_tcp,
+				stream< ap_uint<32> > &inflight_queue,
+				rx_buffer* rx_buffers
 ) {
 #pragma HLS INTERFACE s_axilite port=use_tcp
-#pragma HLS INTERFACE axis 		port=cmd_dma_udp
-#pragma HLS INTERFACE axis 		port=cmd_dma_tcp
-#pragma HLS INTERFACE axis 		port=inflight_queue
-#pragma HLS INTERFACE m_axi 	port=exchange_mem
+#pragma HLS INTERFACE s_axilite port=nbufs
+#pragma HLS INTERFACE axis 		port=cmd_dma_udp	depth=20
+#pragma HLS INTERFACE axis 		port=cmd_dma_tcp	depth=20
+#pragma HLS INTERFACE axis 		port=inflight_queue	depth=20
+#pragma HLS INTERFACE m_axi 	port=rx_buffers	
 #pragma HLS INTERFACE s_axilite port=return
 
-	if(use_tcp){
-		dma_enqueue_tcp(cmd_dma_tcp, inflight_queue, exchange_mem);
-	}else{
-		dma_enqueue_udp(cmd_dma_udp, inflight_queue, exchange_mem);
-	}
-}
-
-
-inline void dma_cmd_addrh_addrl(stream<ap_uint<32>> &cmd_dmax, unsigned int btt, unsigned int addrh, unsigned int addrl, unsigned int tag){
-	cmd_dmax.write( 0xC0800000 | btt); // 31=DRR 30=EOF 29-24=DSA 23=Type 22-0=BTT
-	cmd_dmax.write( addrl);
-	cmd_dmax.write( addrh);
-	cmd_dmax.write( 0x2000 | tag); 	 // 15-12=xCACHE 11-8=xUSER 7-4=RSVD 3-0=TAG
-}
-
-void dma_enqueue_tcp(
-	stream<ap_uint<32>> &cmd_dma_tcp,
-	stream<ap_uint<64>> &inflight_queue,
-	volatile uint* exchange_mem
-){
-unsigned int nbufs = *((unsigned int*)exchange_mem);
-//printf("number of buffers %d \n", nbufs );
-//read number of spare buffer available
-rx_buffer *rx_buf_curr = (rx_buffer*) (exchange_mem + 1);
-//iterate until you run out of spare buffers
-for(int i=0; i < nbufs; i++, rx_buf_curr++){
-	//look for IDLE spare buffers
-	if(rx_buf_curr->status   == STATUS_IDLE){
-		//issue a cmd
-		dma_cmd_addrh_addrl(cmd_dma_tcp , DMA_MAX_BTT, rx_buf_curr->addrh, rx_buf_curr->addrl, 0);
-		//write to the inflight queue the spare buffer address in the exchange memory
-		inflight_queue.write((long long int) rx_buf_curr);
-		//update spare buffer status
-		rx_buf_curr->status 	= STATUS_ENQUEUED;
-	}
-}
-}
-
-void dma_enqueue_udp(
-	stream<ap_uint<32>> &cmd_dma_udp,
-	stream<ap_uint<64>> &inflight_queue,
-	volatile uint* exchange_mem
-){
-	unsigned int nbufs = *exchange_mem;
-
-	//read number of spare buffer available
-	rx_buffer *rx_buf_curr = (rx_buffer*) (exchange_mem + 1);
 	//iterate until you run out of spare buffers
-	for(int i=0; i < nbufs; i++, rx_buf_curr++){
+	for(ap_uint<32> i=0; i < nbufs; i++){
+		#pragma HLS unroll factor=2
+		#pragma HLS pipeline II=1
 		//look for IDLE spare buffers
-		if(rx_buf_curr->status   == STATUS_IDLE){
-			//issue a cmd 
-			dma_cmd_addrh_addrl(cmd_dma_udp , DMA_MAX_BTT, rx_buf_curr->addrh, rx_buf_curr->addrl, 0);
+		if(rx_buffers[i].status   == STATUS_IDLE){
+			//issue a cmd
+			if (use_tcp){
+				cmd_dma_tcp.write( 0xC0800000 | DMA_MAX_BTT	); // 31=DRR 30=EOF 29-24=DSA 23=Type 22-0=BTT
+				cmd_dma_tcp.write( rx_buffers[i].addrl		);
+				cmd_dma_tcp.write( rx_buffers[i].addrh		);
+				cmd_dma_tcp.write( 0x2000 					); 	 // 15-12=xCACHE 11-8=xUSER 7-4=RSVD 3-0=TAG
+			}else{
+				cmd_dma_udp.write( 0xC0800000 | DMA_MAX_BTT	); // 31=DRR 30=EOF 29-24=DSA 23=Type 22-0=BTT
+				cmd_dma_udp.write( rx_buffers[i].addrl		);
+				cmd_dma_udp.write( rx_buffers[i].addrh		);
+				cmd_dma_udp.write( 0x2000 					); 	 // 15-12=xCACHE 11-8=xUSER 7-4=RSVD 3-0=TAG
+			}
 			//write to the inflight queue the spare buffer address in the exchange memory
-			inflight_queue.write((long long int) rx_buf_curr);
+			inflight_queue.write(i);
 			//update spare buffer status
-			rx_buf_curr->status 	= STATUS_ENQUEUED;
+			rx_buffers[i].status 	= STATUS_ENQUEUED;
 		}
 	}
+
 }
+
+
+//inline void dma_cmd_addrh_addrl(stream<ap_uint<32>> &cmd_dmax, unsigned int btt, unsigned int addrh, unsigned int addrl, unsigned int tag){
+//	cmd_dmax.write( 0xC0800000 | btt); // 31=DRR 30=EOF 29-24=DSA 23=Type 22-0=BTT
+//	cmd_dmax.write( addrl);
+//	cmd_dmax.write( addrh);
+//	cmd_dmax.write( 0x2000 | tag); 	 // 15-12=xCACHE 11-8=xUSER 7-4=RSVD 3-0=TAG
+//}
+//
+//ap_uint<32> cur_buf_idx = 0;
+//void dma_enqueue_internal(
+//	ap_uint<32>			 nbufs,
+//	stream<ap_uint<32>> &cmd_dma_queue,
+//	stream<ap_uint<32>> &inflight_queue,
+//	rx_buffer* rx_buffers
+//){
+//	//iterate until you run out of spare buffers
+//	for(ap_uint<32> i=0; i < nbufs; i++, rx_buffers++){
+//		//look for IDLE spare buffers
+//		if(rx_buffers->status   == STATUS_IDLE){
+//			//issue a cmd
+//			dma_cmd_addrh_addrl(cmd_dma_queue , DMA_MAX_BTT, rx_buffers->addrh, rx_buffers->addrl, 0);
+//			//write to the inflight queue the spare buffer address in the exchange memory
+//			inflight_queue.write(i);
+//			//update spare buffer status
+//			rx_buffers->status 	= STATUS_ENQUEUED;
+//		}
+//	}
+//}
 
 
 //enques cmd from DMA that receives from network stack. 

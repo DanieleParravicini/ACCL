@@ -24,17 +24,17 @@
 using namespace hls;
 using namespace std;
 
-void test_even(int use_tcp, int num_test_spares=10){
-	stream<ap_uint<32>> cmd_dma_tcp, cmd_dma_udp;
-	stream<ap_uint<64>> inflight_queue;
+int test_even(int use_tcp, int num_spare_buffers=10){
+	stream< ap_uint<32> > cmd_dma_tcp, cmd_dma_udp;
+	stream< ap_uint<32> > inflight_queue;
 
-	void * ptr 					 = malloc(sizeof(rx_buffer)*num_test_spares+sizeof(unsigned int));
+	void * exchange_mem 				= malloc(sizeof(unsigned int) + sizeof(rx_buffer)*num_spare_buffers);
 	//create a fake memory
-	*((unsigned int *)ptr) 	=  num_test_spares;
-	rx_buffer * buffers 	= ( (rx_buffer *) (((uint *)ptr) + 1 ) );
-	cout << "Exchange memory: " << ptr << endl;
+	*((unsigned int *)exchange_mem) 	=  num_spare_buffers;
+	rx_buffer * buffers 	= ( (rx_buffer *) (((uint *)exchange_mem) + 1 ) );
+	cout << "Exchange memory: " << exchange_mem << endl;
 	//fill buffers with dummy data only even buffer are enqueued
-	for(int i = 0; i < num_test_spares; i++ ){
+	for(int i = 0; i < num_spare_buffers; i++ ){
 		buffers[i].status = (i % 2) == 0 ? STATUS_IDLE : STATUS_RESERVED;
 		buffers[i].addrl  = 0xdeadbeef + i ;
 		buffers[i].addrh  = 0;
@@ -43,18 +43,23 @@ void test_even(int use_tcp, int num_test_spares=10){
 	
 	dma_enqueue(	
 				use_tcp,
+				*((uint *) exchange_mem),
 				cmd_dma_udp,
 				cmd_dma_tcp,
 				inflight_queue,
-				(uint *) ptr
+				(rx_buffer*)((uint *) exchange_mem + 1)
 	);
 
-	for (int i = 0; i < num_test_spares; i++)
+	for (int i = 0; i < num_spare_buffers; i++)
 	{
 		//only even buffers are enqueued
-		if ( (i % 2 ) == 1 ) continue;
 		cout << "Buffer "<< i << " status:" << buffers[i].status << endl;
-		//printf("cmd 0x%08x%08x%08x%08x\n",cmd_dma_tcp.read(), cmd_dma_tcp.read(), cmd_dma_tcp.read(), cmd_dma_tcp.read());
+		if ( (i % 2 ) == 1 ){
+			if( buffers[i].status != STATUS_RESERVED ) return 1;
+			if( buffers[i].addrl  != 0xdeadbeef + i  ) return 1;
+			if( buffers[i].addrh  != 0 				 ) return 1;
+			continue;
+		}
 		int dma_cmd [4];
 		if (use_tcp){
 			dma_cmd[0] = cmd_dma_tcp.read();
@@ -68,28 +73,32 @@ void test_even(int use_tcp, int num_test_spares=10){
 			dma_cmd[3] = cmd_dma_udp.read();
 		}
 		
-		long long int buffer_addr = inflight_queue.read();
+		uint buffer_idx = inflight_queue.read();
 		cout << hex << dma_cmd[0]  << hex << dma_cmd[1] << hex << dma_cmd[2] << hex << dma_cmd[3] << endl;
-		cout << "inflight queue " << buffer_addr << endl;
-		assert( buffers[i].status == STATUS_ENQUEUED );
-		assert( dma_cmd[0] == (0xC0800000 | DMA_MAX_BTT) );
-		assert( dma_cmd[1] == buffers[i].addrl) ;
-		assert( dma_cmd[2] == buffers[i].addrh);
-		assert( dma_cmd[3] == 0x2000);
-
-		assert( (rx_buffer *)buffer_addr == &buffers[i]);
+		cout << "inflight queue "  << buffer_idx << endl;
+		if( buffers[i].status  != STATUS_ENQUEUED 			) return 1;
+		if( buffers[i].addrl   != 0xdeadbeef + i  			) return 1;
+		if( buffers[i].addrh   != 0 				 		) return 1;
+		if( 		dma_cmd[0] != (0xC0800000 | DMA_MAX_BTT)) return 1;
+		if( 		dma_cmd[1] != buffers[i].addrl		 	) return 1;
+		if( 		dma_cmd[2] != buffers[i].addrh		 	) return 1;
+		if( 		dma_cmd[3] != 0x2000				 	) return 1;
+		if( 		buffer_idx != i						 	) return 1;
 
 	}
+	return 0;
 }
 
+//1. give a try with vivado_hls to avoid autopragma
+//2. burstpragma
 int main(){
 	int 		 nerrors 		 = 0;
 	
-	test_even(1);
-	test_even(0);
+	nerrors  = test_even(1);
+	nerrors += test_even(0);
 	
 	cout << "TB passed" << endl;
 
 
-	return 0;
+	return nerrors;
 }

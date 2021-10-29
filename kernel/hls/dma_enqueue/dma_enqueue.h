@@ -23,11 +23,13 @@
     #define STATUS_ERROR    0x04
     #define DMA_MAX_BTT     0x7FFFFF
 
-    void dma_enqueue(	unsigned int use_tcp,
-				stream<ap_uint<32>> &cmd_dma_tcp,
-				stream<ap_uint<32>> &cmd_dma_udp,
-				stream<ap_uint<64>> &inflight_queue,
-				volatile uint* exchange_mem
+    void dma_enqueue(	
+        ap_uint<32>          use_tcp,
+        ap_uint<32>          nbufs,
+        stream< ap_uint<32> > &cmd_dma_tcp,
+        stream< ap_uint<32> > &cmd_dma_udp,
+        stream< ap_uint<32> > &inflight_queue,
+        rx_buffer*           rx_buffers
     );
 
 #endif
