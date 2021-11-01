@@ -20,13 +20,23 @@
 using namespace hls;
 using namespace std;
 
+void read_spares(
+		ap_uint<32>  		  nbufs,
+		ap_uint<32>* 		  spare_buffers,
+		stream< ap_uint<32> > &tmp
+		);
 
-//void dma_enqueue_internal(
-//	ap_uint<32> 		nbufs,
-//	stream<ap_uint<32>> &cmd_dma_queue,
-//	stream<ap_uint<32>> &inflight_queue,
-//	rx_buffer* rx_buffers
-//);
+void enqueue_spares(
+		ap_uint<32>  		  use_tcp,
+		ap_uint<32>  		  nbufs,
+		stream< ap_uint<32> > &cmd_dma_udp,
+		stream< ap_uint<32> > &cmd_dma_tcp,
+		stream< ap_uint<32> > &inflight_queue,
+		ap_uint<32> * 		   spare_buffers,
+		stream< ap_uint<32> > &tmp
+
+);
+
 
 
 void dma_enqueue(	
@@ -35,42 +45,171 @@ void dma_enqueue(
 				stream< ap_uint<32> > &cmd_dma_udp,
 				stream< ap_uint<32> > &cmd_dma_tcp,
 				stream< ap_uint<32> > &inflight_queue,
-				rx_buffer* rx_buffers
+				ap_uint<32>* rx_buffers_input,
+				ap_uint<32>* rx_buffers_output
 ) {
 #pragma HLS INTERFACE s_axilite port=use_tcp
 #pragma HLS INTERFACE s_axilite port=nbufs
-#pragma HLS INTERFACE axis 		port=cmd_dma_udp	depth=20
-#pragma HLS INTERFACE axis 		port=cmd_dma_tcp	depth=20
-#pragma HLS INTERFACE axis 		port=inflight_queue	depth=20
-#pragma HLS INTERFACE m_axi 	port=rx_buffers	
+#pragma HLS INTERFACE axis 		port=cmd_dma_udp
+#pragma HLS INTERFACE axis 		port=cmd_dma_tcp
+#pragma HLS INTERFACE axis 		port=inflight_queue
+#pragma HLS INTERFACE m_axi 	port=rx_buffers_input	num_read_outstanding=4	num_write_outstanding=4	depth=18*16  offset=slave	bundle=mem
+#pragma HLS INTERFACE m_axi 	port=rx_buffers_output	num_read_outstanding=4	num_write_outstanding=4 depth=18*16  offset=slave	bundle=mem
 #pragma HLS INTERFACE s_axilite port=return
 
+	stream< ap_uint<32> > tmp;
+	//#pragma HLS bind_storage variable=tmp type=LUTRAM
+	//#pragma HLS stream variable=tmp type=fifo depth=32
+	//#pragma HLS dependence variable=rx_buffers_input dependent=false
+	#pragma HLS dataflow
+	read_spares(	nbufs, rx_buffers_input, tmp);
+	enqueue_spares( use_tcp, nbufs, cmd_dma_udp, cmd_dma_tcp, inflight_queue, rx_buffers_output, tmp );
+
+}
+
+void read_spares(
+	ap_uint<32>  		  nbufs,	
+	ap_uint<32>* 		  spare_buffers,
+	stream< ap_uint<32> > &tmp
+){
+	for(ap_uint<32> i=0; i < nbufs; i++){
+		for(ap_uint<32> field=0; field< SPARE_BUFFER_FIELDS; field++){
+			tmp.write(*(spare_buffers + (i * SPARE_BUFFER_FIELDS) + field));
+		}
+	}
+}
+
+void enqueue_spares(
+	ap_uint<32>  		  use_tcp,
+	ap_uint<32>  		  nbufs,	
+	stream< ap_uint<32> > &cmd_dma_udp,
+	stream< ap_uint<32> > &cmd_dma_tcp,
+	stream< ap_uint<32> > &inflight_queue,
+	ap_uint<32> * 		   spare_buffers,
+	stream< ap_uint<32> > &tmp
+){
+	ap_uint<32> status, addrl, addrh,	max_len, dma_tag, rx_tag, rx_len, rx_src, sequence_number;
 	//iterate until you run out of spare buffers
 	for(ap_uint<32> i=0; i < nbufs; i++){
-		#pragma HLS unroll factor=2
-		#pragma HLS pipeline II=1
+		//#pipeline
+		//#II
+		//read 3 instead : using memory latency, read outstanding (multiple)
+		status 			= tmp.read();
+		addrl  			= tmp.read();
+		addrh  			= tmp.read();
+		max_len 		= tmp.read();
+        dma_tag 		= tmp.read();
+        rx_tag 			= tmp.read();
+        rx_len 			= tmp.read();
+        rx_src 			= tmp.read();
+        sequence_number = tmp.read();
 		//look for IDLE spare buffers
-		if(rx_buffers[i].status   == STATUS_IDLE){
+		if(status   == STATUS_IDLE){
 			//issue a cmd
 			if (use_tcp){
 				cmd_dma_tcp.write( 0xC0800000 | DMA_MAX_BTT	); // 31=DRR 30=EOF 29-24=DSA 23=Type 22-0=BTT
-				cmd_dma_tcp.write( rx_buffers[i].addrl		);
-				cmd_dma_tcp.write( rx_buffers[i].addrh		);
+				cmd_dma_tcp.write( addrl					);
+				cmd_dma_tcp.write( addrh					);
 				cmd_dma_tcp.write( 0x2000 					); 	 // 15-12=xCACHE 11-8=xUSER 7-4=RSVD 3-0=TAG
 			}else{
 				cmd_dma_udp.write( 0xC0800000 | DMA_MAX_BTT	); // 31=DRR 30=EOF 29-24=DSA 23=Type 22-0=BTT
-				cmd_dma_udp.write( rx_buffers[i].addrl		);
-				cmd_dma_udp.write( rx_buffers[i].addrh		);
+				cmd_dma_udp.write( addrl					);
+				cmd_dma_udp.write( addrh					);
 				cmd_dma_udp.write( 0x2000 					); 	 // 15-12=xCACHE 11-8=xUSER 7-4=RSVD 3-0=TAG
 			}
-			//write to the inflight queue the spare buffer address in the exchange memory
+			//write to the in flight queue the spare buffer address in the exchange memory
 			inflight_queue.write(i);
 			//update spare buffer status
-			rx_buffers[i].status 	= STATUS_ENQUEUED;
+			*(spare_buffers + (i * SPARE_BUFFER_FIELDS) + STATUS_OFFSET) 	= STATUS_ENQUEUED ;
 		}
 	}
-
 }
+//from impl/ip/xdma_enqueue_hw.h
+// ==============================================================
+// Vivado(TM) HLS - High-Level Synthesis from C, C++ and SystemC v2020.1 (64-bit)
+// Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+// ==============================================================
+// AXILiteS
+// 0x00 : Control signals
+//        bit 0  - ap_start (Read/Write/COH)
+//        bit 1  - ap_done (Read/COR)
+//        bit 2  - ap_idle (Read)
+//        bit 3  - ap_ready (Read)
+//        bit 7  - auto_restart (Read/Write)
+//        others - reserved
+// 0x04 : Global Interrupt Enable Register
+//        bit 0  - Global Interrupt Enable (Read/Write)
+//        others - reserved
+// 0x08 : IP Interrupt Enable Register (Read/Write)
+//        bit 0  - Channel 0 (ap_done)
+//        bit 1  - Channel 1 (ap_ready)
+//        others - reserved
+// 0x0c : IP Interrupt Status Register (Read/TOW)
+//        bit 0  - Channel 0 (ap_done)
+//        bit 1  - Channel 1 (ap_ready)
+//        others - reserved
+// 0x10 : Data signal of use_tcp_V
+//        bit 31~0 - use_tcp_V[31:0] (Read/Write)
+// 0x14 : reserved
+// 0x18 : Data signal of nbufs_V
+//        bit 31~0 - nbufs_V[31:0] (Read/Write)
+// 0x1c : reserved
+// 0x20 : Data signal of rx_buffers_addrl
+//        bit 31~0 - rx_buffers_addrl[31:0] (Read/Write)
+// 0x24 : reserved
+// 0x28 : Data signal of rx_buffers_addrh
+//        bit 31~0 - rx_buffers_addrh[31:0] (Read/Write)
+// 0x2c : reserved
+// 0x30 : Data signal of rx_buffers_max_len
+//        bit 31~0 - rx_buffers_max_len[31:0] (Read/Write)
+// 0x34 : reserved
+// 0x38 : Data signal of rx_buffers_dma_tag
+//        bit 31~0 - rx_buffers_dma_tag[31:0] (Read/Write)
+// 0x3c : reserved
+// 0x40 : Data signal of rx_buffers_status
+//        bit 31~0 - rx_buffers_status[31:0] (Read/Write)
+// 0x44 : reserved
+// 0x48 : Data signal of rx_buffers_rx_tag
+//        bit 31~0 - rx_buffers_rx_tag[31:0] (Read/Write)
+// 0x4c : reserved
+// 0x50 : Data signal of rx_buffers_rx_len
+//        bit 31~0 - rx_buffers_rx_len[31:0] (Read/Write)
+// 0x54 : reserved
+// 0x58 : Data signal of rx_buffers_rx_src
+//        bit 31~0 - rx_buffers_rx_src[31:0] (Read/Write)
+// 0x5c : reserved
+// 0x60 : Data signal of rx_buffers_sequence_number
+//        bit 31~0 - rx_buffers_sequence_number[31:0] (Read/Write)
+// 0x64 : reserved
+// (SC = Self Clear, COR = Clear on Read, TOW = Toggle on Write, COH = Clear on Handshake)
+
+//#define XDMA_ENQUEUE_AXILITES_ADDR_AP_CTRL                         0x00
+//#define XDMA_ENQUEUE_AXILITES_ADDR_GIE                             0x04
+//#define XDMA_ENQUEUE_AXILITES_ADDR_IER                             0x08
+//#define XDMA_ENQUEUE_AXILITES_ADDR_ISR                             0x0c
+//#define XDMA_ENQUEUE_AXILITES_ADDR_USE_TCP_V_DATA                  0x10
+//#define XDMA_ENQUEUE_AXILITES_BITS_USE_TCP_V_DATA                  32
+//#define XDMA_ENQUEUE_AXILITES_ADDR_NBUFS_V_DATA                    0x18
+//#define XDMA_ENQUEUE_AXILITES_BITS_NBUFS_V_DATA                    32
+//#define XDMA_ENQUEUE_AXILITES_ADDR_RX_BUFFERS_ADDRL_DATA           0x20
+//#define XDMA_ENQUEUE_AXILITES_BITS_RX_BUFFERS_ADDRL_DATA           32
+//#define XDMA_ENQUEUE_AXILITES_ADDR_RX_BUFFERS_ADDRH_DATA           0x28
+//#define XDMA_ENQUEUE_AXILITES_BITS_RX_BUFFERS_ADDRH_DATA           32
+//#define XDMA_ENQUEUE_AXILITES_ADDR_RX_BUFFERS_MAX_LEN_DATA         0x30
+//#define XDMA_ENQUEUE_AXILITES_BITS_RX_BUFFERS_MAX_LEN_DATA         32
+//#define XDMA_ENQUEUE_AXILITES_ADDR_RX_BUFFERS_DMA_TAG_DATA         0x38
+//#define XDMA_ENQUEUE_AXILITES_BITS_RX_BUFFERS_DMA_TAG_DATA         32
+//#define XDMA_ENQUEUE_AXILITES_ADDR_RX_BUFFERS_STATUS_DATA          0x40
+//#define XDMA_ENQUEUE_AXILITES_BITS_RX_BUFFERS_STATUS_DATA          32
+//#define XDMA_ENQUEUE_AXILITES_ADDR_RX_BUFFERS_RX_TAG_DATA          0x48
+//#define XDMA_ENQUEUE_AXILITES_BITS_RX_BUFFERS_RX_TAG_DATA          32
+//#define XDMA_ENQUEUE_AXILITES_ADDR_RX_BUFFERS_RX_LEN_DATA          0x50
+//#define XDMA_ENQUEUE_AXILITES_BITS_RX_BUFFERS_RX_LEN_DATA          32
+//#define XDMA_ENQUEUE_AXILITES_ADDR_RX_BUFFERS_RX_SRC_DATA          0x58
+//#define XDMA_ENQUEUE_AXILITES_BITS_RX_BUFFERS_RX_SRC_DATA          32
+//#define XDMA_ENQUEUE_AXILITES_ADDR_RX_BUFFERS_SEQUENCE_NUMBER_DATA 0x60
+//#define XDMA_ENQUEUE_AXILITES_BITS_RX_BUFFERS_SEQUENCE_NUMBER_DATA 32
+
 
 
 //inline void dma_cmd_addrh_addrl(stream<ap_uint<32>> &cmd_dmax, unsigned int btt, unsigned int addrh, unsigned int addrl, unsigned int tag){
