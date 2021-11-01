@@ -45,64 +45,26 @@ void dma_enqueue(
 				stream< ap_uint<32> > &cmd_dma_udp,
 				stream< ap_uint<32> > &cmd_dma_tcp,
 				stream< ap_uint<32> > &inflight_queue,
-				ap_uint<32>* rx_buffers_input,
-				ap_uint<32>* rx_buffers_output
+				ap_uint<32>* rx_buffers
 ) {
 #pragma HLS INTERFACE s_axilite port=use_tcp
 #pragma HLS INTERFACE s_axilite port=nbufs
 #pragma HLS INTERFACE axis 		port=cmd_dma_udp
 #pragma HLS INTERFACE axis 		port=cmd_dma_tcp
 #pragma HLS INTERFACE axis 		port=inflight_queue
-#pragma HLS INTERFACE m_axi 	port=rx_buffers_input	num_read_outstanding=4	num_write_outstanding=4	depth=18*16  offset=slave	bundle=mem
-#pragma HLS INTERFACE m_axi 	port=rx_buffers_output	num_read_outstanding=4	num_write_outstanding=4 depth=18*16  offset=slave	bundle=mem
+#pragma HLS INTERFACE m_axi 	port=rx_buffers	depth=9*16  offset=slave num_read_outstanding=4	num_write_outstanding=4 bundle=mem
 #pragma HLS INTERFACE s_axilite port=return
 
-	stream< ap_uint<32> > tmp;
-	//#pragma HLS bind_storage variable=tmp type=LUTRAM
-	//#pragma HLS stream variable=tmp type=fifo depth=32
-	//#pragma HLS dependence variable=rx_buffers_input dependent=false
-	#pragma HLS dataflow
-	read_spares(	nbufs, rx_buffers_input, tmp);
-	enqueue_spares( use_tcp, nbufs, cmd_dma_udp, cmd_dma_tcp, inflight_queue, rx_buffers_output, tmp );
+	ap_uint<32> status, addrl, addrh,	max_len;
 
-}
-
-void read_spares(
-	ap_uint<32>  		  nbufs,	
-	ap_uint<32>* 		  spare_buffers,
-	stream< ap_uint<32> > &tmp
-){
-	for(ap_uint<32> i=0; i < nbufs; i++){
-		for(ap_uint<32> field=0; field< SPARE_BUFFER_FIELDS; field++){
-			tmp.write(*(spare_buffers + (i * SPARE_BUFFER_FIELDS) + field));
-		}
-	}
-}
-
-void enqueue_spares(
-	ap_uint<32>  		  use_tcp,
-	ap_uint<32>  		  nbufs,	
-	stream< ap_uint<32> > &cmd_dma_udp,
-	stream< ap_uint<32> > &cmd_dma_tcp,
-	stream< ap_uint<32> > &inflight_queue,
-	ap_uint<32> * 		   spare_buffers,
-	stream< ap_uint<32> > &tmp
-){
-	ap_uint<32> status, addrl, addrh,	max_len, dma_tag, rx_tag, rx_len, rx_src, sequence_number;
 	//iterate until you run out of spare buffers
-	for(ap_uint<32> i=0; i < nbufs; i++){
-		//#pipeline
-		//#II
-		//read 3 instead : using memory latency, read outstanding (multiple)
-		status 			= tmp.read();
-		addrl  			= tmp.read();
-		addrh  			= tmp.read();
-		max_len 		= tmp.read();
-        dma_tag 		= tmp.read();
-        rx_tag 			= tmp.read();
-        rx_len 			= tmp.read();
-        rx_src 			= tmp.read();
-        sequence_number = tmp.read();
+	elaborate_spares: for(ap_uint<32> i=0; i < nbufs; i++){
+		#pragma HLS pipeline II=1 
+		status 			= *(rx_buffers + (i * SPARE_BUFFER_FIELDS) + 0);
+		addrl  			= *(rx_buffers + (i * SPARE_BUFFER_FIELDS) + 1);
+		addrh  			= *(rx_buffers + (i * SPARE_BUFFER_FIELDS) + 2);
+		max_len 		= *(rx_buffers + (i * SPARE_BUFFER_FIELDS) + 3);
+
 		//look for IDLE spare buffers
 		if(status   == STATUS_IDLE){
 			//issue a cmd
@@ -120,10 +82,12 @@ void enqueue_spares(
 			//write to the in flight queue the spare buffer address in the exchange memory
 			inflight_queue.write(i);
 			//update spare buffer status
-			*(spare_buffers + (i * SPARE_BUFFER_FIELDS) + STATUS_OFFSET) 	= STATUS_ENQUEUED ;
+			rx_buffers[ (i * SPARE_BUFFER_FIELDS) + STATUS_OFFSET ] 	= STATUS_ENQUEUED ;
 		}
 	}
+
 }
+
 //from impl/ip/xdma_enqueue_hw.h
 // ==============================================================
 // Vivado(TM) HLS - High-Level Synthesis from C, C++ and SystemC v2020.1 (64-bit)

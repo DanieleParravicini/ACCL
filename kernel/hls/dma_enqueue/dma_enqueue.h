@@ -29,8 +29,7 @@
         stream< ap_uint<32> > &cmd_dma_tcp,
         stream< ap_uint<32> > &cmd_dma_udp,
         stream< ap_uint<32> > &inflight_queue,
-        ap_uint<32>*         rx_buffers_input,
-        ap_uint<32>*         rx_buffers_output
+        ap_uint<32>*         rx_buffers
     );
 
     #define STATUS_OFFSET           0
