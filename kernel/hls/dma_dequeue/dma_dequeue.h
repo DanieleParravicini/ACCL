@@ -7,11 +7,11 @@
 	using namespace hls;
 
     typedef struct {
+        unsigned int status;
         unsigned int addrl;
         unsigned int addrh;
         unsigned int max_len;
         unsigned int dma_tag;
-        unsigned int status;
         unsigned int rx_tag;
         unsigned int rx_len;
         unsigned int rx_src;
@@ -22,14 +22,26 @@
     #define STATUS_RESERVED 0x02
     #define STATUS_ERROR    0x04
     #define DMA_MAX_BTT     0x7FFFFF
+    
+    #define STATUS_OFFSET           0
+    #define ADDRL_OFFSET            1
+    #define ADDRH_OFFSET            2
+    #define MAX_LEN_OFFSET          3
+    #define DMA_TAG_OFFSET          4
+    #define RX_TAG_OFFSET           5
+    #define RX_LEN_OFFSET           6
+    #define RX_SRC_OFFSET           7
+    #define SEQUENCE_NUMBER_OFFSET  8   
+    #define SPARE_BUFFER_SIZE       36
+    #define SPARE_BUFFER_FIELDS     9       
 
     void dma_dequeue(	unsigned int use_tcp,
-				stream<ap_uint<32>> &sts_tcp,
-				stream<ap_uint<32>> &sts_udp,
-                stream<ap_uint<32>> &header_udp,
-				stream<ap_uint<32>> &header_tcp,
-				stream<ap_uint<64>> &inflight_queue,
-				volatile uint* exchange_mem
+				stream< ap_uint<32> > &sts_tcp,
+				stream< ap_uint<32> > &sts_udp,
+                stream< ap_uint<32> > &header_udp,
+				stream< ap_uint<32> > &header_tcp,
+				stream< ap_uint<32> > &inflight_queue,
+				ap_uint<32>*           exchange_mem
     );
 
 #endif

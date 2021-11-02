@@ -20,79 +20,84 @@
 using namespace hls;
 using namespace std;
 
-void dma_dequeue_tcp(
-	stream<ap_uint<32>> &sts_dma_tcp,
-	stream<ap_uint<32>> &header_tcp,
-	stream<ap_uint<64>> &inflight_queue,
-	volatile uint* exchange_mem
-);
-
-void dma_dequeue_tcp(
-	stream<ap_uint<32>> &sts_dma_udp,
-	stream<ap_uint<32>> &header_udp,
-	stream<ap_uint<64>> &inflight_queue,
-	volatile uint* exchange_mem
-);
-
 void dma_dequeue(	
 				unsigned int use_tcp,
-				stream<ap_uint<32>> &sts_dma_udp,
-				stream<ap_uint<32>> &sts_dma_tcp,
-				stream<ap_uint<32>> &header_udp,
-				stream<ap_uint<32>> &header_tcp,
-				stream<uint*> &inflight_queue,
-				volatile uint* exchange_mem
+				stream< ap_uint<32> > &sts_dma_udp,
+				stream< ap_uint<32> > &sts_dma_tcp,
+				stream< ap_uint<32> > &header_udp,
+				stream< ap_uint<32> > &header_tcp,
+				stream< ap_uint<32> > &inflight_queue,
+				ap_uint<32>* 		   exchange_mem
 ) {
 #pragma HLS INTERFACE s_axilite port=use_tcp
 #pragma HLS INTERFACE axis 		port=sts_dma_udp
 #pragma HLS INTERFACE axis 		port=sts_dma_tcp
+#pragma HLS INTERFACE axis 		port=header_udp
+#pragma HLS INTERFACE axis 		port=header_tcp
 #pragma HLS INTERFACE axis 		port=inflight_queue
-#pragma HLS INTERFACE m_axi 	port=exchange_mem
+#pragma HLS INTERFACE m_axi 	port=exchange_mem depth=16*9 offset=slave num_read_outstanding=4	num_write_outstanding=4  bundle=mem
 #pragma HLS INTERFACE s_axilite port=return
 
-	//if(use_tcp){
-		dma_dequeue_tcp(sts_dma_tcp, header_udp, inflight_queue, exchange_mem);
-	//}else{
-	//	dma_dequeue_udp(sts_dma_udp, header_tcp, inflight_queue, exchange_mem);
-	//}
-}
+	if(use_tcp){
+		//get rx_buffer pointer from inflight queue
+		ap_uint<32> spare_idx = inflight_queue.read();
 
-
-void dma_dequeue_udp(
-	stream<ap_uint<32>> &sts_dma_udp,
-	stream<ap_uint<32>> &header_udp,
-	stream<uint*> &inflight_queue,
-	volatile uint* exchange_mem
-){
-	//get rx_buffer pointer from inflight queue
-	ap_uint<64> tmp = inflight_queue.read();
-	exchange_mem 		= (void* )( tmp );
-	rx_buffer * spare 	= (rx_buffer *) exchange_mem;
-
-	if (spare->status != STATUS_ENQUEUED){
-		spare->status = STATUS_ERROR;
-	}else{
-		int btt;
-		btt 					= header_udp.read();
-		spare->rx_len 		  	= btt;
-		spare->rx_tag 		  	= header_udp.read();
-		spare->rx_src 		  	= header_udp.read();
-		spare->sequence_number 	= header_udp.read();
-		int status = sts_dma_udp.read();
-		//dma sts
-		// 3-0 TAG 
-		// 4 INTERNAL 	ERROR usually a btt=0 trigger this
-		// 5 DECODE 	ERROR address decode error timeout
-		// 6 SLAVE 		ERROR DMA encountered a slave reported error
-		// 7 OKAY		the associated transfer command has been completed with the OKAY response on all intermediate transfers.
-		if( (status & 0x000000f0) | !(status & 0x80000000)| ( ( (status & 0x7FFFFF00) >> 8) != btt) ){
-			spare->status = STATUS_ERROR;
+		if ( *( exchange_mem + (spare_idx * SPARE_BUFFER_FIELDS) + STATUS_OFFSET) != STATUS_ENQUEUED){
+			 exchange_mem[ spare_idx * SPARE_BUFFER_FIELDS + STATUS_OFFSET] = STATUS_ERROR;
 		}else{
-			spare->status = STATUS_RESERVED;
+			#pragma HLS PIPELINE II=1
+			int btt;
+			btt 					= header_tcp.read();
+			exchange_mem[ spare_idx * SPARE_BUFFER_FIELDS + RX_TAG_OFFSET			]	= header_tcp.read();
+			exchange_mem[ spare_idx * SPARE_BUFFER_FIELDS + RX_LEN_OFFSET			]	= btt;
+			exchange_mem[ spare_idx * SPARE_BUFFER_FIELDS + RX_SRC_OFFSET			]	= header_tcp.read();
+			exchange_mem[ spare_idx * SPARE_BUFFER_FIELDS + SEQUENCE_NUMBER_OFFSET	]	= header_tcp.read();
+			int status = sts_dma_tcp.read();
+			//dma sts
+			// 3-0 TAG 
+			// 4 INTERNAL 	ERROR usually a btt=0 trigger this
+			// 5 DECODE 	ERROR address decode error timeout
+			// 6 SLAVE 		ERROR DMA encountered a slave reported error
+			// 7 OKAY		the associated transfer command has been completed with the OKAY response on all intermediate transfers.
+			if( ((status & 0x00000080) == 0) | (status & 0x00000070) | !(status & 0x80000000)| ( ( (status & 0x7FFFFF00) >> 8) != btt) ){
+				exchange_mem[ spare_idx * SPARE_BUFFER_FIELDS + STATUS_OFFSET] = STATUS_ERROR;
+			}else{
+				exchange_mem[ spare_idx * SPARE_BUFFER_FIELDS + STATUS_OFFSET] = STATUS_RESERVED;
+			}
 		}
 
+	}else{
+
+		//get rx_buffer pointer from inflight queue
+		ap_uint<32> spare_idx = inflight_queue.read();
+
+		if (  *( exchange_mem + (spare_idx * SPARE_BUFFER_FIELDS) + STATUS_OFFSET) != STATUS_ENQUEUED){
+			 exchange_mem[ spare_idx * SPARE_BUFFER_FIELDS + STATUS_OFFSET] = STATUS_ERROR;
+		}else{
+			#pragma HLS PIPELINE II=1
+			int btt;
+			btt 					= header_udp.read();
+			exchange_mem[ spare_idx * SPARE_BUFFER_FIELDS + RX_LEN_OFFSET			]	= btt;
+			exchange_mem[ spare_idx * SPARE_BUFFER_FIELDS + RX_TAG_OFFSET			]	= header_udp.read();
+			exchange_mem[ spare_idx * SPARE_BUFFER_FIELDS + RX_SRC_OFFSET			]	= header_udp.read();
+			exchange_mem[ spare_idx * SPARE_BUFFER_FIELDS + SEQUENCE_NUMBER_OFFSET	]	= header_udp.read();
+			int status = sts_dma_udp.read();
+			//dma sts
+			// 3-0 TAG 
+			// 4 INTERNAL 	ERROR usually a btt=0 trigger this
+			// 5 DECODE 	ERROR address decode error timeout
+			// 6 SLAVE 		ERROR DMA encountered a slave reported error
+			// 7 OKAY		the associated transfer command has been completed with the OKAY response on all intermediate transfers.
+			if( ((status & 0x00000080) == 0) | (status & 0x00000070) | !(status & 0x80000000)| ( ( (status & 0x7FFFFF00) >> 8) != btt) ){
+				exchange_mem[ spare_idx * SPARE_BUFFER_FIELDS + STATUS_OFFSET] = STATUS_ERROR;
+			}else{
+				exchange_mem[ spare_idx * SPARE_BUFFER_FIELDS + STATUS_OFFSET] = STATUS_RESERVED;
+			}
+		}
 	}
 }
+
+
 /*
 void dma_dequeue_tcp(
 	stream<ap_uint<32>> &sts_dma_tcp,

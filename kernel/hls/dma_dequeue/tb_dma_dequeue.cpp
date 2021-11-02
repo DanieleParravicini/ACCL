@@ -24,8 +24,8 @@ using namespace std;
 int main(){
 	stream<ap_uint<32>> sts_dma_tcp	, sts_dma_udp;
 	stream<ap_uint<32>> header_tcp	, header_udp;
-	stream<ap_uint<64>> inflight_queue;
-	int num_test_spares = 10;
+	stream<ap_uint<32>> inflight_queue;
+	int num_test_spares = 16;
 	int initial_btt		= 100,  initial_tag     = 0x42, initial_src = 0, initial_sequence_number = 666;
 
 	void * ptr 					 = malloc(sizeof(rx_buffer)*num_test_spares+sizeof(unsigned int));
@@ -42,8 +42,8 @@ int main(){
 		cout << "Buffer "<< i << " status:" << buffers[i].status << " addr: " << hex << buffers[i].addrh << hex << buffers[i].addrl << endl;
 		if ( (i % 2) == 0 ){
 
-			//put spare_buffer_addr in the inflight queue
-			inflight_queue.write((long long int) buffers); 
+			//put spare index in the inflight queue
+			inflight_queue.write( i );
 			//create header 
 			header_tcp.write((initial_btt 			 + i) & DMA_MAX_BTT);
 			header_tcp.write(initial_tag 			 + i);
@@ -51,28 +51,32 @@ int main(){
 			header_tcp.write(initial_sequence_number + i);
 			//create dma sts
 			if( i % 4 == 0){
-				sts_dma_tcp.write(0x000000f0);
+				//create an ok status
+				sts_dma_tcp.write(0x80000080 | ((initial_btt + i) & DMA_MAX_BTT) << 8 );
 			}else{
-				sts_dma_tcp.write(0x80000000 | ((initial_btt + 1) & DMA_MAX_BTT) << 8 );
+				//create an error status
+				sts_dma_tcp.write(0x00000070 );
 			}
 		}
 	}
 
-	dma_dequeue( 1, sts_dma_udp, sts_dma_tcp, header_udp, header_tcp, inflight_queue, (uint *)ptr);
+	for (int i =0; i < ((int)(num_test_spares / 2)); i++){
+		dma_dequeue( 1, sts_dma_udp, sts_dma_tcp, header_udp, header_tcp, inflight_queue, ((ap_uint<32>*) ptr)+1);
+	}
 
 	for(int i = 0; i < num_test_spares; i++ ){
-		if (i %2 ){
-			assert(buffers[i].status == STATUS_RESERVED) ;
-			assert(buffers[i].addrl  == 0xdeadbeef + i ) ;
-			assert(buffers[i].addrh  == 0			   ) ;
-		}else if( (i % 4) == 1){
-			assert(buffers[i].status == STATUS_ERROR) ;
-			assert(buffers[i].addrl  == 0xdeadbeef + i ) ;
-			assert(buffers[i].addrh  == 0			   ) ;
+		if ( (i %2) == 1 ){
+			if(buffers[i].status != STATUS_RESERVED	) {printf("status fail\n"); return 1;};
+			if(buffers[i].addrl  != 0xdeadbeef + i  ) {printf("addrl  fail\n"); return 1;};
+			if(buffers[i].addrh  != 0			    ) {printf("addrh  fail\n"); return 1;};
+		}else if( (i % 4) == 0){
+			if(buffers[i].status != STATUS_RESERVED	) {printf("status fail\n"); return 1;};
+			if(buffers[i].addrl  != 0xdeadbeef + i  ) {printf("addrl  fail\n"); return 1;};
+			if(buffers[i].addrh  != 0			    ) {printf("addrh  fail\n"); return 1;};
 		}else{
-			assert(buffers[i].status == STATUS_RESERVED) ;
-			assert(buffers[i].addrl  == 0xdeadbeef + i ) ;
-			assert(buffers[i].addrh  == 0			   ) ;
+			if(buffers[i].status != STATUS_ERROR	) {printf("status fail\n"); return 1;};
+			if(buffers[i].addrl  != 0xdeadbeef + i  ) {printf("addrl  fail\n"); return 1;};
+			if(buffers[i].addrh  != 0			    ) {printf("addrh  fail\n"); return 1;};
 		}
 		
 		cout << "Buffer "<< i << " status:" << buffers[i].status << " addr: " << hex << buffers[i].addrh << hex << buffers[i].addrl << endl;
