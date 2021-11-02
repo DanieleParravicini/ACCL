@@ -17,10 +17,10 @@
 
 TARGET=ip
 DEVICE=xcu250-figd2104-2L-e
-HOSTCTRL_IP=build_dma_enqueue/sol1/impl/ip/xilinx_com_hls_dma_enqueue_1_0.zip
+DMA_ENQUEUE_IP=build_dma_enqueue/sol1/impl/ip/xilinx_com_hls_dma_enqueue_1_0.zip
 
-all: $(HOSTCTRL_IP)
+all: $(DMA_ENQUEUE_IP)
 
-$(HOSTCTRL_IP): build_dma_enqueue.tcl dma_enqueue.cpp 
+$(DMA_ENQUEUE_IP): build_dma_enqueue.tcl dma_enqueue.cpp 
 	vitis_hls $< -tclargs $(TARGET) $(DEVICE)
 

@@ -52,7 +52,7 @@ void dma_enqueue(
 #pragma HLS INTERFACE axis 		port=cmd_dma_udp
 #pragma HLS INTERFACE axis 		port=cmd_dma_tcp
 #pragma HLS INTERFACE axis 		port=inflight_queue
-#pragma HLS INTERFACE m_axi 	port=rx_buffers	depth=9*16  offset=slave num_read_outstanding=4	num_write_outstanding=4 bundle=mem
+#pragma HLS INTERFACE m_axi 	port=rx_buffers	depth=9*16 offset=slave num_read_outstanding=4	num_write_outstanding=4 bundle=mem
 #pragma HLS INTERFACE s_axilite port=return
 
 	ap_uint<32> status, addrl, addrh,	max_len;
@@ -60,10 +60,10 @@ void dma_enqueue(
 	//iterate until you run out of spare buffers
 	elaborate_spares: for(ap_uint<32> i=0; i < nbufs; i++){
 		#pragma HLS pipeline II=1 
-		status 			= *(rx_buffers + (i * SPARE_BUFFER_FIELDS) + 0);
-		addrl  			= *(rx_buffers + (i * SPARE_BUFFER_FIELDS) + 1);
-		addrh  			= *(rx_buffers + (i * SPARE_BUFFER_FIELDS) + 2);
-		max_len 		= *(rx_buffers + (i * SPARE_BUFFER_FIELDS) + 3);
+		status 			= *(rx_buffers + (i * SPARE_BUFFER_FIELDS) + STATUS_OFFSET	);
+		addrl  			= *(rx_buffers + (i * SPARE_BUFFER_FIELDS) + ADDRL_OFFSET	);
+		addrh  			= *(rx_buffers + (i * SPARE_BUFFER_FIELDS) + ADDRH_OFFSET	);
+		max_len 		= *(rx_buffers + (i * SPARE_BUFFER_FIELDS) + MAX_LEN_OFFSET	);
 
 		//look for IDLE spare buffers
 		if(status   == STATUS_IDLE){

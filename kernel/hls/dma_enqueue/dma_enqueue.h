@@ -23,15 +23,6 @@
     #define STATUS_ERROR    0x04
     #define DMA_MAX_BTT     0x7FFFFF
 
-    void dma_enqueue(	
-        ap_uint<32>          use_tcp,
-        ap_uint<32>          nbufs,
-        stream< ap_uint<32> > &cmd_dma_tcp,
-        stream< ap_uint<32> > &cmd_dma_udp,
-        stream< ap_uint<32> > &inflight_queue,
-        ap_uint<32>*         rx_buffers
-    );
-
     #define STATUS_OFFSET           0
     #define ADDRL_OFFSET            1
     #define ADDRH_OFFSET            2
@@ -43,4 +34,14 @@
     #define SEQUENCE_NUMBER_OFFSET  8   
     #define SPARE_BUFFER_SIZE       36
     #define SPARE_BUFFER_FIELDS     9       
+    
+    void dma_enqueue(	
+        ap_uint<32>          use_tcp,
+        ap_uint<32>          nbufs,
+        stream< ap_uint<32> > &cmd_dma_tcp,
+        stream< ap_uint<32> > &cmd_dma_udp,
+        stream< ap_uint<32> > &inflight_queue,
+        ap_uint<32>*         rx_buffers
+    );
+
 #endif
