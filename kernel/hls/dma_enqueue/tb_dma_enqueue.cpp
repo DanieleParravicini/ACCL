@@ -54,12 +54,14 @@ int test_even(int use_tcp, int num_spare_buffers=16){
 		//only even buffers are enqueued
 		cout << "Buffer "<< i << " status:" << hex << buffers[(i*SPARE_BUFFER_FIELDS) + STATUS_OFFSET] << endl;
 		if ( (i % 2 ) == 1 ){
+			//check that odd spare buffers are left unmodified
 			if( buffers[i*SPARE_BUFFER_FIELDS + STATUS_OFFSET] != STATUS_RESERVED ) { printf("fail status"		); return 1};
 			if( buffers[i*SPARE_BUFFER_FIELDS + ADDRL_OFFSET ] != 0xdeadbeef + i  ) { printf("fail addrl"		); return 1};
 			if( buffers[i*SPARE_BUFFER_FIELDS + ADDRH_OFFSET ] != 0 			  ) { printf("fail addrh"		); return 1};
 			continue;
 		}
 		uint dma_cmd [4];
+		//read dma cmd according to the supplied flag
 		if (use_tcp){
 			dma_cmd[0] = cmd_dma_tcp.read();
 			dma_cmd[1] = cmd_dma_tcp.read();
@@ -71,10 +73,15 @@ int test_even(int use_tcp, int num_spare_buffers=16){
 			dma_cmd[2] = cmd_dma_udp.read();
 			dma_cmd[3] = cmd_dma_udp.read();
 		}
-
+		//read next spare buffer enqueued
 		ap_uint<32> buffer_idx = inflight_queue.read();
 		cout << hex << dma_cmd[0]  << hex << dma_cmd[1] << hex << dma_cmd[2] << hex << dma_cmd[3] << endl;
 		cout << "inflight queue "  << buffer_idx << endl;
+		//check that:
+		//status   is enqueued
+		//address are unchanged
+		//cmd 	   is created as it should be
+		//enqueued spare buffer id is what is expected (i)
 		if( buffers[i*SPARE_BUFFER_FIELDS + STATUS_OFFSET] != STATUS_ENQUEUED 								) { printf("fail status\n"	  ); return 1};
 		if( buffers[i*SPARE_BUFFER_FIELDS + ADDRL_OFFSET ] != 0xdeadbeef + i  								) { printf("fail addrl\n"	  ); return 1};
 		if( buffers[i*SPARE_BUFFER_FIELDS + ADDRH_OFFSET ] != 0 				 							) { printf("fail addrh\n"	  ); return 1};
@@ -99,8 +106,9 @@ int test_all(int use_tcp, int num_spare_buffers=4){
 	cout << "Buffer_in  base addr " << hex << buffers  << endl;
 	//cout << "Buffer_out base addr " << hex << buffers1 << endl;
 
- 	//fill buffers with dummy data only even buffer are enqueued
+ 	//fill buffers with dummy data
 	for(int i = 0; i < num_spare_buffers; i++ ){
+		//all buffers are filled
 		buffers[i*SPARE_BUFFER_FIELDS + STATUS_OFFSET] = STATUS_IDLE ;
 		buffers[i*SPARE_BUFFER_FIELDS + ADDRL_OFFSET ] = 0xdeadbeef + i ;
 		buffers[i*SPARE_BUFFER_FIELDS + ADDRH_OFFSET ] = 0;
@@ -115,12 +123,12 @@ int test_all(int use_tcp, int num_spare_buffers=4){
 				inflight_queue,
 				buffers_addr
 	);
-
+	//check results
 	for (ap_uint<32> i = 0; i < num_spare_buffers; i++)
 	{
-		//only even buffers are enqueued
+		//all buffers are expected to be reserved
 		cout << "Buffer "<< i << " status:" << hex << buffers[(i*SPARE_BUFFER_FIELDS) + STATUS_OFFSET] << endl;
-
+		//get dma cmd according to the flag
 		uint dma_cmd [4];
 		if (use_tcp){
 			dma_cmd[0] = cmd_dma_tcp.read();
@@ -132,11 +140,16 @@ int test_all(int use_tcp, int num_spare_buffers=4){
 			dma_cmd[1] = cmd_dma_udp.read();
 			dma_cmd[2] = cmd_dma_udp.read();
 			dma_cmd[3] = cmd_dma_udp.read();
-		}
-
+		}	
+		//get enqueued spare buffer id
 		ap_uint<32> buffer_idx = inflight_queue.read();
 		cout << hex << dma_cmd[0]  << hex << dma_cmd[1] << hex << dma_cmd[2] << hex << dma_cmd[3] << endl;
 		cout << "inflight queue "  << buffer_idx << endl;
+		//check that:
+		//status   is enqueued
+		//address are unchanged
+		//cmd 	   is created as it should be
+		//enqueued spare buffer id is what is expected (i)
 		if( buffers[i*SPARE_BUFFER_FIELDS + STATUS_OFFSET] != STATUS_ENQUEUED 								) { printf("fail status\n"	  ); return 1};
 		if( buffers[i*SPARE_BUFFER_FIELDS + ADDRL_OFFSET ] != 0xdeadbeef + i  								) { printf("fail addrl\n"	  ); return 1};
 		if( buffers[i*SPARE_BUFFER_FIELDS + ADDRH_OFFSET ] != 0 				 							) { printf("fail addrh\n"	  ); return 1};

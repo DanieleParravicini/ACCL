@@ -79,10 +79,10 @@ void dma_enqueue(
 				cmd_dma_udp.write( addrh					);
 				cmd_dma_udp.write( 0x2000 					); 	 // 15-12=xCACHE 11-8=xUSER 7-4=RSVD 3-0=TAG
 			}
-			//write to the in flight queue the spare buffer address in the exchange memory
-			inflight_queue.write(i);
 			//update spare buffer status
 			rx_buffers[ (i * SPARE_BUFFER_FIELDS) + STATUS_OFFSET ] 	= STATUS_ENQUEUED ;
+			//write to the in flight queue the spare buffer address in the exchange memory
+			inflight_queue.write(i);
 		}
 	}
 
