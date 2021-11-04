@@ -68,7 +68,7 @@ if {$do_sim} {
 if {$do_syn} {
     set_part $device
     create_clock -period 4 -name default
-    config_interface -m_axi_addr64 
+    config_interface -m_axi_addr64=false 
     csynth_design
 }
 
