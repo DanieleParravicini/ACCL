@@ -723,7 +723,8 @@ proc create_hier_cell_control { parentCell nameHier } {
                                                                     [get_bd_pins inflight_queue/s_axis_aresetn]\
                                                                     [get_bd_pins sts_header_cmd_switch/s_axi_ctrl_aresetn]\
                                                                     [get_bd_pins sts_header_cmd_switch/aresetn]
-
+  #create hierarchy for dma_enqueue/dma_dequeue/dma_ic 
+  group_bd_cells dma_harden [get_bd_cells control/dma_dequeue_0] [get_bd_cells control/inflight_queue] [get_bd_cells control/dma_enqueue_0] [get_bd_cells control/dma_memory_ic]
   # interrupt generation
   connect_bd_net -net rx_udp_cmd_count    [get_bd_pins compute_rx_udp_cmd_nonzero/Op1   ] [get_bd_pins fifo_dma0_s2mm_cmd/axis_wr_data_count]
   connect_bd_net -net rx_udp_cmd_nonzero  [get_bd_pins compute_rx_udp_cmd_nonzero/Res   ] [get_bd_pins compute_rx_udp_cmd_zero/Op1]
