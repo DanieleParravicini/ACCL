@@ -640,12 +640,12 @@ proc create_hier_cell_control { parentCell nameHier } {
   delete_bd_objs      [get_bd_intf_nets microblaze_0_M0_AXIS          	]
   connect_bd_intf_net [get_bd_intf_pins microblaze_0/M0_AXIS            ] [get_bd_intf_pins sts_header_cmd_switch/S06_AXIS]
   connect_bd_intf_net [get_bd_intf_pins dma_enqueue_0/cmd_dma_udp_V     ] [get_bd_intf_pins sts_header_cmd_switch/S07_AXIS]
-  connect_bd_intf_net [get_bd_intf_pins sts_header_cmd_switch/M08_AXIS  ] [get_bd_intf_pins fifo_dma0_s2mm_cmd/S_AXIS]
+  connect_bd_intf_net [get_bd_intf_pins sts_header_cmd_switch/M09_AXIS  ] [get_bd_intf_pins fifo_dma0_s2mm_cmd/S_AXIS]
   #dma2_cmd
   delete_bd_objs      [get_bd_intf_nets microblaze_0_M4_AXIS            ]
   connect_bd_intf_net [get_bd_intf_pins microblaze_0/M4_AXIS            ] [get_bd_intf_pins sts_header_cmd_switch/S04_AXIS]
   connect_bd_intf_net [get_bd_intf_pins dma_enqueue_0/cmd_dma_tcp_V     ] [get_bd_intf_pins sts_header_cmd_switch/S05_AXIS]
-  connect_bd_intf_net [get_bd_intf_pins sts_header_cmd_switch/M09_AXIS  ] [get_bd_intf_pins fifo_dma2_s2mm_cmd/S_AXIS]
+  connect_bd_intf_net [get_bd_intf_pins sts_header_cmd_switch/M08_AXIS  ] [get_bd_intf_pins fifo_dma2_s2mm_cmd/S_AXIS]
   # Clocks and resets
   connect_bd_net -net SYS_Rst_1 [get_bd_pins microblaze_0_local_memory/SYS_Rst] [get_bd_pins proc_sys_reset_0/peripheral_reset]
   connect_bd_net [get_bd_pins ap_clk] [get_bd_pins fifo_depacketizer_sts/s_axis_aclk] \
@@ -724,7 +724,7 @@ proc create_hier_cell_control { parentCell nameHier } {
                                                                     [get_bd_pins sts_header_cmd_switch/s_axi_ctrl_aresetn]\
                                                                     [get_bd_pins sts_header_cmd_switch/aresetn]
   #create hierarchy for dma_enqueue/dma_dequeue/dma_ic 
-  group_bd_cells dma_harden [get_bd_cells control/dma_dequeue_0] [get_bd_cells control/inflight_queue] [get_bd_cells control/dma_enqueue_0] [get_bd_cells control/dma_memory_ic]
+  group_bd_cells dma_harden [get_bd_cells dma_dequeue_0] [get_bd_cells inflight_queue] [get_bd_cells dma_enqueue_0] [get_bd_cells dma_memory_ic]
   # interrupt generation
   connect_bd_net -net rx_udp_cmd_count    [get_bd_pins compute_rx_udp_cmd_nonzero/Op1   ] [get_bd_pins fifo_dma0_s2mm_cmd/axis_wr_data_count]
   connect_bd_net -net rx_udp_cmd_nonzero  [get_bd_pins compute_rx_udp_cmd_nonzero/Res   ] [get_bd_pins compute_rx_udp_cmd_zero/Op1]

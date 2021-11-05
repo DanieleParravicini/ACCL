@@ -405,6 +405,8 @@ void cfg_switch(unsigned int scenario, unsigned int arith) {
 	apply_switch_config(ARITH_SWITCH_BASEADDR);
 }
 
+
+
 //retrieves the communicator
 static inline communicator find_comm(unsigned int adr){
 	communicator ret;
@@ -487,6 +489,93 @@ static inline void ack_packetizer(communicator * world, unsigned int dst_rank,un
 		}
 		num_msg -=1;
 	}
+}
+
+void config_sts_cmd_header_switch(unsigned int use_dma_enqueue_dequeue){
+
+	if(use_dma_enqueue_dequeue){
+		disable_switch_datapath(STS_CMD_HEADER_BASE_ADDRESS,											   AXIS_STS_CMD_HEADER_M_HEADER_TCP_microblaze  );
+		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_S_HEADER_TCP			 , AXIS_STS_CMD_HEADER_M_HEADER_TCP_dma_dequeue );
+		disable_switch_datapath(STS_CMD_HEADER_BASE_ADDRESS,											   AXIS_STS_CMD_HEADER_M_HEADER_UDP_microblaze  );
+		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_S_HEADER_UDP			 , AXIS_STS_CMD_HEADER_M_HEADER_UDP_dma_dequeue );
+		disable_switch_datapath(STS_CMD_HEADER_BASE_ADDRESS,											   AXIS_STS_CMD_HEADER_M_DMA_STS_UDP_microblaze );
+		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_S_DMA_STS_UDP			 , AXIS_STS_CMD_HEADER_M_DMA_STS_UDP_dma_dequeue);
+		disable_switch_datapath(STS_CMD_HEADER_BASE_ADDRESS,											   AXIS_STS_CMD_HEADER_M_DMA_STS_TCP_microblaze );
+		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_S_DMA_STS_TCP			 , AXIS_STS_CMD_HEADER_M_DMA_STS_TCP_dma_dequeue);
+		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_S_DMA_CMD_UDP_dma_enqueue, AXIS_STS_CMD_HEADER_M_DMA_CMD_UDP            );
+		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_S_DMA_CMD_TCP_dma_enqueue, AXIS_STS_CMD_HEADER_M_DMA_CMD_TCP            );
+	}else{
+		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_S_HEADER_TCP			, AXIS_STS_CMD_HEADER_M_HEADER_TCP_microblaze  );
+		disable_switch_datapath(STS_CMD_HEADER_BASE_ADDRESS												, AXIS_STS_CMD_HEADER_M_HEADER_TCP_dma_dequeue );
+		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_S_HEADER_UDP			, AXIS_STS_CMD_HEADER_M_HEADER_UDP_microblaze  );
+		disable_switch_datapath(STS_CMD_HEADER_BASE_ADDRESS												, AXIS_STS_CMD_HEADER_M_HEADER_UDP_dma_dequeue );
+		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_S_DMA_STS_UDP			, AXIS_STS_CMD_HEADER_M_DMA_STS_UDP_microblaze );
+		disable_switch_datapath(STS_CMD_HEADER_BASE_ADDRESS												, AXIS_STS_CMD_HEADER_M_DMA_STS_UDP_dma_dequeue);
+		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_S_DMA_STS_TCP			, AXIS_STS_CMD_HEADER_M_DMA_STS_TCP_microblaze );
+		disable_switch_datapath(STS_CMD_HEADER_BASE_ADDRESS												, AXIS_STS_CMD_HEADER_M_DMA_STS_TCP_dma_dequeue);
+		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_S_DMA_CMD_UDP_microblaze, AXIS_STS_CMD_HEADER_M_DMA_CMD_UDP            );
+		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_S_DMA_CMD_TCP_microblaze, AXIS_STS_CMD_HEADER_M_DMA_CMD_TCP            );
+	}
+	apply_switch_config(STS_CMD_HEADER_BASE_ADDRESS);
+}
+
+static inline void start_dma_dequeue(unsigned int use_tcp) {
+	rx_buffer *rx_buf_list = (rx_buffer*)(RX_BUFFER_COUNT_OFFSET+4);
+	SET( 		DMA_DEQUEUE_ADDRESS+0x10, use_tcp );
+	SET(		DMA_DEQUEUE_ADDRESS+0x18, (unsigned int) rx_buf_list);
+	SET(		DMA_DEQUEUE_ADDRESS, CONTROL_REPEAT_MASK | CONTROL_START_MASK );
+}
+
+static inline void start_dma_enqueue(unsigned int use_tcp) {
+	unsigned int nbufs = Xil_In32(RX_BUFFER_COUNT_OFFSET);
+	rx_buffer *rx_buf_list = (rx_buffer*)(RX_BUFFER_COUNT_OFFSET+4);
+	SET( 		DMA_ENQUEUE_ADDRESS+0x10, use_tcp );
+	SET(		DMA_ENQUEUE_ADDRESS+0x18, nbufs);
+	SET(		DMA_ENQUEUE_ADDRESS+0x20, (unsigned int) rx_buf_list);
+	SET(		DMA_ENQUEUE_ADDRESS, CONTROL_REPEAT_MASK | CONTROL_START_MASK );
+}
+
+static inline void switch_dma_hardened(unsigned int use_dma_hardened){
+	//disable interrupts (since this procedure will toggle the irq pin)
+	setup_irq(0);
+	//1. activate reset pin  
+	CLR(GPIO_DATA_REG, GPIO_SWRST_MASK);
+	num_rx_enqueued = 0;
+	dma_tag = 0;
+	//clear dma lookup table
+	for(int i=0; i < MAX_DMA_TAGS; i++){
+		dma_tag_lookup[i]=-1;
+	}
+	//4. then deactivate reset of all other blocks
+	SET(GPIO_DATA_REG, GPIO_SWRST_MASK);
+	config_sts_cmd_header_switch(use_dma_hardened);
+	
+	unsigned int nbufs = Xil_In32(RX_BUFFER_COUNT_OFFSET);
+	rx_buffer *rx_buf_list = (rx_buffer*)(RX_BUFFER_COUNT_OFFSET+4);
+	//reset all enqueued spare buffers
+	for(int i=0; i<nbufs; i++){
+		if(rx_buf_list[i].status   == STATUS_ENQUEUED){
+			rx_buf_list[i].status = STATUS_IDLE;
+		} 
+	}
+
+	if(use_dma_hardened){
+		//starting DMA_DEQUEUE/DMA_ENQUEUE
+		start_dma_enqueue(use_tcp);
+		start_dma_dequeue(use_tcp);
+		//don't activate irq control
+	}else{
+		//stopping DMA_DEQUEUE/DMA_ENQUEUE
+		SET(		DMA_DEQUEUE_ADDRESS, 0 );
+		SET(		DMA_ENQUEUE_ADDRESS, 0 );
+		//		activate irq control
+		setup_irq((use_tcp ? (IRQCTRL_DMA2_CMD_QUEUE_EMPTY|IRQCTRL_DMA2_STS_QUEUE_NON_EMPTY) : (IRQCTRL_DMA0_CMD_QUEUE_EMPTY|IRQCTRL_DMA0_STS_QUEUE_NON_EMPTY)));
+	}
+	//restart (pack/depack)izers
+	start_depacketizer(UDP_RXPKT_BASEADDR);
+	start_depacketizer(TCP_RXPKT_BASEADDR);
+	start_packetizer(UDP_TXPKT_BASEADDR, MAX_PACKETSIZE);
+	start_packetizer(TCP_TXPKT_BASEADDR, MAX_PACKETSIZE);
 }
 
 //TCP connection management
@@ -623,8 +712,8 @@ unsigned int enqueue_rx_buffers(void){
 	
 		//whatever we find now we can enqueue
 		dma_cmd_addrh_addrl(cmd_queue, DMA_MAX_BTT, rx_buf_list[i].addrh, rx_buf_list[i].addrl, new_dma_tag);
-		rx_buf_list[i].status 	= STATUS_ENQUEUED;
 		rx_buf_list[i].dma_tag 	= new_dma_tag;
+		rx_buf_list[i].status 	= STATUS_ENQUEUED;
 		dma_tag_lookup[new_dma_tag] = i;
 		//next_rx_tag = (next_rx_tag + 1) & 0xf;
 		num_rx_enqueued++;
@@ -1949,7 +2038,8 @@ int main() {
 				switch (function)
 				{
 					case HOUSEKEEP_IRQEN:
-						setup_irq((use_tcp ? (IRQCTRL_DMA2_CMD_QUEUE_EMPTY|IRQCTRL_DMA2_STS_QUEUE_NON_EMPTY) : (IRQCTRL_DMA0_CMD_QUEUE_EMPTY|IRQCTRL_DMA0_STS_QUEUE_NON_EMPTY)));
+						//setup_irq((use_tcp ? (IRQCTRL_DMA2_CMD_QUEUE_EMPTY|IRQCTRL_DMA2_STS_QUEUE_NON_EMPTY) : (IRQCTRL_DMA0_CMD_QUEUE_EMPTY|IRQCTRL_DMA0_STS_QUEUE_NON_EMPTY)));
+						switch_dma_hardened(1);
 						microblaze_enable_interrupts();
 						break;
 					case HOUSEKEEP_IRQDIS:

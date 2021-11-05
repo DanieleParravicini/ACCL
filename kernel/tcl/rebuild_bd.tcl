@@ -713,18 +713,18 @@ set s_axis_tcp_notification [ create_bd_intf_port -mode Slave -vlnv xilinx.com:i
   # timer 
   assign_bd_address -offset 0x44A20000 -range 0x00010000 -target_address_space [get_bd_addr_spaces control/microblaze_0/Data] [get_bd_addr_segs control/axi_timer/S_AXI/Reg] -force
   # axis_switch for redirect sts_header_cmd from MCU to dma_enqueue/dequeue
-  assign_bd_address -offset 0x44A30000 -range 0x00010000 -target_address_space [get_bd_addr_spaces control/microblaze_0/Data] [get_bd_addr_segs control/dma_harden/sts_header_cmd_switch/S_AXI_CTRL/Reg] -force 
+  assign_bd_address -offset 0x44A30000 -range 0x00010000 -target_address_space [get_bd_addr_spaces control/microblaze_0/Data] [get_bd_addr_segs control/sts_header_cmd_switch/S_AXI_CTRL/Reg] -force 
   # axis_switch for arithm in mpi_offload top view
   assign_bd_address -offset 0x44B00000 -range 0x00010000 -target_address_space [get_bd_addr_spaces control/microblaze_0/Data] [get_bd_addr_segs arith_switch_0/S_AXI_CTRL/Reg] -force
   #dma_enqueu/dequeue
   #dma_enqueue
    #1. access to exchange memory
-   assign_bd_address -offset 0x00001000 -range 0x00001000 -target_address_space [get_bd_addr_spaces control/dma_harden/dma_enqueue_0/Data_m_axi_mem] [get_bd_addr_segs control/microblaze_0_exchange_memory/axi_bram_ctrl_bypass/S_AXI/Mem0] -force
+   assign_bd_address -offset 0x00001000 -range 0x00001000 -target_address_space [get_bd_addr_spaces control/dma_dequeue_0/Data_m_axi_mem] [get_bd_addr_segs control/microblaze_0_exchange_memory/axi_bram_ctrl_bypass/S_AXI/Mem0] -force
    #2. mcu access to ctrl via axilite
-   assign_bd_address -offset 0x44C00000 -range 0x00010000 -target_address_space [get_bd_addr_spaces control/microblaze_0/Data] [get_bd_addr_segs control/dma_dequeue_0/s_axi_control/Reg] -force
+   assign_bd_address -offset 0x44C00000 -range 0x00010000 -target_address_space [get_bd_addr_spaces control/microblaze_0/Data] [get_bd_addr_segs control/dma_harden/dma_dequeue_0/s_axi_control/Reg] -force
   #dma_dequeue
    #1. access to exchange memory
-   assign_bd_address -offset 0x00001000 -range 0x00001000 -target_address_space [get_bd_addr_spaces control/dma_dequeue_0/Data_m_axi_mem] [get_bd_addr_segs control/microblaze_0_exchange_memory/axi_bram_ctrl_bypass/S_AXI/Mem0] -force
+   assign_bd_address -offset 0x00001000 -range 0x00001000 -target_address_space [get_bd_addr_spaces control/dma_harden/dma_enqueue_0/Data_m_axi_mem] [get_bd_addr_segs control/microblaze_0_exchange_memory/axi_bram_ctrl_bypass/S_AXI/Mem0] -force
    #2. mcu access to ctrl via axilite
    assign_bd_address -offset 0x44D00000 -range 0x00010000 -target_address_space [get_bd_addr_spaces control/microblaze_0/Data] [get_bd_addr_segs control/dma_harden/dma_enqueue_0/s_axi_control/Reg] -force
   # DMA ddr

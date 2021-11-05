@@ -42,8 +42,8 @@ set_property -dict [ list \
  CONFIG.C_SLOT_7_INTF_TYPE {xilinx.com:interface:axis_rtl:1.0} \
 ] [get_bd_cells control/dma_harden/system_ila_dma_harden]
 
-connect_bd_net [get_bd_pins control/dma_harden/ap_clk                      ] [get_bd_pins control/dma_harden/system_ila_dma_harden/clk            ]
-connect_bd_net [get_bd_pins control/dma_harden/system_ila_dma_harden/resetn] [get_bd_pins control/dma_harden/proc_sys_reset_1/peripheral_aresetn  ]
+connect_bd_net [get_bd_pins control/dma_harden/system_ila_dma_harden/clk   ] [get_bd_pins control/dma_harden/ap_clk          ] 
+connect_bd_net [get_bd_pins control/dma_harden/system_ila_dma_harden/resetn] [get_bd_pins control/dma_harden/encore_aresetn  ]
 
 connect_bd_intf_net [get_bd_intf_pins control/dma_harden/system_ila_dma_harden/SLOT_0_AXI ] [get_bd_intf_pins control/dma_harden/dma_memory_ic/M00_AXI]
 connect_bd_intf_net [get_bd_intf_pins control/dma_harden/system_ila_dma_harden/SLOT_1_AXIS] [get_bd_intf_pins control/dma_harden/dma_enqueue_0/cmd_dma_tcp_V]

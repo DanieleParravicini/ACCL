@@ -267,6 +267,30 @@ extern "C" {
 #define PACK_TIMEOUT_STS_ERROR                        21
 #define PACK_SEQ_NUMBER_ERROR                         22
 
+#define DMA_DEQUEUE_ADDRESS    0x44C00000
+#define DMA_ENQUEUE_ADDRESS    0x44D00000
+#define STS_CMD_HEADER_BASE_ADDRESS 0X44A30000
+//master
+#define AXIS_STS_CMD_HEADER_M_HEADER_TCP_microblaze   0
+#define AXIS_STS_CMD_HEADER_M_HEADER_TCP_dma_dequeue  1
+#define AXIS_STS_CMD_HEADER_M_HEADER_UDP_microblaze   2
+#define AXIS_STS_CMD_HEADER_M_HEADER_UDP_dma_dequeue  3
+#define AXIS_STS_CMD_HEADER_M_DMA_STS_UDP_microblaze  4
+#define AXIS_STS_CMD_HEADER_M_DMA_STS_UDP_dma_dequeue 5
+#define AXIS_STS_CMD_HEADER_M_DMA_STS_TCP_microblaze  6
+#define AXIS_STS_CMD_HEADER_M_DMA_STS_TCP_dma_dequeue 7
+#define AXIS_STS_CMD_HEADER_M_DMA_CMD_UDP             8
+#define AXIS_STS_CMD_HEADER_M_DMA_CMD_TCP             9
+//slave
+#define AXIS_STS_CMD_HEADER_S_HEADER_TCP              0
+#define AXIS_STS_CMD_HEADER_S_HEADER_UDP              1
+#define AXIS_STS_CMD_HEADER_S_DMA_STS_UDP             2
+#define AXIS_STS_CMD_HEADER_S_DMA_STS_TCP             3
+#define AXIS_STS_CMD_HEADER_S_DMA_CMD_UDP_microblaze  4
+#define AXIS_STS_CMD_HEADER_S_DMA_CMD_UDP_dma_enqueue 5
+#define AXIS_STS_CMD_HEADER_S_DMA_CMD_TCP_microblaze  6
+#define AXIS_STS_CMD_HEADER_S_DMA_CMD_TCP_dma_enqueue 7
+
 //ARITH functions
 #define ARITH_fp    0
 #define ARITH_dp    1
@@ -341,11 +365,11 @@ static const unsigned int offsets[] = {
 };
 
 typedef struct {
+	unsigned int status;
 	unsigned int addrl;
 	unsigned int addrh;
 	unsigned int max_len;
 	unsigned int dma_tag;
-	unsigned int status;
 	unsigned int rx_tag;
 	unsigned int rx_len;
 	unsigned int rx_src;
