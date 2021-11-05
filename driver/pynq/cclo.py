@@ -60,7 +60,8 @@ class CCLOCfgFunc(IntEnum):
     end_profiling            = 11
     set_dma_transaction_size = 12
     set_max_dma_transactions = 13
-    
+
+@unique
 class CCLOReduceFunc(IntEnum):
     fp          = 0
     dp          = 1
@@ -185,13 +186,15 @@ class cclo(DefaultIP):
             self.rx_buffer_spares.append(pynq.allocate((bufsize,), dtype=np.int8, target=devicemem_i))
             #program this buffer into the accelerator
             addr += 4
+            self.exchange_mem.write(addr, 0)
+            addr += 4
             self.exchange_mem.write(addr, self.rx_buffer_spares[-1].physical_address & 0xffffffff)
             addr += 4
             self.exchange_mem.write(addr, (self.rx_buffer_spares[-1].physical_address>>32) & 0xffffffff)
             addr += 4
             self.exchange_mem.write(addr, bufsize)
             # clear remaining fields
-            for _ in range(3,9):
+            for _ in range(4,9):
                 addr += 4
                 self.exchange_mem.write(addr, 0)
 
@@ -214,6 +217,8 @@ class cclo(DefaultIP):
         nbufs = min(len(self.rx_buffer_spares), nbufs)
         for i in range(nbufs):
             addr   += 4
+            rstatus  = self.exchange_mem.read(addr)
+            addr   += 4
             addrl   =self.exchange_mem.read(addr)
             addr   += 4
             addrh   = self.exchange_mem.read(addr)
@@ -222,8 +227,6 @@ class cclo(DefaultIP):
             #assert self.read(addr) == self.rx_buffer_size
             addr   += 4
             dmatag  = self.exchange_mem.read(addr)
-            addr   += 4
-            rstatus  = self.exchange_mem.read(addr)
             addr   += 4
             rxtag   = self.exchange_mem.read(addr)
             addr   += 4
