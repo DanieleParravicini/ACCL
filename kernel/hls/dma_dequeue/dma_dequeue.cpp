@@ -20,39 +20,6 @@
 using namespace hls;
 using namespace std;
 
-void write_rx_header(
-	stream< ap_uint<32> >  &header,
-	ap_uint<32> 			btt, 
-	ap_uint<32> 			spare_idx, 
-	ap_uint<32>*			exchange_mem 		  
-){
-	exchange_mem[ spare_idx * SPARE_BUFFER_FIELDS + RX_TAG_OFFSET			]	= header.read();
-	exchange_mem[ spare_idx * SPARE_BUFFER_FIELDS + RX_LEN_OFFSET			]	= btt;
-	exchange_mem[ spare_idx * SPARE_BUFFER_FIELDS + RX_SRC_OFFSET			]	= header.read();
-	exchange_mem[ spare_idx * SPARE_BUFFER_FIELDS + SEQUENCE_NUMBER_OFFSET	]	= header.read();
-}
-
-void write_status(
-	stream< ap_uint<32> > &sts,
-	ap_uint<32> 		   btt,
-	ap_uint<32> 		   spare_idx,	
-	ap_uint<32> *		   exchange_mem
-){
-	ap_uint<32> status = sts.read(), new_status;
-	//interpret dma sts and write new spare_sts
-	// 3-0 TAG 
-	// 4 INTERNAL 	ERROR usually a btt=0 trigger this
-	// 5 DECODE 	ERROR address decode error timeout
-	// 6 SLAVE 		ERROR DMA encountered a slave reported error
-	// 7 OKAY		the associated transfer command has been completed with the OKAY response on all intermediate transfers.
-	if( ((status & 0x00000080) == 0) | (status & 0x00000070) | !(status & 0x80000000)| ( ( (status & 0x7FFFFF00) >> 8) != btt) ){
-		new_status = STATUS_ERROR;
-	}else{
-		new_status = STATUS_RESERVED;
-	}
-	exchange_mem[ spare_idx * SPARE_BUFFER_FIELDS + STATUS_OFFSET] = new_status;
-}
-
 void dma_dequeue(	
 				unsigned int use_tcp,
 				stream< ap_uint<32> > &sts_dma_udp,
@@ -70,39 +37,51 @@ void dma_dequeue(
 #pragma HLS INTERFACE axis 		port=inflight_queue
 #pragma HLS INTERFACE m_axi 	port=exchange_mem depth=16*9 offset=slave num_read_outstanding=4	num_write_outstanding=4  bundle=mem
 #pragma HLS INTERFACE s_axilite port=return
-
+#pragma HLS PIPELINE II=1 rewind 
 	//get rx_buffer pointer from inflight queue
 	ap_uint<32> spare_idx = inflight_queue.read(), btt, status, new_status;
 	if(use_tcp){
 
-		//if ( *( exchange_mem + (spare_idx * SPARE_BUFFER_FIELDS) + STATUS_OFFSET) != STATUS_ENQUEUED){
-		//	 exchange_mem[ spare_idx * SPARE_BUFFER_FIELDS + STATUS_OFFSET] = STATUS_ERROR;
-		//}else
-		{
-			btt 					= header_tcp.read();
-
-			write_rx_header(header_tcp , btt, spare_idx, exchange_mem);
-			write_status( 	sts_dma_tcp, btt, spare_idx, exchange_mem);
-			
+		btt 					= header_tcp.read();
+		exchange_mem[ spare_idx * SPARE_BUFFER_FIELDS + RX_TAG_OFFSET			]	= header_tcp.read();
+		exchange_mem[ spare_idx * SPARE_BUFFER_FIELDS + RX_LEN_OFFSET			]	= btt;
+		exchange_mem[ spare_idx * SPARE_BUFFER_FIELDS + RX_SRC_OFFSET			]	= header_tcp.read();
+		exchange_mem[ spare_idx * SPARE_BUFFER_FIELDS + SEQUENCE_NUMBER_OFFSET	]	= header_tcp.read();
+		status = sts_dma_tcp.read();
+		//interpret dma sts and write new spare_sts
+		// 3-0 TAG 
+		// 4 INTERNAL 	ERROR usually a btt=0 trigger this
+		// 5 DECODE 	ERROR address decode error timeout
+		// 6 SLAVE 		ERROR DMA encountered a slave reported error
+		// 7 OKAY		the associated transfer command has been completed with the OKAY response on all intermediate transfers.
+		if( ((status & 0x00000080) == 0) | (status & 0x00000070) | !(status & 0x80000000)| ( ( (status & 0x7FFFFF00) >> 8) != btt) ){
+			new_status = STATUS_ERROR;
+		}else{
+			new_status = STATUS_RESERVED;
 		}
+		exchange_mem[ spare_idx * SPARE_BUFFER_FIELDS + STATUS_OFFSET] = new_status;
 
 	}else{
-
-		//if (  *( exchange_mem + (spare_idx * SPARE_BUFFER_FIELDS) + STATUS_OFFSET) != STATUS_ENQUEUED){
-		//	 exchange_mem[ spare_idx * SPARE_BUFFER_FIELDS + STATUS_OFFSET] = STATUS_ERROR;
-		//}else
-		{
-			btt 					= header_udp.read();
-
-			write_rx_header(header_udp , btt, spare_idx, exchange_mem);
-			write_status( 	sts_dma_udp, btt, spare_idx, exchange_mem);
-		
+		btt 					= header_udp.read();
+		exchange_mem[ spare_idx * SPARE_BUFFER_FIELDS + RX_TAG_OFFSET			]	= header_udp.read();
+		exchange_mem[ spare_idx * SPARE_BUFFER_FIELDS + RX_LEN_OFFSET			]	= btt;
+		exchange_mem[ spare_idx * SPARE_BUFFER_FIELDS + RX_SRC_OFFSET			]	= header_udp.read();
+		exchange_mem[ spare_idx * SPARE_BUFFER_FIELDS + SEQUENCE_NUMBER_OFFSET	]	= header_udp.read();
+		status = sts_dma_udp.read();
+		//interpret dma sts and write new spare_sts
+		// 3-0 TAG 
+		// 4 INTERNAL 	ERROR usually a btt=0 trigger this
+		// 5 DECODE 	ERROR address decode error timeout
+		// 6 SLAVE 		ERROR DMA encountered a slave reported error
+		// 7 OKAY		the associated transfer command has been completed with the OKAY response on all intermediate transfers.
+		if( ((status & 0x00000080) == 0) | (status & 0x00000070) | !(status & 0x80000000)| ( ( (status & 0x7FFFFF00) >> 8) != btt) ){
+			new_status = STATUS_ERROR;
+		}else{
+			new_status = STATUS_RESERVED;
 		}
+		exchange_mem[ spare_idx * SPARE_BUFFER_FIELDS + STATUS_OFFSET] = new_status;
+
 	}
-
-	
-
-
 }
 
 
