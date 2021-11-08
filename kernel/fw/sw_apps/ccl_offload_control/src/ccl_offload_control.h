@@ -44,7 +44,8 @@ extern "C" {
 #define CMD_TCP_PORT 7
 #define CMD_TCP_CON  8
 #define CMD_TCP_TX   9
-#define CMD_HOST    10
+#define CMD_HOST     10
+#define CMD_HLS      13
 
 #define STS_DMA0_RX  0
 #define STS_DMA0_TX  1
@@ -59,6 +60,7 @@ extern "C" {
 #define STS_HOST     10 
 #define STS_TCP_PKT  11 
 #define STS_UDP_PKT  12
+#define STS_HLS      13
 
 //MAIN SWITCH
 
@@ -365,11 +367,11 @@ static const unsigned int offsets[] = {
 };
 
 typedef struct {
-	unsigned int status;
 	unsigned int addrl;
 	unsigned int addrh;
 	unsigned int max_len;
 	unsigned int dma_tag;
+	unsigned int status;
 	unsigned int rx_tag;
 	unsigned int rx_len;
 	unsigned int rx_src;

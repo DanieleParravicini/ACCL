@@ -405,6 +405,33 @@ void cfg_switch(unsigned int scenario, unsigned int arith) {
 	apply_switch_config(ARITH_SWITCH_BASEADDR);
 }
 
+void config_sts_cmd_header_switch(unsigned int use_dma_enqueue_dequeue){
+
+	if(use_dma_enqueue_dequeue){
+		disable_switch_datapath(STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_M_HEADER_TCP_microblaze  );
+		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_M_HEADER_TCP_dma_dequeue , AXIS_STS_CMD_HEADER_S_HEADER_TCP);
+		disable_switch_datapath(STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_M_HEADER_UDP_microblaze  );
+		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_M_HEADER_UDP_dma_dequeue , AXIS_STS_CMD_HEADER_S_HEADER_UDP);
+		disable_switch_datapath(STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_M_DMA_STS_UDP_microblaze );
+		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_M_DMA_STS_UDP_dma_dequeue, AXIS_STS_CMD_HEADER_S_DMA_STS_UDP);
+		disable_switch_datapath(STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_M_DMA_STS_TCP_microblaze );
+		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_M_DMA_STS_TCP_dma_dequeue, AXIS_STS_CMD_HEADER_S_DMA_STS_TCP);
+		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_M_DMA_CMD_UDP            , AXIS_STS_CMD_HEADER_S_DMA_CMD_UDP_dma_enqueue);
+		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_M_DMA_CMD_TCP            , AXIS_STS_CMD_HEADER_S_DMA_CMD_TCP_dma_enqueue);
+	}else{
+		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_M_HEADER_TCP_microblaze  , AXIS_STS_CMD_HEADER_S_HEADER_TCP);
+		disable_switch_datapath(STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_M_HEADER_TCP_dma_dequeue );
+		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_M_HEADER_UDP_microblaze  , AXIS_STS_CMD_HEADER_S_HEADER_UDP);
+		disable_switch_datapath(STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_M_HEADER_UDP_dma_dequeue );
+		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_M_DMA_STS_UDP_microblaze , AXIS_STS_CMD_HEADER_S_DMA_STS_UDP);
+		disable_switch_datapath(STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_M_DMA_STS_UDP_dma_dequeue);
+		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_M_DMA_STS_TCP_microblaze , AXIS_STS_CMD_HEADER_S_DMA_STS_TCP);
+		disable_switch_datapath(STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_M_DMA_STS_TCP_dma_dequeue);
+		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_M_DMA_CMD_UDP            , AXIS_STS_CMD_HEADER_S_DMA_CMD_UDP_microblaze);
+		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_M_DMA_CMD_TCP            , AXIS_STS_CMD_HEADER_S_DMA_CMD_TCP_microblaze);
+	}
+	apply_switch_config(STS_CMD_HEADER_BASE_ADDRESS);
+}
 
 
 //retrieves the communicator
@@ -491,45 +518,18 @@ static inline void ack_packetizer(communicator * world, unsigned int dst_rank,un
 	}
 }
 
-void config_sts_cmd_header_switch(unsigned int use_dma_enqueue_dequeue){
-
-	if(use_dma_enqueue_dequeue){
-		disable_switch_datapath(STS_CMD_HEADER_BASE_ADDRESS,											   AXIS_STS_CMD_HEADER_M_HEADER_TCP_microblaze  );
-		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_S_HEADER_TCP			 , AXIS_STS_CMD_HEADER_M_HEADER_TCP_dma_dequeue );
-		disable_switch_datapath(STS_CMD_HEADER_BASE_ADDRESS,											   AXIS_STS_CMD_HEADER_M_HEADER_UDP_microblaze  );
-		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_S_HEADER_UDP			 , AXIS_STS_CMD_HEADER_M_HEADER_UDP_dma_dequeue );
-		disable_switch_datapath(STS_CMD_HEADER_BASE_ADDRESS,											   AXIS_STS_CMD_HEADER_M_DMA_STS_UDP_microblaze );
-		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_S_DMA_STS_UDP			 , AXIS_STS_CMD_HEADER_M_DMA_STS_UDP_dma_dequeue);
-		disable_switch_datapath(STS_CMD_HEADER_BASE_ADDRESS,											   AXIS_STS_CMD_HEADER_M_DMA_STS_TCP_microblaze );
-		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_S_DMA_STS_TCP			 , AXIS_STS_CMD_HEADER_M_DMA_STS_TCP_dma_dequeue);
-		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_S_DMA_CMD_UDP_dma_enqueue, AXIS_STS_CMD_HEADER_M_DMA_CMD_UDP            );
-		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_S_DMA_CMD_TCP_dma_enqueue, AXIS_STS_CMD_HEADER_M_DMA_CMD_TCP            );
-	}else{
-		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_S_HEADER_TCP			, AXIS_STS_CMD_HEADER_M_HEADER_TCP_microblaze  );
-		disable_switch_datapath(STS_CMD_HEADER_BASE_ADDRESS												, AXIS_STS_CMD_HEADER_M_HEADER_TCP_dma_dequeue );
-		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_S_HEADER_UDP			, AXIS_STS_CMD_HEADER_M_HEADER_UDP_microblaze  );
-		disable_switch_datapath(STS_CMD_HEADER_BASE_ADDRESS												, AXIS_STS_CMD_HEADER_M_HEADER_UDP_dma_dequeue );
-		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_S_DMA_STS_UDP			, AXIS_STS_CMD_HEADER_M_DMA_STS_UDP_microblaze );
-		disable_switch_datapath(STS_CMD_HEADER_BASE_ADDRESS												, AXIS_STS_CMD_HEADER_M_DMA_STS_UDP_dma_dequeue);
-		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_S_DMA_STS_TCP			, AXIS_STS_CMD_HEADER_M_DMA_STS_TCP_microblaze );
-		disable_switch_datapath(STS_CMD_HEADER_BASE_ADDRESS												, AXIS_STS_CMD_HEADER_M_DMA_STS_TCP_dma_dequeue);
-		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_S_DMA_CMD_UDP_microblaze, AXIS_STS_CMD_HEADER_M_DMA_CMD_UDP            );
-		set_switch_datapath(	STS_CMD_HEADER_BASE_ADDRESS,AXIS_STS_CMD_HEADER_S_DMA_CMD_TCP_microblaze, AXIS_STS_CMD_HEADER_M_DMA_CMD_TCP            );
-	}
-	apply_switch_config(STS_CMD_HEADER_BASE_ADDRESS);
-}
-
+//dma hardened
 static inline void start_dma_dequeue(unsigned int use_tcp) {
 	rx_buffer *rx_buf_list = (rx_buffer*)(RX_BUFFER_COUNT_OFFSET+4);
-	SET( 		DMA_DEQUEUE_ADDRESS+0x10, use_tcp );
-	SET(		DMA_DEQUEUE_ADDRESS+0x18, (unsigned int) rx_buf_list);
+	SET( 		DMA_ENQUEUE_ADDRESS+0x10, use_tcp);
+	SET(		DMA_ENQUEUE_ADDRESS+0x18, (unsigned int) rx_buf_list);
 	SET(		DMA_DEQUEUE_ADDRESS, CONTROL_REPEAT_MASK | CONTROL_START_MASK );
 }
 
 static inline void start_dma_enqueue(unsigned int use_tcp) {
 	unsigned int nbufs = Xil_In32(RX_BUFFER_COUNT_OFFSET);
 	rx_buffer *rx_buf_list = (rx_buffer*)(RX_BUFFER_COUNT_OFFSET+4);
-	SET( 		DMA_ENQUEUE_ADDRESS+0x10, use_tcp );
+	SET( 		DMA_ENQUEUE_ADDRESS+0x10, use_tcp);
 	SET(		DMA_ENQUEUE_ADDRESS+0x18, nbufs);
 	SET(		DMA_ENQUEUE_ADDRESS+0x20, (unsigned int) rx_buf_list);
 	SET(		DMA_ENQUEUE_ADDRESS, CONTROL_REPEAT_MASK | CONTROL_START_MASK );
@@ -1976,24 +1976,29 @@ void encore_soft_reset(void){
 }
 
 //poll for a call from the host
-static inline void wait_for_call(void) {
+static inline unsigned int wait_for_call(void) {
 	// Poll the host cmd queue
-	unsigned int invalid;
-	do {
-		invalid = 0;
-		invalid += tngetd(CMD_HOST);
-	} while (invalid);
+	while(1){
+		if( tngetd(CMD_HOST) == 0)
+			return CMD_HOST;
+		if( tngetd(CMD_HLS)  == 0)
+			return CMD_HLS;
+	}
+
 }
 
 //signal finish to the host and write ret value in exchange mem
-static inline void finalize_call(unsigned int retval) {
+static inline void finalize_call(unsigned int cmd_stream, unsigned int retval) {
 	Xil_Out32(RETVAL_OFFSET, retval);
     // Done: Set done and idle
-	putd(STS_HOST, retval);
+	if( cmd_stream == CMD_HOST)
+		putd(STS_HOST, retval);
+	else
+		putd(STS_HLS, retval);
 }
 
 int main() {
-	unsigned int retval;
+	unsigned int cmd_stream = CMD_HOST, retval;
 	unsigned int scenario, len, comm, root_src_dst, function, msg_tag;
 	unsigned int buf0_type, buf1_type, buf2_type;
 	unsigned int buf0_addrl, buf0_addrh, buf1_addrl, buf1_addrh, buf2_addrl, buf2_addrh;
@@ -2006,28 +2011,28 @@ int main() {
 	retval = setjmp(excp_handler);
 	if(retval)
 	{
-		finalize_call(retval);
+		finalize_call(cmd_stream, retval);
 	}
 
 	while (1) {
-		wait_for_call();
+		cmd_stream   = wait_for_call();
 		
 		//read parameters from host command queue
-		scenario     = getd(CMD_HOST);
-		len          = getd(CMD_HOST);
-		comm         = getd(CMD_HOST);
-		root_src_dst = getd(CMD_HOST);
-		function     = getd(CMD_HOST);
-		msg_tag      = getd(CMD_HOST);
-		buf0_type    = getd(CMD_HOST);
-		buf1_type    = getd(CMD_HOST);
-		buf2_type    = getd(CMD_HOST);
-		buf0_addrl   = getd(CMD_HOST);
-		buf0_addrh   = getd(CMD_HOST);
-		buf1_addrl   = getd(CMD_HOST);
-		buf1_addrh   = getd(CMD_HOST);
-		buf2_addrl   = getd(CMD_HOST);
-		buf2_addrh   = getd(CMD_HOST);
+		scenario     = getd(cmd_stream);
+		len          = getd(cmd_stream);
+		comm         = getd(cmd_stream);
+		root_src_dst = getd(cmd_stream);
+		function     = getd(cmd_stream);
+		msg_tag      = getd(cmd_stream);
+		buf0_type    = getd(cmd_stream);
+		buf1_type    = getd(cmd_stream);
+		buf2_type    = getd(cmd_stream);
+		buf0_addrl   = getd(cmd_stream);
+		buf0_addrh   = getd(cmd_stream);
+		buf1_addrl   = getd(cmd_stream);
+		buf1_addrh   = getd(cmd_stream);
+		buf2_addrl   = getd(cmd_stream);
+		buf2_addrh   = getd(cmd_stream);
 		buf0_addr =  ((uint64_t) buf0_addrh << 32) | buf0_addrl;
 		buf1_addr =  ((uint64_t) buf1_addrh << 32) | buf1_addrl;
 		buf2_addr =  ((uint64_t) buf2_addrh << 32) | buf2_addrl;
@@ -2139,7 +2144,7 @@ int main() {
 				break;
 		}
 
-		finalize_call(retval);
+		finalize_call(cmd_stream, retval);
 	}
 	return 0;
 }
