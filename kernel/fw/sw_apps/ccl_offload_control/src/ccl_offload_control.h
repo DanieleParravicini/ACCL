@@ -45,7 +45,11 @@ extern "C" {
 #define CMD_TCP_CON  8
 #define CMD_TCP_TX   9
 #define CMD_HOST     10
+<<<<<<< HEAD
 #define CMD_SCENARIO 11
+=======
+#define CMD_HLS      13
+>>>>>>> hls_calls
 
 #define STS_DMA0_RX  0
 #define STS_DMA0_TX  1
@@ -60,6 +64,7 @@ extern "C" {
 #define STS_HOST     10 
 #define STS_TCP_PKT  11 
 #define STS_UDP_PKT  12
+#define STS_HLS      13
 
 //MAIN SWITCH
 

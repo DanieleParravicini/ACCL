@@ -335,11 +335,15 @@ proc create_hier_cell_control { parentCell nameHier } {
   current_bd_instance $hier_obj
 
   # Create interface pins
+  #debug 
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:mbtrace_rtl:2.0 TRACE
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:bscan_rtl:1.0 bscan_0
-
+  #cmds from hostctrl
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 encore_control
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 host_control
+  #cmds from hls components
+  create_bd_intf_pin -mode Slave  -vlnv xilinx.com:interface:axis_rtl:1.0 hls_control
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 hls_control_result
 
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 udp_packetizer_cmd
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 udp_depacketizer_sts
@@ -485,7 +489,7 @@ proc create_hier_cell_control { parentCell nameHier } {
    CONFIG.C_BASE_VECTORS {0x0000000000010000} \
    CONFIG.C_D_AXI {1} \
    CONFIG.C_D_LMB {1} \
-   CONFIG.C_FSL_LINKS {13} \
+   CONFIG.C_FSL_LINKS {14} \
    CONFIG.C_I_LMB {1} \
    CONFIG.C_TRACE {1} \
    CONFIG.C_USE_EXTENDED_FSL_INSTR {1} \
@@ -658,6 +662,9 @@ proc create_hier_cell_control { parentCell nameHier } {
   connect_bd_intf_net [get_bd_intf_pins microblaze_0/M4_AXIS            ] [get_bd_intf_pins sts_header_cmd_switch/S04_AXIS]
   connect_bd_intf_net [get_bd_intf_pins dma_enqueue_0/cmd_dma_tcp_V     ] [get_bd_intf_pins sts_header_cmd_switch/S05_AXIS]
   connect_bd_intf_net [get_bd_intf_pins sts_header_cmd_switch/M08_AXIS  ] [get_bd_intf_pins fifo_dma2_s2mm_cmd/S_AXIS]
+  #hls cmds and results
+  connect_bd_intf_net [get_bd_intf_pins microblaze_0/M13_AXIS           ] [get_bd_intf_pins hls_control_result]
+  connect_bd_intf_net [get_bd_intf_pins hls_control                     ] [get_bd_intf_pins microblaze_0/S13_AXIS]
   # Clocks and resets
   connect_bd_net -net SYS_Rst_1 [get_bd_pins microblaze_0_local_memory/SYS_Rst] [get_bd_pins proc_sys_reset_0/peripheral_reset]
   connect_bd_net [get_bd_pins ap_clk] [get_bd_pins fifo_depacketizer_sts/s_axis_aclk] \

@@ -45,7 +45,7 @@ set_property -dict [list CONFIG.M00_AXI_NAME {m_axi_0} CONFIG.M00_AXI_ARG00_INTF
 set_property -dict [list CONFIG.M01_AXI_NAME {m_axi_1} CONFIG.M01_AXI_ARG00_INTF {m_axi_1} CONFIG.M01_AXI_ARG00_NAME {buf1_ptr}] [get_ips ccl_offload]
 set_property -dict [list CONFIG.M02_AXI_NAME {m_axi_2} CONFIG.M02_AXI_ARG00_INTF {m_axi_2} CONFIG.M02_AXI_ARG00_NAME {buf2_ptr}] [get_ips ccl_offload]
 # configure number and properties of AXI Streams
-set_property -dict [list CONFIG.NUM_AXIS {18}] [get_ips ccl_offload] 
+set_property -dict [list CONFIG.NUM_AXIS {20}] [get_ips ccl_offload] 
 set_property -dict [list CONFIG.AXIS00_NAME {s_axis_udp_rx_data} CONFIG.AXIS00_MODE {read_only} CONFIG.AXIS00_NUM_BYTES {64}] [get_ips ccl_offload]
 set_property -dict [list CONFIG.AXIS01_NAME {m_axis_udp_tx_data} CONFIG.AXIS01_MODE {write_only} CONFIG.AXIS01_NUM_BYTES {64}] [get_ips ccl_offload]
 set_property -dict [list CONFIG.AXIS02_NAME {s_axis_tcp_notification} CONFIG.AXIS02_MODE {read_only} CONFIG.AXIS02_NUM_BYTES {16}] [get_ips ccl_offload]
@@ -64,7 +64,8 @@ set_property -dict [list CONFIG.AXIS14_NAME {m_axis_krnl} CONFIG.AXIS14_MODE {wr
 set_property -dict [list CONFIG.AXIS15_NAME {s_axis_arith_res} CONFIG.AXIS15_MODE {read_only} CONFIG.AXIS15_NUM_BYTES {64}] [get_ips ccl_offload]
 set_property -dict [list CONFIG.AXIS16_NAME {m_axis_arith_op0} CONFIG.AXIS16_MODE {write_only} CONFIG.AXIS16_NUM_BYTES {64}] [get_ips ccl_offload]
 set_property -dict [list CONFIG.AXIS17_NAME {m_axis_arith_op1} CONFIG.AXIS17_MODE {write_only} CONFIG.AXIS17_NUM_BYTES {64}] [get_ips ccl_offload]
-
+set_property -dict [list CONFIG.AXIS18_NAME {hls_control} CONFIG.AXIS18_MODE {write_only} CONFIG.AXIS18_NUM_BYTES {32}] [get_ips ccl_offload]
+set_property -dict [list CONFIG.AXIS19_NAME {hls_control_result} CONFIG.AXIS19_MODE {read_only} CONFIG.AXIS19_NUM_BYTES {32}] [get_ips ccl_offload]
 generate_target {instantiation_template} [get_files ./rtl_kernel_gen/rtl_kernel_gen.srcs/sources_1/ip/ccl_offload/ccl_offload.xci]
 update_compile_order -fileset sources_1
 open_example_project -force -in_process -dir . [get_ips ccl_offload]

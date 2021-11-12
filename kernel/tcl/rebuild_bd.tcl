@@ -1,3 +1,4 @@
+#testciao
 # /*******************************************************************************
 #  Copyright (C) 2021 Xilinx, Inc
 #
@@ -520,6 +521,19 @@ proc create_root_design { parentCell } {
    CONFIG.WUSER_WIDTH {0} \
    ] $s_axi_control
 
+   #cmds from hls components
+   set hls_control [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 hls_control ]
+  set_property -dict [ list \
+   CONFIG.FREQ_HZ {250000000} \
+   CONFIG.TDATA_NUM_BYTES {4} \
+   ] $hls_control
+
+  set hls_control_result [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 hls_control_result ]
+  set_property -dict [ list \
+   CONFIG.FREQ_HZ {250000000} \
+   CONFIG.TDATA_NUM_BYTES {4} \
+   ] $hls_control_result
+
   # TCP interfaces
   set m_axis_tcp_listen_port [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 m_axis_tcp_listen_port ]
   set_property -dict [ list \
@@ -546,7 +560,7 @@ proc create_root_design { parentCell } {
    CONFIG.FREQ_HZ {250000000} \
    ] $m_axis_tcp_tx_meta
 
-set s_axis_tcp_notification [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 s_axis_tcp_notification ]
+  set s_axis_tcp_notification [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 s_axis_tcp_notification ]
   set_property -dict [ list \
    CONFIG.FREQ_HZ {250000000} \
    CONFIG.HAS_TKEEP {1} \
@@ -747,7 +761,9 @@ set s_axis_tcp_notification [ create_bd_intf_port -mode Slave -vlnv xilinx.com:i
   connect_bd_intf_net [get_bd_intf_ports m_axis_tcp_open_connection] [get_bd_intf_pins tcp_tx_subsystem/m_axis_tcp_open_connection]
   connect_bd_intf_net [get_bd_intf_ports s_axis_tcp_open_status] [get_bd_intf_pins tcp_tx_subsystem/s_axis_tcp_open_status]
   connect_bd_intf_net [get_bd_intf_ports s_axis_tcp_tx_status] [get_bd_intf_pins tcp_tx_subsystem/s_axis_tcp_tx_status]
-
+  # Connect hls_control and hls_control_result
+  connect_bd_intf_net [get_bd_intf_pins hls_control       ] [get_bd_intf_pins control/hls_control       ]
+  connect_bd_intf_net [get_bd_intf_pins hls_control_result] [get_bd_intf_pins control/hls_control_result]
   # Create reset and clock connections
   connect_bd_net -net ap_clk [get_bd_ports ap_clk] [get_bd_pins axis_switch_0/aclk] \
                                                    [get_bd_pins arith_switch_0/aclk] \
