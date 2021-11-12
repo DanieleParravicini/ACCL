@@ -37,7 +37,7 @@ void dma_dequeue(
 #pragma HLS INTERFACE axis 		port=inflight_queue
 #pragma HLS INTERFACE m_axi 	port=exchange_mem depth=16*9 offset=slave num_read_outstanding=4	num_write_outstanding=4  bundle=mem
 #pragma HLS INTERFACE s_axilite port=return
-#pragma HLS PIPELINE II=1 rewind 
+#pragma HLS PIPELINE II=1 style=flp
 	//get rx_buffer pointer from inflight queue
 	ap_uint<32> spare_idx = inflight_queue.read(), btt, status, new_status;
 	if(use_tcp){
@@ -54,7 +54,7 @@ void dma_dequeue(
 		// 5 DECODE 	ERROR address decode error timeout
 		// 6 SLAVE 		ERROR DMA encountered a slave reported error
 		// 7 OKAY		the associated transfer command has been completed with the OKAY response on all intermediate transfers.
-		if( ((status & 0x00000080) == 0) | (status & 0x00000070) | !(status & 0x80000000)| ( ( (status & 0x7FFFFF00) >> 8) != btt) ){
+		if( !(status & 0x00000080)  | (status & 0x00000070) | !(status & 0x80000000)| ( ( (status & 0x7FFFFF00) >> 8) != btt) ){
 			new_status = STATUS_ERROR;
 		}else{
 			new_status = STATUS_RESERVED;
@@ -74,7 +74,7 @@ void dma_dequeue(
 		// 5 DECODE 	ERROR address decode error timeout
 		// 6 SLAVE 		ERROR DMA encountered a slave reported error
 		// 7 OKAY		the associated transfer command has been completed with the OKAY response on all intermediate transfers.
-		if( ((status & 0x00000080) == 0) | (status & 0x00000070) | !(status & 0x80000000)| ( ( (status & 0x7FFFFF00) >> 8) != btt) ){
+		if( !(status & 0x00000080) | (status & 0x00000070) | !(status & 0x80000000)| ( ( (status & 0x7FFFFF00) >> 8) != btt) ){
 			new_status = STATUS_ERROR;
 		}else{
 			new_status = STATUS_RESERVED;
