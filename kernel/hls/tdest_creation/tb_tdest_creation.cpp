@@ -22,11 +22,11 @@ using namespace std;
 
 int main(){
     stream< ap_uint<32> > scenario;
-    unsigned int    DMA0_RX; 
-    unsigned int    DMA1_RX; 
-    unsigned int    DMA2_RX; 
-    unsigned int    ARITH_RES; 
-    unsigned int    EXT_KRNL;
+    ap_uint<NUM_BITS_MASTER> DMA0_RX; 
+    ap_uint<NUM_BITS_MASTER> DMA1_RX; 
+    ap_uint<NUM_BITS_MASTER> DMA2_RX; 
+    ap_uint<NUM_BITS_MASTER> ARITH_RES; 
+    ap_uint<NUM_BITS_MASTER> EXT_KRNL;
 
     for(int i = 0; i < 10; i++){
         scenario.write(DATAPATH_DMA_LOOPBACK);

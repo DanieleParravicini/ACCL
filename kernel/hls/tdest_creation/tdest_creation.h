@@ -10,11 +10,11 @@
 
     void tdest_creation(	
 				stream< ap_uint<32> > &scenario,
-				unsigned int * MAIN_SWITCH_S_DMA0_RX,
-                unsigned int * MAIN_SWITCH_S_DMA1_RX,
-				unsigned int * MAIN_SWITCH_S_DMA2_RX,
-				unsigned int * MAIN_SWITCH_S_ARITH_RES,
-                unsigned int * MAIN_SWITCH_S_EXT_KRNL
+				ap_uint<NUM_BITS_MASTER> * MAIN_SWITCH_S_DMA0_RX,
+                ap_uint<NUM_BITS_MASTER> * MAIN_SWITCH_S_DMA1_RX,
+				ap_uint<NUM_BITS_MASTER> * MAIN_SWITCH_S_DMA2_RX,
+				ap_uint<NUM_BITS_MASTER> * MAIN_SWITCH_S_ARITH_RES,
+                ap_uint<NUM_BITS_MASTER> * MAIN_SWITCH_S_EXT_KRNL
 
     );
 
