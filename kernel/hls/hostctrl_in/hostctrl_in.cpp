@@ -38,10 +38,12 @@ void hostctrl_in_io(
 				ap_uint<64> addrb,
 				ap_uint<64> addrc,
 				stream<ap_uint<32>> &cmd,
-				stream<ap_uint<32>> &sts
+				stream<ap_uint<32>> &sts,
+				stream<ap_uint<32>> &sts_out
 ){
 #pragma HLS INTERFACE axis port=cmd
 #pragma HLS INTERFACE axis port=sts
+#pragma HLS INTERFACE axis port=sts_out
 
 io_section:{
 	#pragma HLS protocol fixed
@@ -75,39 +77,40 @@ io_section:{
 	ap_wait();
 	cmd.write(addrc(63,32));
 	ap_wait();
-	sts.read();
+	sts_out.write(sts.read());
 }
 
 }
 
 void hostctrl_in(	
-                stream<ap_uint<DATA_WIDTH> > & in,
-				stream<ap_uint<32> > & out
+                stream<ap_uint<DATA_WIDTH> > & cmd_in,
+				stream<ap_uint<32> > & 		   cmd_out,
+				stream<ap_uint<32> > & 		   sts_in,
+				stream<ap_uint<32> > & 		   sts_out
 ) {
 
-#pragma HLS INTERFACE axis port=in
-#pragma HLS INTERFACE axis port=out
+#pragma HLS INTERFACE axis port=cmd_in
+#pragma HLS INTERFACE axis port=cmd_out
+#pragma HLS INTERFACE axis port=sts_in
+#pragma HLS INTERFACE axis port=sts_out
+#pragma HLS INTERFACE ap_ctrl_none  port=return
 
-    ap_uint<DATA_WIDTH> in_data = in.read();
+    ap_uint<DATA_WIDTH> in_data = cmd_in.read();
     //Input stream needs to be optimized in the same way as hostctrl 
-    ap_uint<32> scenario = in_data.range(31,0);
-    ap_uint<32> len = in_data.range(63,32);
-    ap_uint<32> comm = in_data.range(95,64);
-    ap_uint<32> root_src_dst = in_data.range(127,96);
-    ap_uint<32> function = in_data.range(159,128);
-    ap_uint<32> msg_tag = in_data.range(191,160);
-    ap_uint<32> buf0_type = in_data.range(223,192);
-    ap_uint<32> buf1_type = in_data.range(255,224);
-    ap_uint<32> buf2_type = in_data.range(287,256);
-    ap_uint<64> addra = in_data.range(319,288);
-    ap_uint<64> addrb = in_data.range(383,320);
-    ap_uint<64> addrc = in_data.range(447,384);
+    ap_uint<32> scenario 	= in_data.range(31,0);
+    ap_uint<32> len 		= in_data.range(63,32);
+    ap_uint<32> comm		= in_data.range(95,64);
+    ap_uint<32> root_src_dst= in_data.range(127,96);
+    ap_uint<32> function 	= in_data.range(159,128);
+    ap_uint<32> msg_tag 	= in_data.range(191,160);
+    ap_uint<32> buf0_type 	= in_data.range(223,192);
+    ap_uint<32> buf1_type 	= in_data.range(255,224);
+    ap_uint<32> buf2_type 	= in_data.range(287,256);
+    ap_uint<64> addra 	  	= in_data.range(351,288);
+    ap_uint<64> addrb    	= in_data.range(415,352);
+    ap_uint<64> addrc 		= in_data.range(479,416);
     stream<ap_uint<32>> cmd;
 
-	hostctrl_in_io(scenario, len, comm, root_src_dst, function, msg_tag, buf0_type, buf1_type, buf2_type, addra, addrb, addrc, cmd, out);
+	hostctrl_in_io(scenario, len, comm, root_src_dst, function, msg_tag, buf0_type, buf1_type, buf2_type, addra, addrb, addrc, cmd_out, sts_in, sts_out);
     
-    //debug
-	#ifndef __SYNTHESIS__
-	in.write(in_data);
-	#endif
 }
