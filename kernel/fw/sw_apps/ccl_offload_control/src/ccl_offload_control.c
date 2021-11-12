@@ -100,12 +100,6 @@ static inline void start_timeout(unsigned int time){
 	Xil_Out32(TIMER_BASEADDR + TIMER0_CONTROL_AND_STATUS_REGISTER_OFFSET, CONTROL_AND_STATUS_REGISTER_ENABLE_MASK | CONTROL_AND_STATUS_REGISTER_INTERRUPT_ENABLE_MASK | CONTROL_AND_STATUS_REGISTER_UP_DOWN_MASK);
 }
 
-//cancel the timeout
-static inline void cancel_timeout(){
-	//1. set counter disable/interrupt disable
-	Xil_Out32(TIMER_BASEADDR + TIMER0_CONTROL_AND_STATUS_REGISTER_OFFSET, CONTROL_AND_STATUS_REGISTER_INTERRUPT_MASK);
-}
-
 //clear timer interrupt
 static inline void clear_timer_interrupt(){
 	Xil_Out32(TIMER_BASEADDR + TIMER0_CONTROL_AND_STATUS_REGISTER_OFFSET, CONTROL_AND_STATUS_REGISTER_INTERRUPT_MASK);
@@ -203,7 +197,7 @@ void stream_isr(void) {
 	}else{
 		irq_mask = (use_tcp ? IRQCTRL_DMA2_STS_QUEUE_NON_EMPTY: IRQCTRL_DMA0_STS_QUEUE_NON_EMPTY) | (use_tcp ? IRQCTRL_DMA2_CMD_QUEUE_EMPTY: IRQCTRL_DMA0_CMD_QUEUE_EMPTY);
 		setup_irq(irq_mask);
-		cancel_timeout();
+		clear_timer_interrupt();
 	}
 	ack_irq(irq);
 }
@@ -319,7 +313,7 @@ static inline void apply_switch_config(unsigned int base) {
 //									result from  "             "          "       " 
 // ARITH_NONE leaves the current arithmetic switch configuration 
 void cfg_switch(unsigned int scenario, unsigned int arith) {
-	switch (scenario)
+	/*switch (scenario)
 	{
 		case DATAPATH_DMA_LOOPBACK:
 			set_switch_datapath(MAIN_SWITCH_BASEADDR, MAIN_SWITCH_S_DMA1_RX, MAIN_SWITCH_M_DMA1_TX);
@@ -380,7 +374,8 @@ void cfg_switch(unsigned int scenario, unsigned int arith) {
 		default:
 			return;
 	}
-	apply_switch_config(MAIN_SWITCH_BASEADDR);
+	apply_switch_config(MAIN_SWITCH_BASEADDR);*/
+	putd(CMD_SCENARIO, scenario);
 	switch (arith)
 	{
 		case ARITH_EXTERNAL:

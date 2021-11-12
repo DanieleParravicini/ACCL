@@ -44,7 +44,8 @@ extern "C" {
 #define CMD_TCP_PORT 7
 #define CMD_TCP_CON  8
 #define CMD_TCP_TX   9
-#define CMD_HOST    10
+#define CMD_HOST     10
+#define CMD_SCENARIO 11
 
 #define STS_DMA0_RX  0
 #define STS_DMA0_TX  1

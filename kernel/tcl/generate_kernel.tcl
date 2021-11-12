@@ -91,9 +91,14 @@ if [string equal $debug "dma"] {
 } elseif [string equal $debug "pkt"] {
   puts "Adding (de)packetizer debug to block design"
   source  -notrace tcl/debug_pkt.tcl
-} elseif [expr [string equal $debug "all"] || [string equal $debug "dma_harden"]]  {
-  puts "Adding dma_harden debug cores to block design"
+} 
+if [expr [string equal $debug "all"] || [string equal $debug "dma_harden"]]  {
+  puts "Adding debug cores to dma_harden"
   source  -notrace tcl/debug_dma_harden.tcl
+} 
+if [expr [string equal $debug "all"] || [string equal $debug "axis_switch_0"]]  {
+  puts "Adding debug cores to axis_switch_0"
+  source  -notrace tcl/debug_axis_switch.tcl
 } 
 if [string equal $debug "all"] {
   puts "Adding all debug cores to block design"

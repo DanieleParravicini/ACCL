@@ -197,7 +197,7 @@ connect_bd_intf_net [get_bd_intf_pins system_ila_tcp_depacketizer/SLOT_4_AXIS] -
 
 
 # Add aximm debug
-set_property HDL_ATTRIBUTE.DEBUG true [get_bd_intf_nets {switch_control}]
+#set_property HDL_ATTRIBUTE.DEBUG true [get_bd_intf_nets {switch_control}]
 set_property HDL_ATTRIBUTE.DEBUG true [get_bd_intf_nets {arith_control}]
 set_property HDL_ATTRIBUTE.DEBUG true [get_bd_intf_nets {udp_depacketizer_control}]
 set_property HDL_ATTRIBUTE.DEBUG true [get_bd_intf_nets {udp_packetizer_control}]

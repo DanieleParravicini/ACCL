@@ -29,13 +29,13 @@ void tdest_creation(
         ap_uint<NUM_BITS_MASTER> *  MAIN_SWITCH_S_EXT_KRNL
 
 ){  
-    #pragma HLS INTERFACE axis 		port=scenario
-    #pragma HLS INTERFACE ap_none   port=MAIN_SWITCH_S_DMA0_RX
-    #pragma HLS INTERFACE ap_none   port=MAIN_SWITCH_S_DMA1_RX
-    #pragma HLS INTERFACE ap_none   port=MAIN_SWITCH_S_DMA2_RX
-    #pragma HLS INTERFACE ap_none   port=MAIN_SWITCH_S_ARITH_RES
-    #pragma HLS INTERFACE ap_none   port=MAIN_SWITCH_S_EXT_KRNL
-    #pragma HLS INTERFACE s_axilite port=return
+    #pragma HLS INTERFACE axis 		    port=scenario
+    #pragma HLS INTERFACE ap_ovld       port=MAIN_SWITCH_S_DMA0_RX
+    #pragma HLS INTERFACE ap_ovld       port=MAIN_SWITCH_S_DMA1_RX
+    #pragma HLS INTERFACE ap_ovld       port=MAIN_SWITCH_S_DMA2_RX
+    #pragma HLS INTERFACE ap_ovld       port=MAIN_SWITCH_S_ARITH_RES
+    #pragma HLS INTERFACE ap_ovld       port=MAIN_SWITCH_S_EXT_KRNL
+    #pragma HLS INTERFACE ap_ctrl_none  port=return
     switch(scenario.read()){
         case DATAPATH_DMA_LOOPBACK:
             *MAIN_SWITCH_S_DMA0_RX   = MAIN_SWITCH_M_DISABLE;

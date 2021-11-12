@@ -181,7 +181,131 @@ if { $bCheckIPsPassed != 1 } {
 ##################################################################
 # DESIGN PROCs
 ##################################################################
+# Procedure to create axis_switch_0
+proc create_hier_cell_axis_switch_0 { parentCell nameHier } {
 
+   variable script_folder
+
+   if { $parentCell eq "" || $nameHier eq "" } {
+      catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_axis_switch_0() - Empty argument(s)!"}
+      return
+   }
+
+   # Get object for parentCell
+   set parentObj [get_bd_cells $parentCell]
+   if { $parentObj == "" } {
+      catch {common::send_gid_msg -ssname BD::TCL -id 2090 -severity "ERROR" "Unable to find parent cell <$parentCell>!"}
+      return
+   }
+
+   # Make sure parentObj is hier blk
+   set parentType [get_property TYPE $parentObj]
+   if { $parentType ne "hier" } {
+      catch {common::send_gid_msg -ssname BD::TCL -id 2091 -severity "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+      return
+   }
+
+   # Save current instance; Restore later
+   set oldCurInst [current_bd_instance .]
+
+   # Set parent object as current
+   current_bd_instance $parentObj
+
+   # Create cell and set as current instance
+   set hier_obj [create_bd_cell -type hier $nameHier]
+   #set hier_obj [create_bd_cell -type hier axis_switch_00]
+
+   current_bd_instance $hier_obj
+
+   set masters 6
+   set slaves 5
+   # Create interface pins
+   for {set i 0} {$i < $slaves} {incr i} {
+   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S0${i}_AXIS
+   }
+   for {set i 0} {$i < $masters} {incr i} {
+   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 M0${i}_AXIS
+   }
+   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 scenario_V
+
+
+   # Create pins
+   create_bd_pin -dir I -type clk aclk
+   create_bd_pin -dir I -type rst aresetn
+   create_bd_pin -dir O -from 4 -to 0 s_decode_err
+
+   set axis_switch_internal_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_switch:1.1 axis_switch_internal_0 ]
+   set_property -dict [ list \
+   CONFIG.DECODER_REG {0} \
+   CONFIG.HAS_TKEEP {1} \
+   CONFIG.HAS_TLAST {1} \
+   CONFIG.NUM_MI $masters \
+   CONFIG.NUM_SI $slaves \
+   CONFIG.ROUTING_MODE {0} \
+   CONFIG.TDATA_NUM_BYTES {64} \
+   ] $axis_switch_internal_0
+
+   create_bd_cell -type ip -vlnv xilinx.com:hls:tdest_creation:1.0 tdest_creation_0
+   for {set i 0} {$i < $slaves} {incr i} {
+      #create a subset converter for each Slave of the axis_switch0
+      create_bd_cell -type ip -vlnv xilinx.com:ip:axis_subset_converter:1.1 axis_subset_converter_${i}
+      set_property -dict [list \
+         CONFIG.M_HAS_TSTRB.VALUE_SRC PROPAGATED \
+         CONFIG.S_HAS_TLAST.VALUE_SRC PROPAGATED \
+         CONFIG.S_HAS_TKEEP.VALUE_SRC PROPAGATED \
+         CONFIG.S_HAS_TSTRB.VALUE_SRC PROPAGATED \
+         CONFIG.M_TDEST_WIDTH.VALUE_SRC USER \
+         CONFIG.S_TDEST_WIDTH.VALUE_SRC USER \
+         CONFIG.M_HAS_TKEEP.VALUE_SRC PROPAGATED \
+         CONFIG.M_HAS_TLAST.VALUE_SRC PROPAGATED \
+         CONFIG.S_TDEST_WIDTH {3} \
+         CONFIG.M_TDEST_WIDTH {3} \
+         CONFIG.TDEST_REMAP {tdest[2:0]} \
+         CONFIG.TLAST_REMAP {1'b0} \
+      ] [get_bd_cells axis_subset_converter_${i}]
+
+      connect_bd_net [get_bd_pins aclk    ] [get_bd_pins axis_subset_converter_${i}/aclk]
+      connect_bd_net [get_bd_pins aresetn ] [get_bd_pins axis_subset_converter_${i}/aresetn]
+      #connect 
+      connect_bd_intf_net [get_bd_intf_pins axis_subset_converter_${i}/M_AXIS ] [get_bd_intf_pins axis_switch_internal_0/S0${i}_AXIS]
+      connect_bd_intf_net [get_bd_intf_pins S0${i}_AXIS ] [get_bd_intf_pins axis_subset_converter_${i}/S_AXIS ]  
+      #create a register
+      create_bd_cell -type ip -vlnv xilinx.com:ip:c_shift_ram:12.0 register_${i}
+      set_property -dict [list \
+         CONFIG.Depth {1} \
+         CONFIG.CE {true} \
+      ] [get_bd_cells register_${i}]
+     
+      connect_bd_net [get_bd_pins aclk    ] [get_bd_pins register_${i}/CLK]
+      #create a FF and use it to drive tdest
+      connect_bd_net [get_bd_pins register_${i}/Q  ] [get_bd_pins axis_subset_converter_${i}/s_axis_tdest]
+      
+   }
+
+   for {set i 0} {$i < $masters} {incr i} {
+      connect_bd_intf_net [get_bd_intf_pins axis_switch_internal_0/M0${i}_AXIS] [get_bd_intf_pins M0${i}_AXIS ]
+   }
+   #connect switch_internal and tdest_creation 
+   connect_bd_net [get_bd_pins aclk        ] [get_bd_pins axis_switch_internal_0/aclk   ] [get_bd_pins tdest_creation_0/ap_clk]
+   connect_bd_net [get_bd_pins aresetn     ] [get_bd_pins axis_switch_internal_0/aresetn] [get_bd_pins tdest_creation_0/ap_rst_n]
+   connect_bd_net [get_bd_pins s_decode_err] [get_bd_pins axis_switch_internal_0/s_decode_err]
+   connect_bd_intf_net -boundary_type upper [get_bd_intf_pins scenario_V] [get_bd_intf_pins tdest_creation_0/scenario_V]
+   #connect_bd_intf_net -boundary_type upper [get_bd_intf_pins S_AXI_CTRL] [get_bd_intf_pins tdest_creation_0/s_axi_control]
+   #connect tdest_creation to register
+   connect_bd_net [get_bd_pins tdest_creation_0/MAIN_SWITCH_S_DMA0_RX    ] [get_bd_pins register_0/D]
+   connect_bd_net [get_bd_pins tdest_creation_0/MAIN_SWITCH_S_DMA1_RX    ] [get_bd_pins register_1/D]
+   connect_bd_net [get_bd_pins tdest_creation_0/MAIN_SWITCH_S_DMA2_RX    ] [get_bd_pins register_2/D]
+   connect_bd_net [get_bd_pins tdest_creation_0/MAIN_SWITCH_S_ARITH_RES  ] [get_bd_pins register_3/D]
+   connect_bd_net [get_bd_pins tdest_creation_0/MAIN_SWITCH_S_EXT_KRNL   ] [get_bd_pins register_4/D]
+
+   connect_bd_net [get_bd_pins tdest_creation_0/MAIN_SWITCH_S_DMA0_RX_ap_vld   ] [get_bd_pins register_0/CE]
+   connect_bd_net [get_bd_pins tdest_creation_0/MAIN_SWITCH_S_DMA1_RX_ap_vld   ] [get_bd_pins register_1/CE]
+   connect_bd_net [get_bd_pins tdest_creation_0/MAIN_SWITCH_S_DMA2_RX_ap_vld   ] [get_bd_pins register_2/CE]
+   connect_bd_net [get_bd_pins tdest_creation_0/MAIN_SWITCH_S_ARITH_RES_ap_vld ] [get_bd_pins register_3/CE]
+   connect_bd_net [get_bd_pins tdest_creation_0/MAIN_SWITCH_S_EXT_KRNL_ap_vld  ] [get_bd_pins register_4/CE]
+   # Restore current instance
+   current_bd_instance $oldCurInst
+}
 
 # Procedure to create entire design; Provide argument to make
 # procedure reusable. If parentCell is "", will use root.
@@ -300,7 +424,7 @@ proc create_root_design { parentCell } {
    CONFIG.HAS_TKEEP {1} \
    CONFIG.HAS_TLAST {1} \
    CONFIG.HAS_TREADY {1} \
-   CONFIG.HAS_TSTRB {0} \
+   CONFIG.HAS_TSTRB {1} \
    CONFIG.LAYERED_METADATA {undef} \
    CONFIG.TDATA_NUM_BYTES {64} \
    CONFIG.TDEST_WIDTH {0} \
@@ -514,17 +638,8 @@ set s_axis_tcp_notification [ create_bd_intf_port -mode Slave -vlnv xilinx.com:i
   set ap_rst_n [ create_bd_port -dir I -type rst ap_rst_n ]
 
   # Create instance: axis_switch_0, and set properties
-  set axis_switch_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_switch:1.1 axis_switch_0 ]
-  set_property -dict [ list \
-   CONFIG.DECODER_REG {1} \
-   CONFIG.HAS_TKEEP {1} \
-   CONFIG.HAS_TLAST {1} \
-   CONFIG.NUM_MI {6} \
-   CONFIG.NUM_SI {5} \
-   CONFIG.ROUTING_MODE {1} \
-   CONFIG.TDATA_NUM_BYTES {64} \
- ] $axis_switch_0
-
+  create_hier_cell_axis_switch_0 $parentObj "axis_switch_0"
+  
    # Create instance: arith_switch_0, and set properties
   set arith_switch_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_switch:1.1 arith_switch_0 ]
   set_property -dict [ list \
@@ -539,7 +654,7 @@ set s_axis_tcp_notification [ create_bd_intf_port -mode Slave -vlnv xilinx.com:i
 
   set control_xbar [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 control_xbar ]
   set_property -dict [ list \
-   CONFIG.NUM_MI {7} \
+   CONFIG.NUM_MI {6} \
  ] $control_xbar
 
   source ./tcl/control_bd.tcl
@@ -555,14 +670,13 @@ set s_axis_tcp_notification [ create_bd_intf_port -mode Slave -vlnv xilinx.com:i
   # Create control interface connections
   connect_bd_intf_net -intf_net host_control [get_bd_intf_ports s_axi_control] [get_bd_intf_pins control/host_control]
 
-  connect_bd_intf_net -intf_net encore_control [get_bd_intf_pins control_xbar/S00_AXI] [get_bd_intf_pins control/encore_control]
-  connect_bd_intf_net -intf_net switch_control [get_bd_intf_pins control_xbar/M00_AXI] [get_bd_intf_pins axis_switch_0/S_AXI_CTRL]
-  connect_bd_intf_net -intf_net arith_bypass_control [get_bd_intf_pins control_xbar/M01_AXI] [get_bd_intf_pins arith_switch_0/S_AXI_CTRL]
-  connect_bd_intf_net -intf_net arith_control [get_bd_intf_pins control_xbar/M02_AXI] [get_bd_intf_pins reduce_arith_0/s_axi_control]
-  connect_bd_intf_net -intf_net udp_packetizer_control [get_bd_intf_pins control_xbar/M03_AXI] [get_bd_intf_pins udp_tx_subsystem/s_axi_control]
-  connect_bd_intf_net -intf_net udp_depacketizer_control [get_bd_intf_pins control_xbar/M04_AXI] [get_bd_intf_pins udp_rx_subsystem/s_axi_control]
-  connect_bd_intf_net -intf_net tcp_packetizer_control [get_bd_intf_pins control_xbar/M05_AXI] [get_bd_intf_pins tcp_tx_subsystem/s_axi_control]
-  connect_bd_intf_net -intf_net tcp_depacketizer_control [get_bd_intf_pins control_xbar/M06_AXI] [get_bd_intf_pins tcp_rx_subsystem/s_axi_control]
+  connect_bd_intf_net -intf_net encore_control           	 [get_bd_intf_pins control_xbar/S00_AXI] [get_bd_intf_pins control/encore_control]
+  connect_bd_intf_net -intf_net arith_bypass_control         [get_bd_intf_pins control_xbar/M00_AXI] [get_bd_intf_pins arith_switch_0/S_AXI_CTRL]
+  connect_bd_intf_net -intf_net arith_control            	 [get_bd_intf_pins control_xbar/M01_AXI] [get_bd_intf_pins reduce_arith_0/s_axi_control]
+  connect_bd_intf_net -intf_net udp_packetizer_control       [get_bd_intf_pins control_xbar/M02_AXI] [get_bd_intf_pins udp_tx_subsystem/s_axi_control]
+  connect_bd_intf_net -intf_net udp_depacketizer_control     [get_bd_intf_pins control_xbar/M03_AXI] [get_bd_intf_pins udp_rx_subsystem/s_axi_control]
+  connect_bd_intf_net -intf_net tcp_packetizer_control       [get_bd_intf_pins control_xbar/M04_AXI] [get_bd_intf_pins tcp_tx_subsystem/s_axi_control]
+  connect_bd_intf_net -intf_net tcp_depacketizer_control     [get_bd_intf_pins control_xbar/M05_AXI] [get_bd_intf_pins tcp_rx_subsystem/s_axi_control]
 
   connect_bd_intf_net -intf_net bscan_0 [get_bd_intf_ports bscan_0] [get_bd_intf_pins control/bscan_0]
 
@@ -636,7 +750,6 @@ set s_axis_tcp_notification [ create_bd_intf_port -mode Slave -vlnv xilinx.com:i
 
   # Create reset and clock connections
   connect_bd_net -net ap_clk [get_bd_ports ap_clk] [get_bd_pins axis_switch_0/aclk] \
-                                                   [get_bd_pins axis_switch_0/s_axi_ctrl_aclk] \
                                                    [get_bd_pins arith_switch_0/aclk] \
                                                    [get_bd_pins arith_switch_0/s_axi_ctrl_aclk] \
                                                    [get_bd_pins control/ap_clk] \
@@ -655,11 +768,9 @@ set s_axis_tcp_notification [ create_bd_intf_port -mode Slave -vlnv xilinx.com:i
                                                    [get_bd_pins control_xbar/M02_ACLK] \
                                                    [get_bd_pins control_xbar/M03_ACLK] \
                                                    [get_bd_pins control_xbar/M04_ACLK] \
-                                                   [get_bd_pins control_xbar/M05_ACLK] \
-                                                   [get_bd_pins control_xbar/M06_ACLK]
+                                                   [get_bd_pins control_xbar/M05_ACLK] 
   connect_bd_net -net ap_rst_n [get_bd_ports ap_rst_n] [get_bd_pins control/ap_rst_n]
   connect_bd_net -net ap_rst_n_1 [get_bd_pins control/encore_aresetn] [get_bd_pins axis_switch_0/aresetn] \
-                                                                      [get_bd_pins axis_switch_0/s_axi_ctrl_aresetn] \
                                                                       [get_bd_pins arith_switch_0/aresetn] \
                                                                       [get_bd_pins arith_switch_0/s_axi_ctrl_aresetn] \
                                                                       [get_bd_pins dma_0/ap_rst_n] \
@@ -677,9 +788,9 @@ set s_axis_tcp_notification [ create_bd_intf_port -mode Slave -vlnv xilinx.com:i
                                                                       [get_bd_pins control_xbar/M02_ARESETN] \
                                                                       [get_bd_pins control_xbar/M03_ARESETN] \
                                                                       [get_bd_pins control_xbar/M04_ARESETN] \
-                                                                      [get_bd_pins control_xbar/M05_ARESETN] \
-                                                                      [get_bd_pins control_xbar/M06_ARESETN]
-
+                                                                      [get_bd_pins control_xbar/M05_ARESETN] 
+  # connect axis_switch_0/scenario_V to MB/M11_AXIS
+  connect_bd_intf_net [get_bd_intf_pins control/M11_AXIS          ] [get_bd_intf_pins axis_switch_0/scenario_V] 
   save_bd_design
   # Create address segments
   #1. exchange memory module
@@ -707,7 +818,7 @@ set s_axis_tcp_notification [ create_bd_intf_port -mode Slave -vlnv xilinx.com:i
   # exchange memory hw versioning register+reset
   assign_bd_address -offset 0x40000000 -range 0x00001000 -target_address_space [get_bd_addr_spaces control/microblaze_0/Data] [get_bd_addr_segs control/microblaze_0_exchange_memory/axi_gpio_0/S_AXI/Reg] -force
   # axis_switch in mpi_offload top view
-  assign_bd_address -offset 0x44A00000 -range 0x00010000 -target_address_space [get_bd_addr_spaces control/microblaze_0/Data] [get_bd_addr_segs axis_switch_0/S_AXI_CTRL/Reg] -force
+  #assign_bd_address -offset 0x44A00000 -range 0x00010000 -target_address_space [get_bd_addr_spaces control/microblaze_0/Data] [get_bd_addr_segs axis_switch_0/tdest_creation_0/s_axi_control/Reg] -force
   # irq controller
   assign_bd_address -offset 0x44A10000 -range 0x00010000 -target_address_space [get_bd_addr_spaces control/microblaze_0/Data] [get_bd_addr_segs control/proc_irq_control/S_AXI/Reg] -force
   # timer 
