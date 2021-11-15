@@ -525,7 +525,7 @@ proc create_root_design { parentCell } {
    set hls_control [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 hls_control ]
   set_property -dict [ list \
    CONFIG.FREQ_HZ {250000000} \
-   CONFIG.TDATA_NUM_BYTES {4} \
+   CONFIG.TDATA_NUM_BYTES {64} \
    ] $hls_control
 
   set hls_control_result [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 hls_control_result ]
@@ -647,7 +647,7 @@ proc create_root_design { parentCell } {
   # Create ports
   set ap_clk [ create_bd_port -dir I -type clk -freq_hz 250000000 ap_clk ]
   set_property -dict [ list \
-   CONFIG.ASSOCIATED_BUSIF {m_axi_0:m_axi_1:s_axi_control:s_axis_tcp_notification:m_axis_tcp_read_pkg:s_axis_tcp_rx_meta:m_axis_tcp_tx_meta:m_axis_tcp_tx_data:s_axis_tcp_open_status:s_axis_tcp_tx_status:m_axis_tcp_open_connection:m_axis_tcp_listen_port:s_axis_tcp_port_status:s_axis_tcp_rx_data} \
+   CONFIG.ASSOCIATED_BUSIF {m_axi_0:m_axi_1:s_axi_control:s_axis_tcp_notification:m_axis_tcp_read_pkg:s_axis_tcp_rx_meta:m_axis_tcp_tx_meta:m_axis_tcp_tx_data:s_axis_tcp_open_status:s_axis_tcp_tx_status:m_axis_tcp_open_connection:m_axis_tcp_listen_port:s_axis_tcp_port_status:s_axis_tcp_rx_data:hls_control:hls_control_result} \
  ] $ap_clk
   set ap_rst_n [ create_bd_port -dir I -type rst ap_rst_n ]
 

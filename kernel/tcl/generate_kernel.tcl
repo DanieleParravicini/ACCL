@@ -64,8 +64,8 @@ set_property -dict [list CONFIG.AXIS14_NAME {m_axis_krnl} CONFIG.AXIS14_MODE {wr
 set_property -dict [list CONFIG.AXIS15_NAME {s_axis_arith_res} CONFIG.AXIS15_MODE {read_only} CONFIG.AXIS15_NUM_BYTES {64}] [get_ips ccl_offload]
 set_property -dict [list CONFIG.AXIS16_NAME {m_axis_arith_op0} CONFIG.AXIS16_MODE {write_only} CONFIG.AXIS16_NUM_BYTES {64}] [get_ips ccl_offload]
 set_property -dict [list CONFIG.AXIS17_NAME {m_axis_arith_op1} CONFIG.AXIS17_MODE {write_only} CONFIG.AXIS17_NUM_BYTES {64}] [get_ips ccl_offload]
-set_property -dict [list CONFIG.AXIS18_NAME {hls_control} CONFIG.AXIS18_MODE {write_only} CONFIG.AXIS18_NUM_BYTES {32}] [get_ips ccl_offload]
-set_property -dict [list CONFIG.AXIS19_NAME {hls_control_result} CONFIG.AXIS19_MODE {read_only} CONFIG.AXIS19_NUM_BYTES {32}] [get_ips ccl_offload]
+set_property -dict [list CONFIG.AXIS18_NAME {hls_control} CONFIG.AXIS18_MODE {write_only} CONFIG.AXIS18_NUM_BYTES {64}] [get_ips ccl_offload]
+set_property -dict [list CONFIG.AXIS19_NAME {hls_control_result} CONFIG.AXIS19_MODE {read_only} CONFIG.AXIS19_NUM_BYTES {4}] [get_ips ccl_offload]
 generate_target {instantiation_template} [get_files ./rtl_kernel_gen/rtl_kernel_gen.srcs/sources_1/ip/ccl_offload/ccl_offload.xci]
 update_compile_order -fileset sources_1
 open_example_project -force -in_process -dir . [get_ips ccl_offload]

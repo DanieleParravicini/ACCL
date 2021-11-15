@@ -511,6 +511,8 @@ proc create_hier_cell_control { parentCell nameHier } {
   # Create instance: microblaze_0_local_memory
   create_hier_cell_microblaze_0_local_memory $hier_obj microblaze_0_local_memory
 
+  create_bd_cell -type ip -vlnv xilinx.com:hls:hostctrl_in:1.0 hostctrl_in_0
+
   # Create instance: proc_sys_reset_0, and set properties
   set proc_sys_reset_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 proc_sys_reset_0 ]
 
@@ -663,8 +665,12 @@ proc create_hier_cell_control { parentCell nameHier } {
   connect_bd_intf_net [get_bd_intf_pins dma_enqueue_0/cmd_dma_tcp_V     ] [get_bd_intf_pins sts_header_cmd_switch/S05_AXIS]
   connect_bd_intf_net [get_bd_intf_pins sts_header_cmd_switch/M08_AXIS  ] [get_bd_intf_pins fifo_dma2_s2mm_cmd/S_AXIS]
   #hls cmds and results
-  connect_bd_intf_net [get_bd_intf_pins microblaze_0/M13_AXIS           ] [get_bd_intf_pins hls_control_result]
-  connect_bd_intf_net [get_bd_intf_pins hls_control                     ] [get_bd_intf_pins microblaze_0/S13_AXIS]
+
+  connect_bd_intf_net [get_bd_intf_pins hls_control                     ] [get_bd_intf_pins hostctrl_in_0/cmd_in_V]
+  connect_bd_intf_net [get_bd_intf_pins hostctrl_in_0/cmd_out_V         ] [get_bd_intf_pins microblaze_0/S13_AXIS]
+  connect_bd_intf_net [get_bd_intf_pins microblaze_0/M13_AXIS           ] [get_bd_intf_pins hostctrl_in_0/sts_in_V]
+  connect_bd_intf_net [get_bd_intf_pins hostctrl_in_0/sts_out_V         ] [get_bd_intf_pins hls_control_result]
+
   # Clocks and resets
   connect_bd_net -net SYS_Rst_1 [get_bd_pins microblaze_0_local_memory/SYS_Rst] [get_bd_pins proc_sys_reset_0/peripheral_reset]
   connect_bd_net [get_bd_pins ap_clk] [get_bd_pins fifo_depacketizer_sts/s_axis_aclk] \
@@ -701,7 +707,8 @@ proc create_hier_cell_control { parentCell nameHier } {
                                       [get_bd_pins dma_memory_ic/M00_ACLK]\
                                       [get_bd_pins inflight_queue/s_axis_aclk]\
                                       [get_bd_pins sts_header_cmd_switch/s_axi_ctrl_aclk]\
-                                      [get_bd_pins sts_header_cmd_switch/aclk]
+                                      [get_bd_pins sts_header_cmd_switch/aclk]\
+                                      [get_bd_pins hostctrl_in_0/ap_clk]
                                       
   connect_bd_net [get_bd_pins ap_rst_n] [get_bd_pins proc_sys_reset_0/ext_reset_in]
   #external reset
@@ -712,7 +719,8 @@ proc create_hier_cell_control { parentCell nameHier } {
                                                                     [get_bd_pins microblaze_0_axi_periph/S00_ARESETN] \
                                                                     [get_bd_pins microblaze_0_axi_periph/M00_ARESETN] \
                                                                     [get_bd_pins microblaze_0_axi_periph/M02_ARESETN] \
-                                                                    [get_bd_pins microblaze_0_axi_periph/M03_ARESETN] 
+                                                                    [get_bd_pins microblaze_0_axi_periph/M03_ARESETN] \
+                                                                    [get_bd_pins hostctrl_in_0/ap_rst_n]
 
   connect_bd_net -net mdm_1_Debug_SYS_Rst [get_bd_pins mdm_1/Debug_SYS_Rst] [get_bd_pins proc_sys_reset_0/mb_debug_sys_rst] [get_bd_pins proc_sys_reset_1/mb_debug_sys_rst]
   connect_bd_net -net microblaze_0_exchange_memory_Dout [get_bd_pins microblaze_0_exchange_memory/encore_aresetn] [get_bd_pins proc_sys_reset_1/ext_reset_in]
