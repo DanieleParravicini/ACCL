@@ -553,7 +553,8 @@ class cclo(DefaultIP):
         if buf.nbytes == 0:
             warnings.warn("zero size buffer")
             return
-
+        if not from_fpga and is_root:
+            buf.sync_to_device() 
         cclop = CCLOp.bcast
         prevcall = [self.start(scenario=cclop, len=buf.nbytes, comm=self.communicators[comm_id]["addr"], root_src_dst=root, addr_0=buf, waitfor=waitfor)]
     
@@ -664,7 +665,6 @@ class cclo(DefaultIP):
         local_rank  = comm["local_rank"]
 
         if not from_fpga:
-            print(f"synchronize {sbuf[0:count].nbytes}")
             sbuf[0:count].sync_to_device()
 
         cclop = CCLOp.reduce
