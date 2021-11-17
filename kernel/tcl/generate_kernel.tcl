@@ -101,6 +101,10 @@ if [expr [string equal $debug "all"] || [string equal $debug "axis_switch_0"]]  
   puts "Adding debug cores to axis_switch_0"
   source  -notrace tcl/debug_axis_switch.tcl
 } 
+if [expr [string equal $debug "all"] || [string equal $debug "hls_ctrl"]]  {
+  puts "Adding debug cores to axis_switch_0"
+  source  -notrace tcl/debug_hls_control.tcl
+} 
 if [string equal $debug "all"] {
   puts "Adding all debug cores to block design"
   source  -notrace tcl/debug_all.tcl
