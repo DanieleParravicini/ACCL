@@ -54,7 +54,7 @@ void dummy_hls_control(	ap_uint<32> scenario,
 #pragma HLS INTERFACE s_axilite port=return
 	
 	ap_uint<512> in_data ;
-    //Input stream needs to be optimized in the same way as hostctrl 
+	//Input stream needs to be optimized in the same way as hostctrl 
     in_data.range(31,0) 	= scenario 		;
     in_data.range(63,32) 	= len 			;
     in_data.range(95,64) 	= comm			;
@@ -67,6 +67,10 @@ void dummy_hls_control(	ap_uint<32> scenario,
     in_data.range(351,288) 	= addra 	  	;
     in_data.range(415,352) 	= addrb    		;
     in_data.range(479,416) 	= addrc 		;
-	cmd.write(in_data);
-	sts.read();
+    {
+		#pragma HLS protocol fixed 
+		cmd.write(in_data);
+		ap_wait();
+		sts.read();
+	}
 }
