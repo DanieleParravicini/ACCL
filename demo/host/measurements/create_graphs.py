@@ -40,15 +40,15 @@ def plot_lines(title, x_datas, y_datas, y_series_labels, y_styles=None, logx=Tru
     for x, y, y_series_label, y_style, y_error in zip(x_datas, y_datas, y_series_labels, y_styles, y_errors):
         if y_style:
             if not y_error is None:
-                series.append(ax.errorbar(x, y,  yerr = y_error, fmt=y_style, label=y_series_label, capsize=4.0, linewidth=3, markersize=8, markeredgewidth=3))
+                series.append(ax.errorbar(x, y,  yerr = y_error, fmt=y_style, label=y_series_label, capsize=4.0, linewidth=1, markersize=8, markeredgewidth=3))
             else:
-                line, = ax.plot(x, y, y_style, label=y_series_label, linewidth=3, markersize=8, markeredgewidth=3)
+                line, = ax.plot(x, y, y_style, label=y_series_label, linewidth=1, markersize=8, markeredgewidth=3)
                 series.append(line)
         else:
             if not y_error is None:
-                series.append(ax.errorbar(x, y,  yerr = y_error, fmt=y_style, label=y_series_label, capsize=4.0, linewidth=3, markersize=8, markeredgewidth=3))
+                series.append(ax.errorbar(x, y,  yerr = y_error, fmt=y_style, label=y_series_label, capsize=4.0, linewidth=1, markersize=8, markeredgewidth=3))
             else:
-                line, = ax.plot(x, y, label=y_series_label, linewidth=3, markersize=8, markeredgewidth=3)
+                line, = ax.plot(x, y, label=y_series_label, linewidth=1, markersize=8, markeredgewidth=3)
                 series.append(line)
 
     plt.grid(axis='y')
@@ -357,7 +357,7 @@ def compare_openMPI(df, H2H=True, F2F=True, error=False):
             if board.find("U280") != -1:
                 average_delta = np.abs(exe_full - exe)
         #For OpenMPI
-        subset              = df[(df["collective name"] == collective) & ((df["board_instance"] == "OpenMPI" ) | (df["board_instance"] == "OpenMPI 4_1 new" ) | (df["board_instance"] == "OpenMPI 4_1 mc" ))]
+        subset              = df[(df["collective name"] == collective) & ((df["board_instance"] == "OpenMPI 4_1 new" ) )]
         grouped             = subset.groupby(["board_instance", "buffer size[KB]"]).agg({'execution_time[us]':['mean','std'], 'execution_time_fullpath[us]':['mean','std']})
         grouped.reset_index(inplace=True)
         grouped             = grouped.groupby(["board_instance"])
@@ -376,7 +376,7 @@ def compare_openMPI(df, H2H=True, F2F=True, error=False):
                 series_label.append(f"{board} F2F")
                 series_y.append(exe)
                 series_x.append(bufsize)
-                stdevs.append(None)
+                stdevs.append(exe_std)
                 styles.append(f"C{i}+-")
             if np.any(exe_full != 0) and H2H:
                 series_label.append(f"{board} H2H")
@@ -386,7 +386,7 @@ def compare_openMPI(df, H2H=True, F2F=True, error=False):
                 styles.append(f"C{i}+--")
 
         
-        plot_lines("compare_OMPI"+("H2H" if H2H else "") + ("F2F" if F2F else "")+collective.replace("/", ""), series_x, series_y, series_label, styles, y_label='Latency [us]', logx=True, legend_loc ="upper left", y_errors=(stdevs if error else None))
+        plot_lines("4_1_compare_OMPI"+("H2H" if H2H else "") + ("F2F" if F2F else "")+collective.replace("/", ""), series_x, series_y, series_label, styles, y_label='Latency [us]', logx=True, legend_loc ="upper left", y_errors=(stdevs if error else None))
 
 def plot_box_plot(title,xs, ys, y_labels, xlabel, ylabel, logy=False, logx=True):
 
@@ -593,7 +593,7 @@ def compare_board(df,H2H=True, F2F=True, error =False):
                 stdevs.append(exe_full_std)
                 styles.append(f"C{i}--")
         
-        plot_lines("board_comparison"+("H2H" if H2H else "") + ("F2F" if F2F else "")+collective.replace("/", ""), series_x, series_y, series_label, styles, y_label='Latency [us]', logx=True, legend_loc ="upper left", y_errors=(stdevs if error else None))
+        plot_lines("4_1_board_comparison"+("H2H" if H2H else "") + ("F2F" if F2F else "")+collective.replace("/", ""), series_x, series_y, series_label, styles, y_label='Latency [us]', logx=True, legend_loc ="upper left", y_errors=(stdevs if error else None))
         #plot_clustered_bars(collective, series_x, series_y, series_label)
 
 def sendrecv_banks(df,H2H=False, F2F=True):
@@ -817,7 +817,7 @@ def compare_rank_with_fixed_bsize(df, H2H=True, F2F=True, error=False):
                 styles.append(f"C2--+")
             
             #OpenMPI
-            subset              = df[(df["collective name"] == collective) & (df[ "buffer size[KB]"] == bsize) & ((df["board_instance"] == "OpenMPI" ) | (df["board_instance"] == "OpenMPI 4_1 new" ) | (df["board_instance"] == "OpenMPI 4_1 mc" )) & (df["number of nodes"] > 2)]
+            subset              = df[(df["collective name"] == collective) & (df[ "buffer size[KB]"] == bsize) & ( (df["board_instance"] == "OpenMPI 4_1 new" ) ) & (df["number of nodes"] > 2)]
             i=2
             for board_name, group in subset.groupby(["board_instance"]): 
                 grouped             = group.groupby(["number of nodes"]).agg({'execution_time[us]':['mean','std'], 'execution_time_fullpath[us]':['mean','std']})
@@ -846,7 +846,7 @@ def compare_rank_with_fixed_bsize(df, H2H=True, F2F=True, error=False):
                         styles.append(f"C{i}--+")
 
             
-            plot_lines("rank_comparison"+collective.replace("/", "")+str(bsize), series_x, series_y, series_label, styles, x_label="Number of ranks", y_label='Latency [us]', legend_loc ="upper left", logx=False, logy = False, y_errors=(stdevs if error else None))
+            plot_lines("4_1_rank_comparison"+collective.replace("/", "")+str(bsize), series_x, series_y, series_label, styles, x_label="Number of ranks", y_label='Latency [us]', legend_loc ="upper left", logx=False, logy = False, y_errors=(stdevs if error else None))
 
             #plot_clustered_bars(collective, series_x, series_y, series_label)
 
@@ -856,7 +856,7 @@ def simplify_board_name(name):
     elif name == "xilinx_u280_xdma_201920_3":
         return "U280"
     elif name == "OpenMPI 4_1 new":
-        return "OpenMPI 4_1"
+        return "OpenMPI"
     else:
         return name
 
@@ -888,8 +888,8 @@ def compare_throughput(df):
         thr_full_std = group['throughput_fullpath[Gbps]']['std'].to_numpy()
         board = simplify_board_name(board)
         #if np.any(thr != 0) and F2F:
-        if np.any(thr != 0):
-            series_label.append(f"ACCL {board} F2F")
+        if np.any(thr != 0) and board== "U280":
+            series_label.append(f"ACCL")
             series_y.append(thr)
             series_x.append(bufsize)
             stdevs.append(thr_std)
@@ -902,32 +902,36 @@ def compare_throughput(df):
         #    styles.append(f"C{i+1}--+")
         
     #OpenMPI
-    subset              = df[( (df["rank id"] == 0) & (df["board_instance"] == "OpenMPI" ) & ( df["collective name"] == "Send/recv") )]
-    grouped             = subset.groupby(["buffer size[KB]"]).agg({'throughput[Gbps]':['mean','std'], 'throughput_fullpath[Gbps]':['mean','std']})
+    subset              = df[( (df["rank id"] == 0) & ((df["board_instance"] == "OpenMPI 4_1 new" )) & ( df["collective name"] == "Send/recv") )]
+    grouped             = subset.groupby(["board_instance","buffer size[KB]"]).agg({'throughput[Gbps]':['mean','std'], 'throughput_fullpath[Gbps]':['mean','std']})
     grouped.reset_index(inplace=True)
-
-    print(grouped)
-    thr          = grouped['throughput[Gbps]']['mean'].to_numpy()
-    thr_std      = grouped['throughput[Gbps]']['std'].to_numpy()
-    bufsize      = grouped['buffer size[KB]'].to_numpy()*1024
-    thr_full     = grouped['throughput_fullpath[Gbps]']['mean'].to_numpy()
-    thr_full_std = grouped['throughput_fullpath[Gbps]']['std'].to_numpy()
-    #if np.any(thr != 0) and F2F:
-    #        series_label.append("OpenMPI F2F")
-    #        series_y.append(thr)
-    #        series_x.append(bufsize[:len(thr)])
-    #        stdevs.append(thr_std)
-    #        styles.append(f"C3-+")
-    #if np.any(thr_full != 0) and H2H :
-    if np.any(thr_full != 0) :
-            series_label.append("OpenMPI  H2H")
-            series_y.append(thr_full)
-            series_x.append(bufsize)
-            stdevs.append(thr_full_std)
-            styles.append(f"C3--+")
+    grouped             = grouped.groupby(["board_instance"])
+    i = 2
+    for board, group in grouped:
+        print(group)
+        thr          = group['throughput[Gbps]']['mean'].to_numpy()
+        thr_std      = group['throughput[Gbps]']['std'].to_numpy()
+        bufsize      = group['buffer size[KB]'].to_numpy()*1024
+        thr_full     = group['throughput_fullpath[Gbps]']['mean'].to_numpy()
+        thr_full_std = group['throughput_fullpath[Gbps]']['std'].to_numpy()
+        #if np.any(thr != 0) and F2F:
+        #        series_label.append("OpenMPI F2F")
+        #        series_y.append(thr)
+        #        series_x.append(bufsize[:len(thr)])
+        #        stdevs.append(thr_std)
+        #        styles.append(f"C3-+")
+        #if np.any(thr_full != 0) and H2H :
+        board = simplify_board_name(board)
+        if np.any(thr_full != 0) :
+                series_label.append(f"{board}")
+                series_y.append(thr_full)
+                series_x.append(bufsize)
+                stdevs.append(thr_full_std)
+                styles.append(f"C{3}--+")
+        i+=1
 
         
-    plot_lines("throughput_comparsion", series_x, series_y, series_label, styles, x_label="Message Size", y_label='Throughput [Gbps]', legend_loc ="upper left", logx=True, logy = False)
+    plot_lines("throughput_comparsion_4_1", series_x, series_y, series_label, styles, x_label="Message Size", y_label='Throughput [Gbps]', legend_loc ="upper left", logx=True, logy = False)
 
 def segment_vs_membank(df):
     df              = df[ (df["experiment"] == "u280_sendrecv") & (df["rank id"] == 0)  & ( df["collective name"] == "Send/recv")]
@@ -983,7 +987,7 @@ def segment_vs_membank(df):
         plt.show()
         plt.savefig(f"segment_vs_bank_{board}.png", format='png', bbox_inches='tight')
 
-def optimized_vs_base(df, selection_params,  error = False, logy=False):
+def optimized_vs_base(df, selection_params,  error = False, logy=False, figure_label=""):
     df              = df[ (df["rank id"] == 0) ]
 
     series_label = []
@@ -1026,19 +1030,21 @@ def optimized_vs_base(df, selection_params,  error = False, logy=False):
             series_y.append(exe)
             series_x.append(bufsize)
             stdevs.append(exe_std)
-            styles.append(f"C{i}-")
+            linestyle = selection_param["line style"] if selection_param["line style"] else f"C{i}-"
+            styles.append(linestyle)
             i+=1
         if np.any(exe_full != 0) and H2H:
             series_label.append(f"{label} H2H")
             series_y.append(exe_full)
             series_x.append(bufsize)
             stdevs.append(exe_full_std)
-            styles.append(f"C{i}-")
+            linestyle = selection_param["line style"] if selection_param["line style"] else f"C{i}-"
+            styles.append(linestyle)
             i+=1
 
     #optimized version
-
-    plot_lines("comparison"+"_".join(collectives), series_x, series_y, series_label, styles, y_label='Latency [us]', logx=True, logy=logy, legend_loc ="upper left", y_errors=(stdevs if error else None))
+    figure_label = (figure_label if figure_label != "" else ("comparison"+"_".join(collectives)))
+    plot_lines(figure_label, series_x, series_y, series_label, styles, y_label='Latency [us]', logx=True, logy=logy, legend_loc ="upper left", y_errors=(stdevs if error else None))
         
 def remove_multiple_headers(df):
     headers = df.columns.tolist()
@@ -1110,7 +1116,7 @@ if __name__ == "__main__":
     if args.statistic:
         get_statistics(df)
     if args.openMPI:
-        compare_openMPI(df, error=True)
+        compare_openMPI(df, error=False)
         #compare_openMPI(df, H2H=False)
         #compare_openMPI(df, F2F=False)
         #compare_box_plot(df)
@@ -1124,89 +1130,378 @@ if __name__ == "__main__":
     if args.segment_vs_membank:
         segment_vs_membank(df)
     if args.optimized_vs_base:
-        other = pd.concat([df, load_csvs_under("accl/dual_path")])
+        other = pd.concat([df, load_csvs_under("accl/dual_path_daniele")])
         other = remove_multiple_headers(other)
 
-        optimized_vs_base(other,[{ "experiment":"bcast",
-                                "label":"baseline: dual datapath",
-                                "collective name":"Broadcast",
-                                "Segment_size[KB]":1024,
-                                "board_instance":"xilinx_u280_xdma_201920_3", 
-                                "number of banks":6,
-                                "number of nodes": 4,
-                                "F2F":True,
-                                "H2H":False},
-                                { "experiment":"bcast1",
-                                "label":"baseline: dual datapath 2",
-                                "collective name":"Broadcast",
-                                "Segment_size[KB]":1024,
-                                "board_instance":"xilinx_u280_xdma_201920_3", 
-                                "number of banks":6,
-                                "number of nodes": 4,
-                                "F2F":True,
-                                "H2H":False}, 
-                                { "experiment":"bcast_rr",
-                                "label":"baseline: dual datapath rr",
-                                "collective name":"Broadcast",
-                                "Segment_size[KB]":1024,
-                                "board_instance":"xilinx_u280_xdma_201920_3", 
-                                "number of banks":6,
-                                "number of nodes": 4,
-                                "F2F":True,
-                                "H2H":False},
-                                { "experiment":"u280_bcast",
-                                "label":"single datapath: bcast rr",
-                                "collective name":"Broadcast",
-                                "Segment_size[KB]":1024,
-                                "board_instance":"xilinx_u280_xdma_201920_3", 
-                                "number of banks":6,
-                                "number of nodes": 4,
-                                "F2F":True,
-                                "H2H":False}, 
-                                { "experiment":"converted from log",
-                                "label":"OpenMPI",
-                                "collective name":"Broadcast",
-                                "Segment_size[KB]":0,
-                                "board_instance":"OpenMPI", 
-                                "number of banks": 0,
-                                "number of nodes": 4,
-                                "F2F":False,
-                                "H2H":True}], logy=True)
+        #optimized_vs_base(other,[{ "experiment":"bcast",
+        #                        "label":"baseline: dual datapath",
+        #                        "collective name":"Broadcast",
+        #                        "Segment_size[KB]":1024,
+        #                        "board_instance":"xilinx_u280_xdma_201920_3", 
+        #                        "number of banks":6,
+        #                        "number of nodes": 4,
+        #                        "F2F":True,
+        #                        "H2H":False},
+        #                        { "experiment":"bcast1",
+        #                        "label":"baseline: dual datapath 2",
+        #                        "collective name":"Broadcast",
+        #                        "Segment_size[KB]":1024,
+        #                        "board_instance":"xilinx_u280_xdma_201920_3", 
+        #                        "number of banks":6,
+        #                        "number of nodes": 4,
+        #                        "F2F":True,
+        #                        "H2H":False}, 
+        #                        { "experiment":"bcast_rr",
+        #                        "label":"baseline: dual datapath rr",
+        #                        "collective name":"Broadcast",
+        #                        "Segment_size[KB]":1024,
+        #                        "board_instance":"xilinx_u280_xdma_201920_3", 
+        #                        "number of banks":6,
+        #                        "number of nodes": 4,
+        #                        "F2F":True,
+        #                        "H2H":False},
+        #                        { "experiment":"u280_bcast",
+        #                        "label":"single datapath: bcast rr",
+        #                        "collective name":"Broadcast",
+        #                        "Segment_size[KB]":1024,
+        #                        "board_instance":"xilinx_u280_xdma_201920_3", 
+        #                        "number of banks":6,
+        #                        "number of nodes": 4,
+        #                        "F2F":True,
+        #                        "H2H":False}, 
+        #                        { "experiment":"converted from log",
+        #                        "label":"OpenMPI",
+        #                        "collective name":"Broadcast",
+        #                        "Segment_size[KB]":0,
+        #                        "board_instance":"OpenMPI", 
+        #                        "number of banks": 0,
+        #                        "number of nodes": 4,
+        #                        "F2F":False,
+        #                        "H2H":True}], logy=True)
 
-        optimized_vs_base(other,[{ "experiment":"u280_dual_path_scatter",
-                                "label":"baseline",
-                                "collective name":"Scatter",
-                                "Segment_size[KB]":1024,
-                                "board_instance":"xilinx_u280_xdma_201920_3", 
-                                "number of banks":6,
-                                "number of nodes": 4,
-                                "F2F":True,
-                                "H2H":False}, 
-                                { "experiment":"u280_scatter",
-                                "label":"alternative",
-                                "collective name":"Scatter",
-                                "Segment_size[KB]":1024,
-                                "board_instance":"xilinx_u280_xdma_201920_3", 
-                                "number of banks":6,
-                                "number of nodes": 4,
-                                "F2F":True,
-                                "H2H":False}])
+        #optimized_vs_base(other,[{ "experiment":"u280_dual_path_scatter",
+        #                        "label":"baseline",
+        #                        "collective name":"Scatter",
+        #                        "Segment_size[KB]":1024,
+        #                        "board_instance":"xilinx_u280_xdma_201920_3", 
+        #                        "number of banks":6,
+        #                        "number of nodes": 4,
+        #                        "F2F":True,
+        #                        "H2H":False}, 
+        #                        { "experiment":"u280_scatter",
+        #                        "label":"alternative",
+        #                        "collective name":"Scatter",
+        #                        "Segment_size[KB]":1024,
+        #                        "board_instance":"xilinx_u280_xdma_201920_3", 
+        #                        "number of banks":6,
+        #                        "number of nodes": 4,
+        #                        "F2F":True,
+        #                        "H2H":False}])
 
-        optimized_vs_base(other,[{ "experiment":"u280_dual_path_reduce",
-                                "label":"baseline",
-                                "collective name":"Reduce",
-                                "Segment_size[KB]":1024,
-                                "board_instance":"xilinx_u280_xdma_201920_3", 
-                                "number of banks":6,
-                                "number of nodes": 4,
-                                "F2F":True,
-                                "H2H":False}, 
-                                { "experiment":"u280_reduce",
-                                "label":"alternative",
-                                "collective name":"Reduce",
-                                "Segment_size[KB]":1024,
-                                "board_instance":"xilinx_u280_xdma_201920_3", 
-                                "number of banks":6,
-                                "number of nodes": 4,
-                                "F2F":True,
-                                "H2H":False}])
+        #optimized_vs_base(other,[
+        #                         { "experiment":"19_dma",
+        #                        "label":"dual datapath",
+        #                        "collective name":"Reduce",
+        #                        "Segment_size[KB]":1024,
+        #                        "board_instance":"xilinx_u280_xdma_201920_3", 
+        #                        "number of banks":6,
+        #                        "number of nodes": 3,
+        #                        "F2F":True,
+        #                        "H2H":False}, 
+        #                        { "experiment":"u280_u250_reduce",
+        #                        "label":"single datapath",
+        #                        "collective name":"Reduce",
+        #                        "Segment_size[KB]":1024,
+        #                        "board_instance":"xilinx_u280_xdma_201920_3", 
+        #                        "number of banks":6,
+        #                        "number of nodes": 3,
+        #                        "F2F":True,
+        #                        "H2H":False}], logy=True)
+        #
+        #optimized_vs_base(other,[
+        #                         { "experiment":"allreduce",
+        #                        "label":"dual datapath",
+        #                        "collective name":"Allreduce",
+        #                        "Segment_size[KB]":1024,
+        #                        "board_instance":"xilinx_u280_xdma_201920_3", 
+        #                        "number of banks":6,
+        #                        "number of nodes": 3,
+        #                        "F2F":True,
+        #                        "H2H":False}, 
+        #                        { "experiment":"u280_u250_allreduce",
+        #                        "label":"single datapath",
+        #                        "collective name":"Allreduce",
+        #                        "Segment_size[KB]":1024,
+        #                        "board_instance":"xilinx_u280_xdma_201920_3", 
+        #                        "number of banks":6,
+        #                        "number of nodes": 3,
+        #                        "F2F":True,
+        #                        "H2H":False}], logy=True)
+        #
+        #optimized_vs_base(other,[
+        #                         { "experiment":"allgather",
+        #                        "label":"dual datapath",
+        #                        "collective name":"Allgather",
+        #                        "Segment_size[KB]":1024,
+        #                        "board_instance":"xilinx_u280_xdma_201920_3", 
+        #                        "number of banks":6,
+        #                        "number of nodes": 3,
+        #                        "F2F":True,
+        #                        "H2H":False}, 
+        #                        { "experiment":"u280_u250_allgather",
+        #                        "label":"single datapath",
+        #                        "collective name":"Allgather",
+        #                        "Segment_size[KB]":1024,
+        #                        "board_instance":"xilinx_u280_xdma_201920_3", 
+        #                        "number of banks":6,
+        #                        "number of nodes": 3,
+        #                        "F2F":True,
+        #                        "H2H":False}], logy=True)
+        #
+        #optimized_vs_base(other,[
+        #                         { "experiment":"gather",
+        #                        "label":"dual datapath",
+        #                        "collective name":"Gather",
+        #                        "Segment_size[KB]":1024,
+        #                        "board_instance":"xilinx_u280_xdma_201920_3", 
+        #                        "number of banks":6,
+        #                        "number of nodes": 3,
+        #                        "F2F":True,
+        #                        "H2H":False}, 
+        #                        { "experiment":"u280_u250_gather",
+        #                        "label":"single datapath",
+        #                        "collective name":"Gather",
+        #                        "Segment_size[KB]":1024,
+        #                        "board_instance":"xilinx_u280_xdma_201920_3", 
+        #                        "number of banks":6,
+        #                        "number of nodes": 3,
+        #                        "F2F":True,
+        #                        "H2H":False}], logy=True)
+        #
+        #optimized_vs_base(other,[
+        #                         { "experiment":"bcast",
+        #                        "label":"dual datapath",
+        #                        "collective name":"Broadcast",
+        #                        "Segment_size[KB]":1024,
+        #                        "board_instance":"xilinx_u280_xdma_201920_3", 
+        #                        "number of banks":6,
+        #                        "number of nodes": 3,
+        #                        "F2F":True,
+        #                        "H2H":False}, 
+        #                        { "experiment":"u280_u250_bcast",
+        #                        "label":"single datapath",
+        #                        "collective name":"Broadcast",
+        #                        "Segment_size[KB]":1024,
+        #                        "board_instance":"xilinx_u280_xdma_201920_3", 
+        #                        "number of banks":6,
+        #                        "number of nodes": 3,
+        #                        "F2F":True,
+        #                        "H2H":False}], logy=True)
+
+        #other = pd.concat([df, load_csvs_under("accl/dual_path_daniele"), load_csvs_under("accl/dma_hardenend")])
+        #other = remove_multiple_headers(other)
+        #experiments_filtering = [
+        #            { "experiment":"allreduce",
+        #                "label":"dual datapath (BASELINE)",
+        #                "collective name":"Allreduce",
+        #                "Segment_size[KB]":1024,
+        #                "board_instance":"xilinx_u280_xdma_201920_3", 
+        #                "number of banks":6,
+        #                "number of nodes": 3,
+        #                "F2F":True,
+        #                "H2H":False}
+        #                ]
+        #for segment_size in [128, 256, 512, 1024]:
+        #    experiments_filtering.append(
+        #    { "experiment":"dma_hardened",
+        #    "label": f"dma hardened segment_size {segment_size}",
+        #    "collective name":"Allreduce",
+        #    "Segment_size[KB]":segment_size,
+        #    "board_instance":"xilinx_u280_xdma_201920_3", 
+        #    "number of banks":6,
+        #    "number of nodes": 3,
+        #    "F2F":True,
+        #    "H2H":False})
+        #optimized_vs_base(other, experiments_filtering , logy=False, figure_label="dma_hardened_allreduce_comparison")
+        #
+        #experiments_filtering = [{
+        #    "experiment":"19_dma",
+        #    "label":"dual datapath (BASELINE)",
+        #    "collective name":"Reduce",
+        #    "Segment_size[KB]":1024,
+        #    "board_instance":"xilinx_u280_xdma_201920_3", 
+        #    "number of banks":6,
+        #    "number of nodes": 3,
+        #    "F2F":True,
+        #    "H2H":False
+        #}]
+        #
+        #for segment_size in [128, 256, 512, 1024]:
+        #    experiments_filtering.append({
+        #        "experiment":"dma_hardened",
+        #        "label":f"dma hardened {segment_size}",
+        #        "collective name":"Reduce",
+        #        "Segment_size[KB]":segment_size,
+        #        "board_instance":"xilinx_u280_xdma_201920_3", 
+        #        "number of banks":6,
+        #        "number of nodes": 3,
+        #        "F2F":True,
+        #        "H2H":False
+        #    })
+        #optimized_vs_base(other, experiments_filtering , logy=False, figure_label="dma_hardened_reduce_comparison")
+        #
+        #experiments_filtering = [{
+        #    "experiment":"allgather",
+        #    "label":"dual datapath",
+        #    "collective name":"Allgather",
+        #    "Segment_size[KB]":1024,
+        #    "board_instance":"xilinx_u280_xdma_201920_3", 
+        #    "number of banks":6,
+        #    "number of nodes": 3,
+        #    "F2F":True,
+        #    "H2H":False
+        #}]
+        #
+        #for segment_size in [128, 256, 512, 1024]:
+        #    experiments_filtering.append({
+        #        "experiment":"dma_hardened",
+        #        "label":f"dma hardened {segment_size}",
+        #        "collective name":"Allgather",
+        #        "Segment_size[KB]":segment_size,
+        #        "board_instance":"xilinx_u280_xdma_201920_3", 
+        #        "number of banks":6,
+        #        "number of nodes": 3,
+        #        "F2F":True,
+        #        "H2H":False
+        #    })
+        #
+        #optimized_vs_base(other, experiments_filtering, logy=False, figure_label="dma_hardened_allgather_comparison")
+        #
+        #experiments_filtering = [{ 
+        #    "experiment":"gather",
+        #    "label":"dual datapath",
+        #    "collective name":"Gather",
+        #    "Segment_size[KB]":1024,
+        #    "board_instance":"xilinx_u280_xdma_201920_3", 
+        #    "number of banks":6,
+        #    "number of nodes": 3,
+        #    "F2F":True,
+        #    "H2H":False
+        #}]
+        #
+        #for segment_size in [128, 256, 512, 1024]:
+        #    experiments_filtering.append({
+        #        "experiment":"dma_hardened",
+        #        "label": f"dma_hardened {segment_size}",
+        #        "collective name":"Gather",
+        #        "Segment_size[KB]": segment_size,
+        #        "board_instance":"xilinx_u280_xdma_201920_3", 
+        #        "number of banks":6,
+        #        "number of nodes": 3,
+        #        "F2F":True,
+        #        "H2H":False
+        #    })
+        #optimized_vs_base(other,experiments_filtering, logy=False, figure_label="dma_hardened_gather_comparison")
+        #
+        #
+        #experiments_filtering = [{ 
+        #    "experiment":"bcast",
+        #    "label":"dual datapath",
+        #    "collective name":"Broadcast",
+        #    "Segment_size[KB]":1024,
+        #    "board_instance":"xilinx_u280_xdma_201920_3", 
+        #    "number of banks":6,
+        #    "number of nodes": 3,
+        #    "F2F":True,
+        #    "H2H":False
+        #}]
+        #
+        #for segment_size in [128, 256, 512, 1024]:
+        #    experiments_filtering.append({
+        #        "experiment":"dma_hardened",
+        #        "label": f"dma_hardened {segment_size}",
+        #        "collective name":"Broadcast",
+        #        "Segment_size[KB]":segment_size,
+        #        "board_instance":"xilinx_u280_xdma_201920_3", 
+        #        "number of banks":6,
+        #        "number of nodes": 3,
+        #        "F2F":True,
+        #        "H2H":False
+        #    })
+        #optimized_vs_base(other,experiments_filtering, logy=False, figure_label="dma_hardened_broadcast_comparison")
+        #
+
+        other = pd.concat([load_csvs_under("accl/dma_hardened2")])
+        other = remove_multiple_headers(other)
+
+        for collective_op in ["Send/recv","Broadcast", "Scatter", "Gather", "Allgather", "Reduce", "Allreduce"]:
+            experiments_filtering = []
+            for segment_size, marker in [(128,"o"), (256, "*"), (512, "v"), (1024, ">")]:
+                experiments_filtering.append(
+                    { 
+                        "experiment":"dma_mcu",
+                        "line style":f"C0-{marker}",
+                        "label":f"MCU s:{segment_size}",
+                        "collective name": collective_op,
+                        "Segment_size[KB]":segment_size,
+                        "board_instance":"xilinx_u280_xdma_201920_3", 
+                        "number of banks":6,
+                        "number of nodes": 3,
+                        "F2F":True,
+                        "H2H":False})
+            
+            collective_label = collective_op.replace("/","")
+            print(collective_op)
+            optimized_vs_base(other, experiments_filtering , logy=True, figure_label=f"dma_mcu_{collective_label}_trend")
+
+        for collective_op in ["Send/recv","Broadcast", "Scatter", "Gather", "Allgather", "Reduce", "Allreduce"]:
+            experiments_filtering = []
+        
+            for segment_size, marker in [(128,"o"), (256, "*"), (512, "v"), (1024, ">")]:
+                experiments_filtering.append(
+                    { 
+                        "experiment":"dma_hardened2",
+                        "line style":f"C1-{marker}",
+                        "label": f"dma hardened s:{segment_size}",
+                        "collective name": collective_op,
+                        "Segment_size[KB]":segment_size,
+                        "board_instance":"xilinx_u280_xdma_201920_3", 
+                        "number of banks":6,
+                        "number of nodes": 3,
+                        "F2F":True,
+                        "H2H":False})
+            collective_label = collective_op.replace("/","")
+            print(collective_op)
+            optimized_vs_base(other, experiments_filtering , logy=True, figure_label=f"dma_hardened_{collective_label}_trend")
+
+        for collective_op in ["Send/recv","Broadcast", "Scatter", "Gather", "Allgather", "Reduce", "Allreduce"]:
+            experiments_filtering = []
+            for segment_size, marker in [(128,"o"), (256, "*"), (512, "v"), (1024, ">")]:
+                experiments_filtering.append(
+                    { 
+                        "experiment":"dma_mcu",
+                        "line style":f"C0-{marker}",
+                        "label":f"MCU s:{segment_size}",
+                        "collective name": collective_op,
+                        "Segment_size[KB]":segment_size,
+                        "board_instance":"xilinx_u280_xdma_201920_3", 
+                        "number of banks":6,
+                        "number of nodes": 3,
+                        "F2F":True,
+                        "H2H":False})
+            for segment_size, marker in [(128,"o"), (256, "*"), (512, "v"), (1024, ">")]:
+                experiments_filtering.append(
+                    { 
+                        "experiment":"dma_hardened2",
+                        "line style":f"C1-{marker}",
+                        "label": f"dma hardened s:{segment_size}",
+                        "collective name": collective_op,
+                        "Segment_size[KB]":segment_size,
+                        "board_instance":"xilinx_u280_xdma_201920_3", 
+                        "number of banks":6,
+                        "number of nodes": 3,
+                        "F2F":True,
+                        "H2H":False})
+            collective_label = collective_op.replace("/","")
+            print(collective_op)
+            optimized_vs_base(other, experiments_filtering , logy=True, figure_label=f"dma_hardened_{collective_label}_comparison")
