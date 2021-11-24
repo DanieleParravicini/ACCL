@@ -305,7 +305,9 @@ ap_uint<32> dma_mover(
 		dma_tag_start 		 = (dma_tag_start + 1) & 0xf;
 		dma_tag_acked 		 = (dma_tag_acked + 1) & 0xf;
 		sequence_number		  += 1;
-		sequence_number_acked += 1;
+		if( err == DMA_SUCCESS){
+			sequence_number_acked += 1;
+		}
 	}
 
 	// 3. finish ack the remaining
@@ -321,7 +323,9 @@ ap_uint<32> dma_mover(
 		// update reference 
 		remaining_to_ack 	-= curr_len_ack;
 		dma_tag_acked 		 = (dma_tag_acked + 1) & 0xf;
-		sequence_number_acked += 1;
+		if( err == DMA_SUCCESS){
+			sequence_number_acked += 1;
+		}
 	}
 	
 	if( which_dma & (USE_PACKETIZER_UDP | USE_PACKETIZER_TCP)){

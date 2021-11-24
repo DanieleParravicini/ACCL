@@ -209,6 +209,143 @@ int test_pkts( unsigned int which_dma,
     return nerrors;
 }
 
+int test_pkts_error( unsigned int which_dma, 
+             unsigned int len = 20){
+    stream<ap_uint <128> > DMA0_RX_CMD  ; stream<ap_uint <32>  > DMA0_RX_STS  ; 
+	stream<ap_uint <128> > DMA1_RX_CMD  ; stream<ap_uint <32>  > DMA1_RX_STS  ;
+	stream<ap_uint <128> > DMA2_RX_CMD  ; stream<ap_uint <32>  > DMA2_RX_STS  ;
+	stream<ap_uint <128> > DMA1_TX_CMD  ; stream<ap_uint <32>  > DMA1_TX_STS  ;
+	stream<ap_uint <512> > UDP_PKT_CMD  ; stream<ap_uint <32>  > UDP_PKT_STS  ;
+    stream<ap_uint <512> > TCP_PKT_CMD  ; stream<ap_uint <32>  > TCP_PKT_STS  ;
+    unsigned int segment_size       = 10;
+    unsigned int max_dma_in_flight  = 20; //max_dma_in_flight can't be really tested :/
+    ap_uint<64>  op0_addr           = 0xdeadbeef;
+    ap_uint<64>  op1_addr           = 0x43;
+    ap_uint<64>  res_addr           = 100;
+    unsigned     nerrors            = 0;
+	
+    unsigned int len_tmp        ;
+    unsigned int tmp_to_move;
+    unsigned int mpi_tag 	= 0xffff;
+    //create dummy communicator with 4 ranks
+	unsigned int n_ranks = 4;
+	unsigned int local_rank 		= 3;
+	unsigned int base_ip 			= 0xbeef;
+	unsigned int base_port			= 0xdead;
+	unsigned int base_session 		= 0xcafe;
+	unsigned int base_inbound_seq   = 0x0042;
+	unsigned int base_outbound_seq  = 42	;
+	void * ptr = malloc( sizeof(communicator) -4 + sizeof(comm_rank)* n_ranks);
+	communicator* comm 	= ( communicator *) ptr;
+	comm->size 			= n_ranks;
+	comm->local_rank 	= local_rank;
+	comm_rank * ranks 	= (comm_rank *) (ptr + 8) ;
+	for(int i =0; i < n_ranks; i++){
+		ranks[i].ip 			= base_ip 			+ i;
+		ranks[i].port			= base_port			+ i;
+		ranks[i].session 		= base_session 		+ i;
+		ranks[i].inbound_seq  = base_inbound_seq 	+ i;
+		ranks[i].outbound_seq = base_outbound_seq + i;
+	}
+
+    unsigned int segment_number;
+    ap_uint <96> sts;
+    ap_uint <512> pkt_cmd;
+    
+
+	//test: ensure that dma_mover segments correctly the buffers for the pkts and
+	//send them the correct header and recognizes an error condition on the last segment
+	for( unsigned int dst_rank = 0; dst_rank < n_ranks; dst_rank++){
+			
+		len_tmp		= len;
+		segment_number = base_outbound_seq + dst_rank + 1;
+		//check that there's no data left to move
+		while(  which_dma && len_tmp > 0 ){
+
+			tmp_to_move = (len_tmp > segment_size ? segment_size : len_tmp);
+			if( len_tmp <= segment_size ){
+				//increment an additional time the segment number
+				segment_number +=1;
+			}
+
+			if ( (which_dma & USE_PACKETIZER_TCP) && len_tmp > 0){
+				//if there are too many element to transfer: according to segment size
+				//put segment size elements
+				TCP_PKT_STS.write( segment_number);
+			}
+			if ( (which_dma & USE_PACKETIZER_UDP) && len_tmp > 0){
+				UDP_PKT_STS.write( segment_number);
+			}
+
+			len_tmp -=tmp_to_move;
+			segment_number +=1;
+		}
+		//recall segmentator
+		sts = dma_mover(
+			DMA0_RX_CMD, DMA0_RX_STS,
+			DMA1_RX_CMD, DMA1_RX_STS,
+			DMA2_RX_CMD, DMA2_RX_STS,
+			DMA1_TX_CMD, DMA1_TX_STS,
+			UDP_PKT_CMD, UDP_PKT_STS,
+			TCP_PKT_CMD, TCP_PKT_STS,
+			segment_size, max_dma_in_flight,
+			len,
+			op0_addr    , op1_addr  , res_addr,
+			dst_rank	, mpi_tag 	, ( (unsigned int *) ptr)	,
+			which_dma);
+		
+		
+		if (sts.range(DMA_ERR_BITS*3-1, DMA_ERR_BITS*2) != PACK_SEQ_NUMBER_ERROR){ cout << "Dma mover didn't return a PACK_SEQ_NUMBER_ERROR error! (" << sts << ")" << endl; return 1; }
+		len_tmp			= len;	
+		segment_number  = base_outbound_seq + dst_rank + 1;
+		//check that dma_mover created all the segments
+		while( which_dma && len_tmp > 0) {
+			tmp_to_move = (len_tmp > segment_size ? segment_size : len_tmp);
+			//all the pkt cmds are generated
+			if ( (which_dma & USE_PACKETIZER_TCP) && len_tmp > 0){
+				//if there are too many element to transfer: according to segment size
+				//put segment size elements
+				pkt_cmd = TCP_PKT_CMD.read();
+				ap_uint<512> expected_pkt =  create_pkt_cmd(base_session + dst_rank , tmp_to_move, mpi_tag, local_rank,  segment_number );
+				nerrors     +=( pkt_cmd != expected_pkt);
+				if (nerrors){ cout << "TCP PKT CMD not correct! Got: " << pkt_cmd << " Expected: " << expected_pkt <<  endl; return 1; }
+			}
+			if ( (which_dma & USE_PACKETIZER_UDP) && len_tmp > 0){
+				pkt_cmd = UDP_PKT_CMD.read();
+				ap_uint<512> expected_pkt =  create_pkt_cmd(base_port	   + dst_rank , tmp_to_move, mpi_tag, local_rank, segment_number );
+				nerrors     +=( pkt_cmd != expected_pkt);
+				if (nerrors){ cout << "UDP PKT CMD not correct! Got: " << pkt_cmd << " Expected: " << expected_pkt <<  endl; return 1; }
+			}			
+			len_tmp -= tmp_to_move;
+			segment_number +=1;
+		}
+		//sequence number are updated as in the normal case but 1 message will be missing
+		for(int i=0; i < n_ranks ; i++){
+			if( ranks[i].ip 			!= base_ip 			 + i) { cout << "base_ip of rank " << i << "has been modified!" << endl ; return 1;}
+			if( ranks[i].port			!= base_port		 + i) { cout << "base_port of rank " << i << "has been modified!" << endl ; return 1;}
+			if( ranks[i].session 		!= base_session 	 + i) { cout << "base_session of rank " << i << "has been modified!" << endl ; return 1;}
+			if( ranks[i].inbound_seq  	!= base_inbound_seq  + i) { cout << "base_inbound_seq of rank " << i << "has been modified!" << endl ; return 1;}
+			
+			if(i <= dst_rank){
+				if( ranks[i].outbound_seq  	!= base_outbound_seq + i + (len + segment_size -1 ) / segment_size ) { cout << "outbound_seq " << i << " has not been updated! obtained: "  << ranks[i].outbound_seq << " expected: " << base_outbound_seq + i + 1+  (len + segment_size -1 ) / segment_size << endl; return 1;}
+			}else{
+				if( ranks[i].outbound_seq 	!= base_outbound_seq + i) { cout << "base_outbound_seq of rank " << i << " has been modified!" << endl; return 1;}
+			}
+		}
+
+	}
+	if (!DMA0_RX_CMD.empty()){ cout << "DMA0_RX CMD not empty!" << endl; return 1; }
+	if (!DMA1_RX_CMD.empty()){ cout << "DMA1_RX CMD not empty!" << endl; return 1; }
+	if (!DMA2_RX_CMD.empty()){ cout << "DMA2_RX CMD not empty!" << endl; return 1; }
+	if (!DMA1_TX_CMD.empty()){ cout << "DMA1_TX CMD not empty!" << endl; return 1; }
+	if (!DMA0_RX_STS.empty()){ cout << "DMA0_RX STS not empty!" << endl; return 1; }
+	if (!DMA1_RX_STS.empty()){ cout << "DMA1_RX STS not empty!" << endl; return 1; }
+	if (!DMA2_RX_STS.empty()){ cout << "DMA2_RX STS not empty!" << endl; return 1; }
+	if (!DMA1_TX_STS.empty()){ cout << "DMA1_TX STS not empty!" << endl; return 1; }
+
+    return nerrors;
+}
+
 
 int test_dmas( unsigned int which_dma, 
              unsigned int len = 20){
@@ -593,5 +730,8 @@ int main(){
     	cout << "Errors: " << nerrors << " after testing pkts" <<  endl;
 	}
 
+	nerrors 	+= test_pkts_error( USE_PACKETIZER_TCP, 100);
+	nerrors 	+= test_pkts_error( USE_PACKETIZER_UDP, 100);
+	cout << "Errors: " << nerrors << " after testing pkts error" <<  endl;
     return (nerrors == 0 ? 0 : 1);
 }
