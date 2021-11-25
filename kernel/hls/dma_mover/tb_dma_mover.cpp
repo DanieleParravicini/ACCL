@@ -21,10 +21,9 @@ using namespace hls;
 using namespace std;
 
 void dma_mover(
-    stream<ap_uint<128> > &DMA0_RX_CMD	, stream<ap_uint<32> > &DMA0_RX_STS, 
-	stream<ap_uint<128> > &DMA1_RX_CMD	, stream<ap_uint<32> > &DMA1_RX_STS,
-	stream<ap_uint<128> > &DMA2_RX_CMD	, stream<ap_uint<32> > &DMA2_RX_STS,
-	stream<ap_uint<128> > &DMA1_TX_CMD	, stream<ap_uint<32> > &DMA1_TX_STS,
+    stream<ap_uint<104> > &DMA0_RX_CMD	, stream<ap_uint<32> > &DMA0_RX_STS, 
+	stream<ap_uint<104> > &DMA1_RX_CMD	, stream<ap_uint<32> > &DMA1_RX_STS,
+	stream<ap_uint<104> > &DMA1_TX_CMD	, stream<ap_uint<32> > &DMA1_TX_STS,
 	stream<ap_uint<512> > &UDP_PKT_CMD	, stream<ap_uint<32> > &UDP_PKT_STS,
     stream<ap_uint<512> > &TCP_PKT_CMD	, stream<ap_uint<32> > &TCP_PKT_STS,
     unsigned int segment_size,
@@ -34,10 +33,9 @@ void dma_mover(
 	stream< ap_uint<32> 	  >  & return_stream);
 
 ap_uint<32> dma_mover_unpacked(
-    stream<ap_uint<128> > &DMA0_RX_CMD	, stream<ap_uint<32> > &DMA0_RX_STS, 
-	stream<ap_uint<128> > &DMA1_RX_CMD	, stream<ap_uint<32> > &DMA1_RX_STS,
-	stream<ap_uint<128> > &DMA2_RX_CMD	, stream<ap_uint<32> > &DMA2_RX_STS,
-	stream<ap_uint<128> > &DMA1_TX_CMD	, stream<ap_uint<32> > &DMA1_TX_STS,
+    stream<ap_uint<104> > &DMA0_RX_CMD	, stream<ap_uint<32> > &DMA0_RX_STS, 
+	stream<ap_uint<104> > &DMA1_RX_CMD	, stream<ap_uint<32> > &DMA1_RX_STS,
+	stream<ap_uint<104> > &DMA1_TX_CMD	, stream<ap_uint<32> > &DMA1_TX_STS,
 	stream<ap_uint<512> > &UDP_PKT_CMD	, stream<ap_uint<32> > &UDP_PKT_STS,
     stream<ap_uint<512> > &TCP_PKT_CMD	, stream<ap_uint<32> > &TCP_PKT_STS,
     unsigned int segment_size,
@@ -66,7 +64,6 @@ ap_uint<32> dma_mover_unpacked(
 		dma_mover(
 			DMA0_RX_CMD,DMA0_RX_STS,
 			DMA1_RX_CMD,DMA1_RX_STS,
-			DMA2_RX_CMD,DMA2_RX_STS,
 			DMA1_TX_CMD,DMA1_TX_STS,
 			UDP_PKT_CMD,UDP_PKT_STS,
 			TCP_PKT_CMD,TCP_PKT_STS,
@@ -96,13 +93,14 @@ ap_uint <32> create_sts(int btt, int error, int tag, int tlast=0){
     return ret;
 }
 
-ap_uint <128> create_dma_cmd( unsigned int btt, ap_uint<64> addr, unsigned int tag){
+ap_uint <104> create_dma_cmd( unsigned int btt, ap_uint<64> addr, unsigned int tag, unsigned expected_tlast=1){
 
-  ap_uint<128> ret;
-  // 31=DRR 30=EOF 29-24=DSA 23=Type 22-0=BTT 15-12=xCACHE 11-8=xUSER 7-4=RSVD 3-0=TAG
-  ret.range( 31,  0) 	= 0xC0800000 | btt;  
+  ap_uint<104> ret;
+  
+  ret.range( 31,  0) 	= 0xC0800000 | btt;  // 31=DRR 30=EOF 29-24=DSA 23=Type 22-0=BTT 15-12=xCACHE 11-8=xUSER 7-4=RSVD 3-0=TAG
+  ret.range( 30, 30)	= expected_tlast;
   ret.range( 95, 32) 	= addr;
-  ret.range(127, 96) 	= 	  0x2000 | tag;
+  ret.range(103, 96) 	= tag;
   return ret;
 }
 
@@ -120,10 +118,9 @@ ap_uint <512> create_pkt_cmd( unsigned int dst, unsigned int btt, unsigned int m
 
 int test_pkts( unsigned int which_dma, 
              unsigned int len = 20){
-    stream<ap_uint <128> > DMA0_RX_CMD  ; stream<ap_uint <32>  > DMA0_RX_STS  ; 
-	stream<ap_uint <128> > DMA1_RX_CMD  ; stream<ap_uint <32>  > DMA1_RX_STS  ;
-	stream<ap_uint <128> > DMA2_RX_CMD  ; stream<ap_uint <32>  > DMA2_RX_STS  ;
-	stream<ap_uint <128> > DMA1_TX_CMD  ; stream<ap_uint <32>  > DMA1_TX_STS  ;
+    stream<ap_uint <104> > DMA0_RX_CMD  ; stream<ap_uint <32>  > DMA0_RX_STS  ; 
+	stream<ap_uint <104> > DMA1_RX_CMD  ; stream<ap_uint <32>  > DMA1_RX_STS  ;
+	stream<ap_uint <104> > DMA1_TX_CMD  ; stream<ap_uint <32>  > DMA1_TX_STS  ;
 	stream<ap_uint <512> > UDP_PKT_CMD  ; stream<ap_uint <32>  > UDP_PKT_STS  ;
     stream<ap_uint <512> > TCP_PKT_CMD  ; stream<ap_uint <32>  > TCP_PKT_STS  ;
     unsigned int segment_size       = 10;
@@ -188,7 +185,6 @@ int test_pkts( unsigned int which_dma,
 		sts = dma_mover_unpacked(
 			DMA0_RX_CMD, DMA0_RX_STS,
 			DMA1_RX_CMD, DMA1_RX_STS,
-			DMA2_RX_CMD, DMA2_RX_STS,
 			DMA1_TX_CMD, DMA1_TX_STS,
 			UDP_PKT_CMD, UDP_PKT_STS,
 			TCP_PKT_CMD, TCP_PKT_STS,
@@ -239,11 +235,9 @@ int test_pkts( unsigned int which_dma,
 	}
 	if (!DMA0_RX_CMD.empty()){ cout << "DMA0_RX CMD not empty!" << endl; return 1; }
 	if (!DMA1_RX_CMD.empty()){ cout << "DMA1_RX CMD not empty!" << endl; return 1; }
-	if (!DMA2_RX_CMD.empty()){ cout << "DMA2_RX CMD not empty!" << endl; return 1; }
 	if (!DMA1_TX_CMD.empty()){ cout << "DMA1_TX CMD not empty!" << endl; return 1; }
 	if (!DMA0_RX_STS.empty()){ cout << "DMA0_RX STS not empty!" << endl; return 1; }
 	if (!DMA1_RX_STS.empty()){ cout << "DMA1_RX STS not empty!" << endl; return 1; }
-	if (!DMA2_RX_STS.empty()){ cout << "DMA2_RX STS not empty!" << endl; return 1; }
 	if (!DMA1_TX_STS.empty()){ cout << "DMA1_TX STS not empty!" << endl; return 1; }
 
     return nerrors;
@@ -251,10 +245,9 @@ int test_pkts( unsigned int which_dma,
 
 int test_pkts_error( unsigned int which_dma, 
              unsigned int len = 20){
-    stream<ap_uint <128> > DMA0_RX_CMD  ; stream<ap_uint <32>  > DMA0_RX_STS  ; 
-	stream<ap_uint <128> > DMA1_RX_CMD  ; stream<ap_uint <32>  > DMA1_RX_STS  ;
-	stream<ap_uint <128> > DMA2_RX_CMD  ; stream<ap_uint <32>  > DMA2_RX_STS  ;
-	stream<ap_uint <128> > DMA1_TX_CMD  ; stream<ap_uint <32>  > DMA1_TX_STS  ;
+    stream<ap_uint <104> > DMA0_RX_CMD  ; stream<ap_uint <32>  > DMA0_RX_STS  ; 
+	stream<ap_uint <104> > DMA1_RX_CMD  ; stream<ap_uint <32>  > DMA1_RX_STS  ;
+	stream<ap_uint <104> > DMA1_TX_CMD  ; stream<ap_uint <32>  > DMA1_TX_STS  ;
 	stream<ap_uint <512> > UDP_PKT_CMD  ; stream<ap_uint <32>  > UDP_PKT_STS  ;
     stream<ap_uint <512> > TCP_PKT_CMD  ; stream<ap_uint <32>  > TCP_PKT_STS  ;
     unsigned int segment_size       = 10;
@@ -324,7 +317,6 @@ int test_pkts_error( unsigned int which_dma,
 		sts = dma_mover_unpacked(
 			DMA0_RX_CMD, DMA0_RX_STS,
 			DMA1_RX_CMD, DMA1_RX_STS,
-			DMA2_RX_CMD, DMA2_RX_STS,
 			DMA1_TX_CMD, DMA1_TX_STS,
 			UDP_PKT_CMD, UDP_PKT_STS,
 			TCP_PKT_CMD, TCP_PKT_STS,
@@ -376,11 +368,9 @@ int test_pkts_error( unsigned int which_dma,
 	}
 	if (!DMA0_RX_CMD.empty()){ cout << "DMA0_RX CMD not empty!" << endl; return 1; }
 	if (!DMA1_RX_CMD.empty()){ cout << "DMA1_RX CMD not empty!" << endl; return 1; }
-	if (!DMA2_RX_CMD.empty()){ cout << "DMA2_RX CMD not empty!" << endl; return 1; }
 	if (!DMA1_TX_CMD.empty()){ cout << "DMA1_TX CMD not empty!" << endl; return 1; }
 	if (!DMA0_RX_STS.empty()){ cout << "DMA0_RX STS not empty!" << endl; return 1; }
 	if (!DMA1_RX_STS.empty()){ cout << "DMA1_RX STS not empty!" << endl; return 1; }
-	if (!DMA2_RX_STS.empty()){ cout << "DMA2_RX STS not empty!" << endl; return 1; }
 	if (!DMA1_TX_STS.empty()){ cout << "DMA1_TX STS not empty!" << endl; return 1; }
 
     return nerrors;
@@ -389,10 +379,9 @@ int test_pkts_error( unsigned int which_dma,
 
 int test_dmas( unsigned int which_dma, 
              unsigned int len = 20){
-    stream<ap_uint <128> > DMA0_RX_CMD  ; stream<ap_uint <32>  > DMA0_RX_STS  ; 
-	stream<ap_uint <128> > DMA1_RX_CMD  ; stream<ap_uint <32>  > DMA1_RX_STS  ;
-	stream<ap_uint <128> > DMA2_RX_CMD  ; stream<ap_uint <32>  > DMA2_RX_STS  ;
-	stream<ap_uint <128> > DMA1_TX_CMD  ; stream<ap_uint <32>  > DMA1_TX_STS  ;
+    stream<ap_uint <104> > DMA0_RX_CMD  ; stream<ap_uint <32>  > DMA0_RX_STS  ; 
+	stream<ap_uint <104> > DMA1_RX_CMD  ; stream<ap_uint <32>  > DMA1_RX_STS  ;
+	stream<ap_uint <104> > DMA1_TX_CMD  ; stream<ap_uint <32>  > DMA1_TX_STS  ;
 	stream<ap_uint <512> > UDP_PKT_CMD  ; stream<ap_uint <32>  > UDP_PKT_STS  ;
     stream<ap_uint <512> > TCP_PKT_CMD  ; stream<ap_uint <32>  > TCP_PKT_STS  ;
     unsigned int segment_size       = 10;
@@ -409,7 +398,7 @@ int test_dmas( unsigned int which_dma,
     unsigned int comm		[10];
     unsigned int dma_tag;
     ap_uint <96> sts;
-    ap_uint <128> cmd;
+    ap_uint <104> cmd;
     
 
 	//test: ensure that dma_mover segments correctly the buffers
@@ -442,7 +431,6 @@ int test_dmas( unsigned int which_dma,
 	sts = dma_mover_unpacked(
 		DMA0_RX_CMD, DMA0_RX_STS,
 		DMA1_RX_CMD, DMA1_RX_STS,
-		DMA2_RX_CMD, DMA2_RX_STS,
 		DMA1_TX_CMD, DMA1_TX_STS,
 		UDP_PKT_CMD, UDP_PKT_STS,
 		TCP_PKT_CMD, TCP_PKT_STS,
@@ -475,7 +463,7 @@ int test_dmas( unsigned int which_dma,
 		}
 		if( (which_dma & (USE_RES_DMA | USE_RES_DMA_WITHOUT_TLAST) ) && len_tmp > 0 ){
 			cmd         = DMA1_TX_CMD.read();
-			nerrors     +=( cmd != create_dma_cmd(tmp_to_move, res_addr, dma_tag) );
+			nerrors     +=( cmd != create_dma_cmd(tmp_to_move, res_addr, dma_tag, ( (which_dma & USE_RES_DMA) ? 1 : 0) ) );
 			if (nerrors){ cout << "DMA1_TX CMD not correct!" << endl; return 1; }
 			res_addr    += tmp_to_move;
 		}
@@ -484,11 +472,9 @@ int test_dmas( unsigned int which_dma,
 	}
 	if (!DMA0_RX_CMD.empty()){ cout << "DMA0_RX CMD not empty!" << endl; return 1; }
 	if (!DMA1_RX_CMD.empty()){ cout << "DMA1_RX CMD not empty!" << endl; return 1; }
-	if (!DMA2_RX_CMD.empty()){ cout << "DMA2_RX CMD not empty!" << endl; return 1; }
 	if (!DMA1_TX_CMD.empty()){ cout << "DMA1_TX CMD not empty!" << endl; return 1; }
 	if (!DMA0_RX_STS.empty()){ cout << "DMA0_RX STS not empty!" << endl; return 1; }
 	if (!DMA1_RX_STS.empty()){ cout << "DMA1_RX STS not empty!" << endl; return 1; }
-	if (!DMA2_RX_STS.empty()){ cout << "DMA2_RX STS not empty!" << endl; return 1; }
 	if (!DMA1_TX_STS.empty()){ cout << "DMA1_TX STS not empty!" << endl; return 1; }
 
     return nerrors;
@@ -497,10 +483,9 @@ int test_dmas( unsigned int which_dma,
 int test_dma_tag_errors( 
 	unsigned int which_dma, 
     unsigned int len = 20){
-    stream<ap_uint <128> > DMA0_RX_CMD  ; stream<ap_uint <32>  > DMA0_RX_STS  ; 
-	stream<ap_uint <128> > DMA1_RX_CMD  ; stream<ap_uint <32>  > DMA1_RX_STS  ;
-	stream<ap_uint <128> > DMA2_RX_CMD  ; stream<ap_uint <32>  > DMA2_RX_STS  ;
-	stream<ap_uint <128> > DMA1_TX_CMD  ; stream<ap_uint <32>  > DMA1_TX_STS  ;
+    stream<ap_uint <104> > DMA0_RX_CMD  ; stream<ap_uint <32>  > DMA0_RX_STS  ; 
+	stream<ap_uint <104> > DMA1_RX_CMD  ; stream<ap_uint <32>  > DMA1_RX_STS  ;
+	stream<ap_uint <104> > DMA1_TX_CMD  ; stream<ap_uint <32>  > DMA1_TX_STS  ;
 	stream<ap_uint <512> > UDP_PKT_CMD  ; stream<ap_uint <32>  > UDP_PKT_STS  ;
     stream<ap_uint <512> > TCP_PKT_CMD  ; stream<ap_uint <32>  > TCP_PKT_STS  ;
     unsigned int segment_size       = 10;
@@ -518,7 +503,7 @@ int test_dma_tag_errors(
     unsigned int comm		[10];
     unsigned int dma_tag;
     ap_uint <96> sts;
-    ap_uint <128> cmd;
+    ap_uint <104> cmd;
     
 
 	//test: ensure that dma_mover segments correctly the buffers
@@ -550,7 +535,6 @@ int test_dma_tag_errors(
 	sts = dma_mover_unpacked(
 		DMA0_RX_CMD, DMA0_RX_STS,
 		DMA1_RX_CMD, DMA1_RX_STS,
-		DMA2_RX_CMD, DMA2_RX_STS,
 		DMA1_TX_CMD, DMA1_TX_STS,
 		UDP_PKT_CMD, UDP_PKT_STS,
 		TCP_PKT_CMD, TCP_PKT_STS,
@@ -591,7 +575,7 @@ int test_dma_tag_errors(
 		if( (which_dma & (USE_RES_DMA | USE_RES_DMA_WITHOUT_TLAST) ) && len_tmp > 0 ){
 			//check that cmd is issued 
 			cmd         = DMA1_TX_CMD.read();
-			nerrors     +=( cmd != create_dma_cmd(tmp_to_move, res_addr, dma_tag) );
+			nerrors     +=( cmd != create_dma_cmd(tmp_to_move, res_addr, dma_tag, ( (which_dma & USE_RES_DMA) ? 1 : 0)) );
 			if (nerrors){ cout << "DMA1_TX CMD not correct!" << endl; return 1; }
 			res_addr    += tmp_to_move;
 			//check that dma_mover signals a dma_tag mismatch
@@ -605,11 +589,9 @@ int test_dma_tag_errors(
 	}
 	if (!DMA0_RX_CMD.empty()){ cout << "DMA0_RX CMD not empty!" << endl; return 1; }
 	if (!DMA1_RX_CMD.empty()){ cout << "DMA1_RX CMD not empty!" << endl; return 1; }
-	if (!DMA2_RX_CMD.empty()){ cout << "DMA2_RX CMD not empty!" << endl; return 1; }
 	if (!DMA1_TX_CMD.empty()){ cout << "DMA1_TX CMD not empty!" << endl; return 1; }
 	if (!DMA0_RX_STS.empty()){ cout << "DMA0_RX STS not empty!" << endl; return 1; }
 	if (!DMA1_RX_STS.empty()){ cout << "DMA1_RX STS not empty!" << endl; return 1; }
-	if (!DMA2_RX_STS.empty()){ cout << "DMA2_RX STS not empty!" << endl; return 1; }
 	if (!DMA1_TX_STS.empty()){ cout << "DMA1_TX STS not empty!" << endl; return 1; }
 
     return nerrors;
@@ -618,10 +600,9 @@ int test_dma_tag_errors(
 int test_dma_errors( 
 	unsigned int which_dma, 
     unsigned int len = 20){
-    stream<ap_uint <128> > DMA0_RX_CMD  ; stream<ap_uint <32>  > DMA0_RX_STS  ; 
-	stream<ap_uint <128> > DMA1_RX_CMD  ; stream<ap_uint <32>  > DMA1_RX_STS  ;
-	stream<ap_uint <128> > DMA2_RX_CMD  ; stream<ap_uint <32>  > DMA2_RX_STS  ;
-	stream<ap_uint <128> > DMA1_TX_CMD  ; stream<ap_uint <32>  > DMA1_TX_STS  ;
+    stream<ap_uint <104> > DMA0_RX_CMD  ; stream<ap_uint <32>  > DMA0_RX_STS  ; 
+	stream<ap_uint <104> > DMA1_RX_CMD  ; stream<ap_uint <32>  > DMA1_RX_STS  ;
+	stream<ap_uint <104> > DMA1_TX_CMD  ; stream<ap_uint <32>  > DMA1_TX_STS  ;
 	stream<ap_uint <512> > UDP_PKT_CMD  ; stream<ap_uint <32>  > UDP_PKT_STS  ;
     stream<ap_uint <512> > TCP_PKT_CMD  ; stream<ap_uint <32>  > TCP_PKT_STS  ;
     unsigned int segment_size       = 10;
@@ -639,7 +620,7 @@ int test_dma_errors(
     unsigned int comm		[10];
     unsigned int dma_tag;
     ap_uint <96> sts;
-    ap_uint <128> cmd;
+    ap_uint <104> cmd;
     
 
 	//test: ensure that dma_mover correctly notifies errors
@@ -671,7 +652,6 @@ int test_dma_errors(
 		sts = dma_mover_unpacked(
 			DMA0_RX_CMD, DMA0_RX_STS,
 			DMA1_RX_CMD, DMA1_RX_STS,
-			DMA2_RX_CMD, DMA2_RX_STS,
 			DMA1_TX_CMD, DMA1_TX_STS,
 			UDP_PKT_CMD, UDP_PKT_STS,
 			TCP_PKT_CMD, TCP_PKT_STS,
@@ -712,7 +692,7 @@ int test_dma_errors(
 			if( (which_dma & (USE_RES_DMA | USE_RES_DMA_WITHOUT_TLAST) ) && len_tmp > 0 ){
 				//check that cmd is issued 
 				cmd         = DMA1_TX_CMD.read();
-				nerrors     +=( cmd != create_dma_cmd(tmp_to_move, res_addr, dma_tag) );
+				nerrors     +=( cmd != create_dma_cmd(tmp_to_move, res_addr, dma_tag,  ( (which_dma & USE_RES_DMA) ? 1 : 0 )  ) ) ;
 				if (nerrors){ cout << "DMA1_TX CMD not correct!" << endl; return 1; }
 				res_addr    += tmp_to_move;
 				//check that dma_mover signals a dma_tag mismatch
@@ -727,11 +707,9 @@ int test_dma_errors(
 	
 		if (!DMA0_RX_CMD.empty()){ cout << "DMA0_RX CMD not empty!" << endl; return 1; }
 		if (!DMA1_RX_CMD.empty()){ cout << "DMA1_RX CMD not empty!" << endl; return 1; }
-		if (!DMA2_RX_CMD.empty()){ cout << "DMA2_RX CMD not empty!" << endl; return 1; }
 		if (!DMA1_TX_CMD.empty()){ cout << "DMA1_TX CMD not empty!" << endl; return 1; }
 		if (!DMA0_RX_STS.empty()){ cout << "DMA0_RX STS not empty!" << endl; return 1; }
 		if (!DMA1_RX_STS.empty()){ cout << "DMA1_RX STS not empty!" << endl; return 1; }
-		if (!DMA2_RX_STS.empty()){ cout << "DMA2_RX STS not empty!" << endl; return 1; }
 		if (!DMA1_TX_STS.empty()){ cout << "DMA1_TX STS not empty!" << endl; return 1; }
 	}
     return nerrors;
