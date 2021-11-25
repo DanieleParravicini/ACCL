@@ -107,11 +107,11 @@ void tcp_txHandler(
 		case CHECK_REQ:
 			if (!s_axis_tcp_tx_status.empty())
                {
-                    pkt64 txStatus_pkt = s_axis_tcp_tx_status.read();
-                    sessionID = txStatus_pkt.data(15,0);
-                    length = txStatus_pkt.data(31,16);
-                    remaining_space = txStatus_pkt.data(61,32);
-                    error = txStatus_pkt.data(63,62);
+                    pkt64 txStatus_pkt  = s_axis_tcp_tx_status.read();
+                    sessionID           = txStatus_pkt.data(15,0);
+                    length              = txStatus_pkt.data(31,16);
+                    remaining_space     = txStatus_pkt.data(61,32);
+                    error               = txStatus_pkt.data(63,62);
                     currentPkgWord = (length + (512/8) -1 ) >> 6; //current packet word length
 
                     //if no error, perpare the tx meta of the next packet
