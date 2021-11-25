@@ -187,7 +187,7 @@ ap_uint <32> ack_pkts(
 	return err;
 }
 
-ap_uint<32> dma_mover(
+ap_uint<32> dma_mover_unpacked_internal(
     stream<ap_uint<128> > &DMA0_RX_CMD	, stream<ap_uint<32> > &DMA0_RX_STS, 
 	stream<ap_uint<128> > &DMA1_RX_CMD	, stream<ap_uint<32> > &DMA1_RX_STS,
 	stream<ap_uint<128> > &DMA2_RX_CMD	, stream<ap_uint<32> > &DMA2_RX_STS,
@@ -205,45 +205,19 @@ ap_uint<32> dma_mover(
     ap_uint<64> res_addr,
     unsigned int dst_rank,
     unsigned int mpi_tag,
-    unsigned int * comm,
+    unsigned int * exchange_mem,
+	ap_uint <PKT_COMM_OFFSET_END - (PKT_COMM_OFFSET_START + 2) > comm_offset,
     unsigned int which_dma) 
 {
-	#pragma HLS INTERFACE s_axilite port = segment_size
-	#pragma HLS INTERFACE s_axilite port = max_dma_in_flight
-	#pragma HLS INTERFACE ap_ctrl_chain port = return
-	#pragma HLS INTERFACE axis port = DMA0_RX_CMD
-	#pragma HLS INTERFACE axis port = DMA0_RX_STS
-	#pragma HLS INTERFACE axis port = DMA1_RX_CMD
-	#pragma HLS INTERFACE axis port = DMA1_RX_STS
-	#pragma HLS INTERFACE axis port = DMA2_RX_CMD
-	#pragma HLS INTERFACE axis port = DMA2_RX_STS
-	#pragma HLS INTERFACE axis port = DMA1_TX_CMD
-	#pragma HLS INTERFACE axis port = DMA1_TX_STS
-	#pragma HLS INTERFACE axis port = UDP_PKT_CMD
-	#pragma HLS INTERFACE axis port = UDP_PKT_STS
-	#pragma HLS INTERFACE axis port = TCP_PKT_CMD
-	#pragma HLS INTERFACE axis port = TCP_PKT_STS
-	//#pragma HLS INTERFACE axis port = op0_len
-	//#pragma HLS INTERFACE axis port = op1_len
-	//#pragma HLS INTERFACE axis port = res_len
-	#pragma HLS INTERFACE axis port = len
-	#pragma HLS INTERFACE axis port = op0_addr
-	#pragma HLS INTERFACE axis port = op1_addr
-	#pragma HLS INTERFACE axis port = res_addr
-	#pragma HLS INTERFACE axis port = which_dma
-	#pragma HLS INTERFACE axis port = dst_rank
-	#pragma HLS INTERFACE axis port = mpi_tag
-	#pragma HLS INTERFACE m_axi port= comm	depth=24 offset=slave num_read_outstanding=40	num_write_outstanding=40 bundle=mem
-	#pragma HLS PIPELINE II=1 style=flp
 
 	unsigned int src_rank = 0, sequence_number = 0, dst = 0;
 	if ( which_dma & (USE_PACKETIZER_TCP | USE_PACKETIZER_UDP) ) {
-		src_rank 		= *(comm + COMM_LOCAL_RANK_OFFSET);
-		sequence_number = *(comm + COMM_RANKS_OFFSET + (dst_rank * RANK_SIZE) + RANK_OUTBOUND_SEQ_OFFSET) + 1;
+		src_rank 		= *(exchange_mem + comm_offset +  COMM_LOCAL_RANK_OFFSET);
+		sequence_number = *(exchange_mem + comm_offset +  COMM_RANKS_OFFSET + (dst_rank * RANK_SIZE) + RANK_OUTBOUND_SEQ_OFFSET) + 1;
 		if ( which_dma & USE_PACKETIZER_TCP ) {
-			dst = *(comm + COMM_RANKS_OFFSET + dst_rank * RANK_SIZE + RANK_SESSION_OFFSET);
+			dst = *(exchange_mem  + comm_offset + COMM_RANKS_OFFSET + dst_rank * RANK_SIZE + RANK_SESSION_OFFSET);
 		} else {
-			dst = *(comm + COMM_RANKS_OFFSET + dst_rank * RANK_SIZE +    RANK_PORT_OFFSET);
+			dst = *(exchange_mem  + comm_offset + COMM_RANKS_OFFSET + dst_rank * RANK_SIZE +    RANK_PORT_OFFSET);
 		}
 	}
 
@@ -329,7 +303,72 @@ ap_uint<32> dma_mover(
 	}
 	
 	if( which_dma & (USE_PACKETIZER_UDP | USE_PACKETIZER_TCP)){
-		*(comm + COMM_RANKS_OFFSET +  dst_rank * RANK_SIZE + RANK_OUTBOUND_SEQ_OFFSET) = sequence_number_acked;
+		*(exchange_mem + comm_offset +COMM_RANKS_OFFSET +  dst_rank * RANK_SIZE + RANK_OUTBOUND_SEQ_OFFSET) = sequence_number_acked;
 	}
 	return err;
+}
+
+void dma_mover(
+    stream<ap_uint<128> > &DMA0_RX_CMD	, stream<ap_uint<32> > &DMA0_RX_STS, 
+	stream<ap_uint<128> > &DMA1_RX_CMD	, stream<ap_uint<32> > &DMA1_RX_STS,
+	stream<ap_uint<128> > &DMA2_RX_CMD	, stream<ap_uint<32> > &DMA2_RX_STS,
+	stream<ap_uint<128> > &DMA1_TX_CMD	, stream<ap_uint<32> > &DMA1_TX_STS,
+	stream<ap_uint<512> > &UDP_PKT_CMD	, stream<ap_uint<32> > &UDP_PKT_STS,
+    stream<ap_uint<512> > &TCP_PKT_CMD	, stream<ap_uint<32> > &TCP_PKT_STS,
+    unsigned int segment_size,
+    unsigned int max_dma_in_flight,
+    unsigned int * exchange_mem,
+    stream< ap_uint<PKT_SIZE> > &pkt_stream,
+	stream< ap_uint<32> > 		&return_stream){
+	#pragma HLS INTERFACE 
+	#pragma HLS INTERFACE s_axilite port = segment_size
+	#pragma HLS INTERFACE s_axilite port = max_dma_in_flight
+	#pragma HLS INTERFACE m_axi port= exchange_mem	depth=24 offset=slave num_read_outstanding=40	num_write_outstanding=40 bundle=mem
+	#pragma HLS INTERFACE s_axilite port = return
+	#pragma HLS INTERFACE axis port = DMA0_RX_CMD
+	#pragma HLS INTERFACE axis port = DMA0_RX_STS
+	#pragma HLS INTERFACE axis port = DMA1_RX_CMD
+	#pragma HLS INTERFACE axis port = DMA1_RX_STS
+	#pragma HLS INTERFACE axis port = DMA2_RX_CMD
+	#pragma HLS INTERFACE axis port = DMA2_RX_STS
+	#pragma HLS INTERFACE axis port = DMA1_TX_CMD
+	#pragma HLS INTERFACE axis port = DMA1_TX_STS
+	#pragma HLS INTERFACE axis port = UDP_PKT_CMD
+	#pragma HLS INTERFACE axis port = UDP_PKT_STS
+	#pragma HLS INTERFACE axis port = TCP_PKT_CMD
+	#pragma HLS INTERFACE axis port = TCP_PKT_STS
+	#pragma HLS INTERFACE axis port = pkt_stream
+	#pragma HLS INTERFACE axis port = return_stream
+	#pragma HLS PIPELINE II=1 style=flp
+	ap_uint< PKT_SIZE> pkt  = pkt_stream.read();
+	unsigned int len 		= pkt.range(PKT_LEN_END			, PKT_LEN_START				);
+	unsigned int dst_rank 	= pkt.range(PKT_DST_RANK_END	, PKT_DST_RANK_START		);	
+	unsigned int mpi_tag 	= pkt.range(PKT_MPI_TAG_END		, PKT_MPI_TAG_START			);
+	unsigned int op0_addr 	= pkt.range(PKT_OP0_ADDR_END	, PKT_OP0_ADDR_START		);	
+	unsigned int op1_addr 	= pkt.range(PKT_OP1_ADDR_END	, PKT_OP1_ADDR_START		);	
+	unsigned int res_addr 	= pkt.range(PKT_RES_ADDR_END	, PKT_RES_ADDR_START		);	
+	unsigned int which_dma 	= pkt.range(PKT_WHICH_DMA_END	, PKT_WHICH_DMA_START		);	
+	ap_uint <PKT_COMM_OFFSET_END - (PKT_COMM_OFFSET_START + 2) > comm_offset = pkt.range(PKT_COMM_OFFSET_END , PKT_COMM_OFFSET_START	+ 2	);	
+
+	ap_uint<32> ret = dma_mover_unpacked_internal(
+		DMA0_RX_CMD	,DMA0_RX_STS,
+		DMA1_RX_CMD	,DMA1_RX_STS,
+		DMA2_RX_CMD	,DMA2_RX_STS,
+		DMA1_TX_CMD	,DMA1_TX_STS,
+		UDP_PKT_CMD	,UDP_PKT_STS,
+		TCP_PKT_CMD	,TCP_PKT_STS,
+		segment_size,
+		max_dma_in_flight,
+		len,
+		op0_addr,
+		op1_addr,
+		res_addr,
+		dst_rank,
+		mpi_tag,
+		exchange_mem,
+		comm_offset, 
+		which_dma
+	);
+
+	return_stream.write(ret);
 }

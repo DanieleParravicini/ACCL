@@ -57,8 +57,8 @@ add_files dma_mover.h -cflags "-std=c++14"
 add_files -tb tb_dma_mover.cpp -cflags "-std=c++14"
 
 set_top dma_mover
-
 open_solution sol1
+config_interface -m_axi_addr64=false 
 
 if {$do_sim} {
     csim_design -clean

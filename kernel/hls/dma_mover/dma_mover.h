@@ -7,6 +7,25 @@
     #include <iostream>
     #include <stdio.h>
     using namespace hls;
+
+    //DMA MOVER PKTS
+    #define PKT_LEN_START                    0
+    #define PKT_LEN_END                     31
+    #define PKT_DST_RANK_START              32
+    #define PKT_DST_RANK_END                63
+    #define PKT_MPI_TAG_START               64
+    #define PKT_MPI_TAG_END                 95
+    #define PKT_OP0_ADDR_START              96
+    #define PKT_OP0_ADDR_END               159
+    #define PKT_OP1_ADDR_START             160
+    #define PKT_OP1_ADDR_END               223
+    #define PKT_RES_ADDR_START             224
+    #define PKT_RES_ADDR_END               287
+    #define PKT_WHICH_DMA_START            288
+    #define PKT_WHICH_DMA_END              295
+    #define PKT_COMM_OFFSET_START          296
+    #define PKT_COMM_OFFSET_END            307
+    #define PKT_SIZE                       320
     //ERR 
     #define DMA_ERR_BITS                     8
     //USE DMA FLAGS

@@ -20,7 +20,7 @@
 using namespace hls;
 using namespace std;
 
-ap_uint<32> dma_mover(
+void dma_mover(
     stream<ap_uint<128> > &DMA0_RX_CMD	, stream<ap_uint<32> > &DMA0_RX_STS, 
 	stream<ap_uint<128> > &DMA1_RX_CMD	, stream<ap_uint<32> > &DMA1_RX_STS,
 	stream<ap_uint<128> > &DMA2_RX_CMD	, stream<ap_uint<32> > &DMA2_RX_STS,
@@ -29,17 +29,57 @@ ap_uint<32> dma_mover(
     stream<ap_uint<512> > &TCP_PKT_CMD	, stream<ap_uint<32> > &TCP_PKT_STS,
     unsigned int segment_size,
     unsigned int max_dma_in_flight,
-    //unsigned int op0_len,
-    //unsigned int op1_len,
-    //unsigned int res_len,
+    unsigned int * exchange_mem,
+    stream< ap_uint<PKT_SIZE> >  & pkt_stream,
+	stream< ap_uint<32> 	  >  & return_stream);
+
+ap_uint<32> dma_mover_unpacked(
+    stream<ap_uint<128> > &DMA0_RX_CMD	, stream<ap_uint<32> > &DMA0_RX_STS, 
+	stream<ap_uint<128> > &DMA1_RX_CMD	, stream<ap_uint<32> > &DMA1_RX_STS,
+	stream<ap_uint<128> > &DMA2_RX_CMD	, stream<ap_uint<32> > &DMA2_RX_STS,
+	stream<ap_uint<128> > &DMA1_TX_CMD	, stream<ap_uint<32> > &DMA1_TX_STS,
+	stream<ap_uint<512> > &UDP_PKT_CMD	, stream<ap_uint<32> > &UDP_PKT_STS,
+    stream<ap_uint<512> > &TCP_PKT_CMD	, stream<ap_uint<32> > &TCP_PKT_STS,
+    unsigned int segment_size,
+    unsigned int max_dma_in_flight,
     unsigned int len,
     ap_uint<64> op0_addr,
     ap_uint<64> op1_addr,
     ap_uint<64> res_addr,
     unsigned int dst_rank,
     unsigned int mpi_tag,
-    unsigned int * comm,
-    unsigned int which_dma) ;
+    unsigned int * exchange_mem,
+    unsigned int which_dma) {
+
+		ap_uint< PKT_SIZE> pkt;
+		pkt.range(PKT_LEN_END		  , PKT_LEN_START			) = len;
+		pkt.range(PKT_DST_RANK_END	  , PKT_DST_RANK_START		) =	dst_rank;	
+		pkt.range(PKT_MPI_TAG_END	  , PKT_MPI_TAG_START		) =	mpi_tag;
+		pkt.range(PKT_OP0_ADDR_END	  , PKT_OP0_ADDR_START		) =	op0_addr;	
+		pkt.range(PKT_OP1_ADDR_END	  , PKT_OP1_ADDR_START		) =	op1_addr;	
+		pkt.range(PKT_RES_ADDR_END	  , PKT_RES_ADDR_START		) =	res_addr;	
+		pkt.range(PKT_WHICH_DMA_END	  , PKT_WHICH_DMA_START		) =	which_dma;	
+		pkt.range(PKT_COMM_OFFSET_END , PKT_COMM_OFFSET_START	) =	0;	
+		stream < ap_uint< PKT_SIZE> > pkt_stream; 
+		stream < ap_uint<32> > 	      return_stream;
+		pkt_stream.write(pkt);
+		dma_mover(
+			DMA0_RX_CMD,DMA0_RX_STS,
+			DMA1_RX_CMD,DMA1_RX_STS,
+			DMA2_RX_CMD,DMA2_RX_STS,
+			DMA1_TX_CMD,DMA1_TX_STS,
+			UDP_PKT_CMD,UDP_PKT_STS,
+			TCP_PKT_CMD,TCP_PKT_STS,
+			segment_size,
+			max_dma_in_flight,
+			exchange_mem,
+			pkt_stream, return_stream
+		);
+
+		return return_stream.read();
+	}
+
+
 
 ap_uint <32> create_sts(int btt, int error, int tag, int tlast=0){
     ap_uint<32> ret;
@@ -145,7 +185,7 @@ int test_pkts( unsigned int which_dma,
 			segment_number +=1;
 		}
 		//recall segmentator
-		sts = dma_mover(
+		sts = dma_mover_unpacked(
 			DMA0_RX_CMD, DMA0_RX_STS,
 			DMA1_RX_CMD, DMA1_RX_STS,
 			DMA2_RX_CMD, DMA2_RX_STS,
@@ -281,7 +321,7 @@ int test_pkts_error( unsigned int which_dma,
 			segment_number +=1;
 		}
 		//recall segmentator
-		sts = dma_mover(
+		sts = dma_mover_unpacked(
 			DMA0_RX_CMD, DMA0_RX_STS,
 			DMA1_RX_CMD, DMA1_RX_STS,
 			DMA2_RX_CMD, DMA2_RX_STS,
@@ -399,7 +439,7 @@ int test_dmas( unsigned int which_dma,
 
 	}
 	//recall segmentator
-	sts = dma_mover(
+	sts = dma_mover_unpacked(
 		DMA0_RX_CMD, DMA0_RX_STS,
 		DMA1_RX_CMD, DMA1_RX_STS,
 		DMA2_RX_CMD, DMA2_RX_STS,
@@ -507,7 +547,7 @@ int test_dma_tag_errors(
 		len_tmp -=tmp_to_move;
 	}
 	//recall segmentator
-	sts = dma_mover(
+	sts = dma_mover_unpacked(
 		DMA0_RX_CMD, DMA0_RX_STS,
 		DMA1_RX_CMD, DMA1_RX_STS,
 		DMA2_RX_CMD, DMA2_RX_STS,
@@ -628,7 +668,7 @@ int test_dma_errors(
 			len_tmp -=tmp_to_move;
 		}
 		//recall segmentator
-		sts = dma_mover(
+		sts = dma_mover_unpacked(
 			DMA0_RX_CMD, DMA0_RX_STS,
 			DMA1_RX_CMD, DMA1_RX_STS,
 			DMA2_RX_CMD, DMA2_RX_STS,
