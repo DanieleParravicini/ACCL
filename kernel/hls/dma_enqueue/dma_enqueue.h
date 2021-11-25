@@ -38,8 +38,8 @@
     void dma_enqueue(	
         ap_uint<32>          use_tcp,
         ap_uint<32>          nbufs,
-        stream< ap_uint<32> > &cmd_dma_tcp,
-        stream< ap_uint<32> > &cmd_dma_udp,
+        stream< ap_uint<104> > &cmd_dma_tcp,
+        stream< ap_uint<104> > &cmd_dma_udp,
         stream< ap_uint<32> > &inflight_queue,
         ap_uint<32>*         rx_buffers
     );

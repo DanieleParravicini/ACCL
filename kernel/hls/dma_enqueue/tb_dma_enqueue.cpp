@@ -25,8 +25,9 @@ using namespace hls;
 using namespace std;
 
 int test_even(int use_tcp, int num_spare_buffers=16){
-	stream< ap_uint<32> > cmd_dma_tcp, cmd_dma_udp;
+	stream< ap_uint<104> > cmd_dma_tcp, cmd_dma_udp;
 	stream< ap_uint<32> > inflight_queue;
+	uint max_len = 1000;
 	//create a fake memory to hold spare buffers
 	ap_uint<32>  buffers [num_spare_buffers*SPARE_BUFFER_FIELDS];
 	ap_uint<32>* buffers_addr = buffers;
@@ -37,6 +38,7 @@ int test_even(int use_tcp, int num_spare_buffers=16){
 		buffers[i*SPARE_BUFFER_FIELDS + STATUS_OFFSET] = ((i % 2) == 0 ? STATUS_IDLE : STATUS_RESERVED);
 		buffers[i*SPARE_BUFFER_FIELDS + ADDRL_OFFSET ] = 0xdeadbeef + i ;
 		buffers[i*SPARE_BUFFER_FIELDS + ADDRH_OFFSET ] = 0;
+		buffers[i*SPARE_BUFFER_FIELDS + MAX_LEN_OFFSET] = max_len +1;
 		cout << "Buffer "<< i << " status:" << buffers[i*SPARE_BUFFER_FIELDS + STATUS_OFFSET] << " addr: " << hex << buffers[i*SPARE_BUFFER_FIELDS + ADDRH_OFFSET] << hex << buffers[i*SPARE_BUFFER_FIELDS + ADDRL_OFFSET] << endl;
 	}
 
@@ -58,24 +60,19 @@ int test_even(int use_tcp, int num_spare_buffers=16){
 			if( buffers[i*SPARE_BUFFER_FIELDS + STATUS_OFFSET] != STATUS_RESERVED ) { printf("fail status"		); return 1};
 			if( buffers[i*SPARE_BUFFER_FIELDS + ADDRL_OFFSET ] != 0xdeadbeef + i  ) { printf("fail addrl"		); return 1};
 			if( buffers[i*SPARE_BUFFER_FIELDS + ADDRH_OFFSET ] != 0 			  ) { printf("fail addrh"		); return 1};
+			if( buffers[i*SPARE_BUFFER_FIELDS + MAX_LEN_OFFSET] != max_len +1     ) { printf("fail maxlen"		); return 1};
 			continue;
 		}
-		uint dma_cmd [4];
+		ap_uint <104> dma_cmd ;
 		//read dma cmd according to the supplied flag
 		if (use_tcp){
-			dma_cmd[0] = cmd_dma_tcp.read();
-			dma_cmd[1] = cmd_dma_tcp.read();
-			dma_cmd[2] = cmd_dma_tcp.read();
-			dma_cmd[3] = cmd_dma_tcp.read();
+			dma_cmd = cmd_dma_tcp.read();
 		}else{
-			dma_cmd[0] = cmd_dma_udp.read();
-			dma_cmd[1] = cmd_dma_udp.read();
-			dma_cmd[2] = cmd_dma_udp.read();
-			dma_cmd[3] = cmd_dma_udp.read();
+			dma_cmd = cmd_dma_udp.read();
 		}
 		//read next spare buffer enqueued
 		ap_uint<32> buffer_idx = inflight_queue.read();
-		cout << hex << dma_cmd[0]  << hex << dma_cmd[1] << hex << dma_cmd[2] << hex << dma_cmd[3] << endl;
+		cout << hex << dma_cmd << endl;
 		cout << "inflight queue "  << buffer_idx << endl;
 		//check that:
 		//status   is enqueued
@@ -85,10 +82,11 @@ int test_even(int use_tcp, int num_spare_buffers=16){
 		if( buffers[i*SPARE_BUFFER_FIELDS + STATUS_OFFSET] != STATUS_ENQUEUED 								) { printf("fail status\n"	  ); return 1};
 		if( buffers[i*SPARE_BUFFER_FIELDS + ADDRL_OFFSET ] != 0xdeadbeef + i  								) { printf("fail addrl\n"	  ); return 1};
 		if( buffers[i*SPARE_BUFFER_FIELDS + ADDRH_OFFSET ] != 0 				 							) { printf("fail addrh\n"	  ); return 1};
-		if( dma_cmd[0] 									   != (0xC0800000 | DMA_MAX_BTT)					) { printf("fail dma_cmd[0]\n"); return 1};
-		if( dma_cmd[1] 									   != buffers[i*SPARE_BUFFER_FIELDS + ADDRL_OFFSET]	) { printf("fail dma_cmd[1]\n"); return 1};
-		if( dma_cmd[2] 									   != buffers[i*SPARE_BUFFER_FIELDS + ADDRH_OFFSET]	) { printf("fail dma_cmd[2]\n"); return 1};
-		if( dma_cmd[3] 									   != 0x2000				 						) { printf("fail dma_cmd[3]\n"); return 1};
+		if( buffers[i*SPARE_BUFFER_FIELDS + MAX_LEN_OFFSET]!= max_len +1     	) { printf("fail maxlen"		); return 1};
+		if( dma_cmd.range( 31,  0)  != (0xC0800000 | max_len)					) { printf("fail dma_cmd[0]\n"); return 1};
+		if( dma_cmd.range( 63, 32)  != buffers[i*SPARE_BUFFER_FIELDS + ADDRL_OFFSET]	) { printf("fail dma_cmd[1]\n"); return 1};
+		if( dma_cmd.range( 95, 64)  != buffers[i*SPARE_BUFFER_FIELDS + ADDRH_OFFSET]	) { printf("fail dma_cmd[2]\n"); return 1};
+		if( dma_cmd.range(103, 96)  != 0				 						) { printf("fail dma_cmd[3]\n"); return 1};
 		if( buffer_idx 									   != i						 						) { printf("fail buffer_idx\n"); return 1};
 
 	}
@@ -97,8 +95,9 @@ int test_even(int use_tcp, int num_spare_buffers=16){
 }
 
 int test_all(int use_tcp, int num_spare_buffers=4){
-	stream< ap_uint<32> > cmd_dma_tcp, cmd_dma_udp;
+	stream< ap_uint<104> > cmd_dma_tcp, cmd_dma_udp;
 	stream< ap_uint<32> > inflight_queue;
+	uint max_len = 1000;
 	//create a fake memory to hold spare buffers
 	ap_uint<32>  buffers [num_spare_buffers*SPARE_BUFFER_FIELDS];
 	//ap_uint<32>  buffers1[num_spare_buffers*SPARE_BUFFER_FIELDS];
@@ -109,9 +108,10 @@ int test_all(int use_tcp, int num_spare_buffers=4){
  	//fill buffers with dummy data
 	for(int i = 0; i < num_spare_buffers; i++ ){
 		//all buffers are filled
-		buffers[i*SPARE_BUFFER_FIELDS + STATUS_OFFSET] = STATUS_IDLE ;
-		buffers[i*SPARE_BUFFER_FIELDS + ADDRL_OFFSET ] = 0xdeadbeef + i ;
-		buffers[i*SPARE_BUFFER_FIELDS + ADDRH_OFFSET ] = 0;
+		buffers[i*SPARE_BUFFER_FIELDS + STATUS_OFFSET ] = STATUS_IDLE ;
+		buffers[i*SPARE_BUFFER_FIELDS + ADDRL_OFFSET  ] = 0xdeadbeef + i ;
+		buffers[i*SPARE_BUFFER_FIELDS + ADDRH_OFFSET  ] = 0;
+		buffers[i*SPARE_BUFFER_FIELDS + MAX_LEN_OFFSET] = max_len +1;
 		cout << "Buffer "<< i << " status:" << buffers[i*SPARE_BUFFER_FIELDS + STATUS_OFFSET] << " addr: " << hex << buffers[i*SPARE_BUFFER_FIELDS + ADDRH_OFFSET] << hex << buffers[i*SPARE_BUFFER_FIELDS + ADDRL_OFFSET] << endl;
 	}
 
@@ -129,34 +129,30 @@ int test_all(int use_tcp, int num_spare_buffers=4){
 		//all buffers are expected to be reserved
 		cout << "Buffer "<< i << " status:" << hex << buffers[(i*SPARE_BUFFER_FIELDS) + STATUS_OFFSET] << endl;
 		//get dma cmd according to the flag
-		uint dma_cmd [4];
+		ap_uint <104> dma_cmd ;
+		//read dma cmd according to the supplied flag
 		if (use_tcp){
-			dma_cmd[0] = cmd_dma_tcp.read();
-			dma_cmd[1] = cmd_dma_tcp.read();
-			dma_cmd[2] = cmd_dma_tcp.read();
-			dma_cmd[3] = cmd_dma_tcp.read();
+			dma_cmd = cmd_dma_tcp.read();
 		}else{
-			dma_cmd[0] = cmd_dma_udp.read();
-			dma_cmd[1] = cmd_dma_udp.read();
-			dma_cmd[2] = cmd_dma_udp.read();
-			dma_cmd[3] = cmd_dma_udp.read();
-		}	
+			dma_cmd = cmd_dma_udp.read();
+		}
 		//get enqueued spare buffer id
 		ap_uint<32> buffer_idx = inflight_queue.read();
-		cout << hex << dma_cmd[0]  << hex << dma_cmd[1] << hex << dma_cmd[2] << hex << dma_cmd[3] << endl;
+		cout << hex << dma_cmd << endl;
 		cout << "inflight queue "  << buffer_idx << endl;
 		//check that:
 		//status   is enqueued
 		//address are unchanged
 		//cmd 	   is created as it should be
 		//enqueued spare buffer id is what is expected (i)
-		if( buffers[i*SPARE_BUFFER_FIELDS + STATUS_OFFSET] != STATUS_ENQUEUED 								) { printf("fail status\n"	  ); return 1};
-		if( buffers[i*SPARE_BUFFER_FIELDS + ADDRL_OFFSET ] != 0xdeadbeef + i  								) { printf("fail addrl\n"	  ); return 1};
-		if( buffers[i*SPARE_BUFFER_FIELDS + ADDRH_OFFSET ] != 0 				 							) { printf("fail addrh\n"	  ); return 1};
-		if( dma_cmd[0] 									   != (0xC0800000 | DMA_MAX_BTT)					) { printf("fail dma_cmd[0]\n"); return 1};
-		if( dma_cmd[1] 									   != buffers[i*SPARE_BUFFER_FIELDS + ADDRL_OFFSET]	) { printf("fail dma_cmd[1]\n"); return 1};
-		if( dma_cmd[2] 									   != buffers[i*SPARE_BUFFER_FIELDS + ADDRH_OFFSET]	) { printf("fail dma_cmd[2]\n"); return 1};
-		if( dma_cmd[3] 									   != 0x2000				 						) { printf("fail dma_cmd[3]\n"); return 1};
+		if( buffers[i*SPARE_BUFFER_FIELDS + STATUS_OFFSET ] != STATUS_ENQUEUED 								) { printf("fail status\n"	  ); return 1};
+		if( buffers[i*SPARE_BUFFER_FIELDS + ADDRL_OFFSET  ] != 0xdeadbeef + i  								) { printf("fail addrl\n"	  ); return 1};
+		if( buffers[i*SPARE_BUFFER_FIELDS + ADDRH_OFFSET  ] != 0 				 							) { printf("fail addrh\n"	  ); return 1};
+		if( buffers[i*SPARE_BUFFER_FIELDS + MAX_LEN_OFFSET]!= max_len +1    ) { printf("fail maxlen"	  ); return 1};
+		if( dma_cmd.range( 31,  0)  != (0xC0800000 | max_len)				) { printf("fail dma_cmd[0]\n"); return 1};
+		if( dma_cmd.range( 63, 32)  != 0xdeadbeef + i 						) { printf("fail dma_cmd[1]\n"); return 1};
+		if( dma_cmd.range( 95, 64)  != 0 									) { printf("fail dma_cmd[2]\n"); return 1};
+		if( dma_cmd.range(103, 96)  != 0				 					) { printf("fail dma_cmd[3]\n"); return 1};
 		if( buffer_idx 									   != i						 						) { printf("fail buffer_idx\n"); return 1};
 
 	}

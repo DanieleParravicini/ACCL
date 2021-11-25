@@ -26,24 +26,28 @@ void read_spares(
 		stream< ap_uint<32> > &tmp
 		);
 
-void enqueue_spares(
-		ap_uint<32>  		  use_tcp,
-		ap_uint<32>  		  nbufs,
-		stream< ap_uint<32> > &cmd_dma_udp,
-		stream< ap_uint<32> > &cmd_dma_tcp,
-		stream< ap_uint<32> > &inflight_queue,
-		ap_uint<32> * 		   spare_buffers,
-		stream< ap_uint<32> > &tmp
+// start a DMA operations on a specific channel
+void start_dma(
+    stream<ap_uint<104> > &dma_cmd_channel,
+    unsigned int btt,
+    ap_uint<64> addr,
+    unsigned int tag,
+	unsigned int tlast_expected=1) {
+  ap_uint<104> dma_cmd;
 
-);
-
+  dma_cmd.range( 31,  0) 	= 0x80800000 | btt;  // 31=DRR 30=EOF 29-24=DSA 23=Type 22-0=BTT 
+  dma_cmd.range( 30, 30)    = tlast_expected;
+  dma_cmd.range( 95, 32) 	= addr;
+  dma_cmd.range(103, 96) 	= 	  0x2000 | tag; //15-12=xCACHE 11-8=xUSER 7-4=RSVD 3-0=TAG
+  dma_cmd_channel.write(dma_cmd);
+}
 
 
 void dma_enqueue(	
 				ap_uint<32>  		use_tcp,
 				ap_uint<32>  		nbufs,
-				stream< ap_uint<32> > &cmd_dma_udp,
-				stream< ap_uint<32> > &cmd_dma_tcp,
+				stream< ap_uint<104> > &cmd_dma_udp,
+				stream< ap_uint<104> > &cmd_dma_tcp,
 				stream< ap_uint<32> > &inflight_queue,
 				ap_uint<32>* rx_buffers
 ) {
@@ -55,30 +59,25 @@ void dma_enqueue(
 #pragma HLS INTERFACE m_axi 	port=rx_buffers	depth=9*16 offset=slave num_read_outstanding=4	num_write_outstanding=4 bundle=mem
 #pragma HLS INTERFACE s_axilite port=return
 	#pragma HLS PIPELINE II=4 rewind 
-	ap_uint<32> status, addrl, addrh,	max_len;
 
 	//iterate until you run out of spare buffers
 	elaborate_spares: for(ap_uint<32> i=0; i < nbufs; i++){
-		#pragma HLS pipeline II=4 
-		status 			= *(rx_buffers + (i * SPARE_BUFFER_FIELDS) + STATUS_OFFSET	);
-		addrl  			= *(rx_buffers + (i * SPARE_BUFFER_FIELDS) + ADDRL_OFFSET	);
-		addrh  			= *(rx_buffers + (i * SPARE_BUFFER_FIELDS) + ADDRH_OFFSET	);
-		max_len 		= *(rx_buffers + (i * SPARE_BUFFER_FIELDS) + MAX_LEN_OFFSET	);
+		#pragma HLS pipeline II=1
+		ap_uint<32> status, max_len;
+		ap_uint<64> addr;
+		status 				= *(rx_buffers + (i * SPARE_BUFFER_FIELDS) + STATUS_OFFSET	);
+		addr.range( 31,  0) = *(rx_buffers + (i * SPARE_BUFFER_FIELDS) + ADDRL_OFFSET	);
+		addr.range( 63, 32) = *(rx_buffers + (i * SPARE_BUFFER_FIELDS) + ADDRH_OFFSET	);
+		max_len 			= *(rx_buffers + (i * SPARE_BUFFER_FIELDS) + MAX_LEN_OFFSET	);
 
 		//look for IDLE spare buffers
 		//can't be pipelined fully because of this test.
 		if(status   == STATUS_IDLE){
 			//issue a cmd
 			if (use_tcp){
-				cmd_dma_tcp.write( 0xC0800000 | DMA_MAX_BTT	); // 31=DRR 30=EOF 29-24=DSA 23=Type 22-0=BTT
-				cmd_dma_tcp.write( addrl					);
-				cmd_dma_tcp.write( addrh					);
-				cmd_dma_tcp.write( 0x2000 					); 	 // 15-12=xCACHE 11-8=xUSER 7-4=RSVD 3-0=TAG
+				start_dma( cmd_dma_tcp, max_len, 0, 1  );
 			}else{
-				cmd_dma_udp.write( 0xC0800000 | DMA_MAX_BTT	); // 31=DRR 30=EOF 29-24=DSA 23=Type 22-0=BTT
-				cmd_dma_udp.write( addrl					);
-				cmd_dma_udp.write( addrh					);
-				cmd_dma_udp.write( 0x2000 					); 	 // 15-12=xCACHE 11-8=xUSER 7-4=RSVD 3-0=TAG
+				start_dma( cmd_dma_udp, max_len, 0, 1  );
 			}
 			//update spare buffer status
 			rx_buffers[ (i * SPARE_BUFFER_FIELDS) + STATUS_OFFSET ] 	= STATUS_ENQUEUED ;
