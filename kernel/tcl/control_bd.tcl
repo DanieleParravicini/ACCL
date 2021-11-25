@@ -172,9 +172,9 @@ proc create_hier_cell_microblaze_0_exchange_memory { parentCell nameHier } {
 set axi_bram_ctrl_bypass [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_bram_ctrl:4.1 axi_bram_ctrl_bypass ]
   set_property -dict [ list \
    CONFIG.ECC_TYPE {0} \
-   CONFIG.PROTOCOL {AXI4LITE} \
+   CONFIG.PROTOCOL {AXI4} \
+   CONFIG.SUPPORTS_NARROW_BURST {1} \
    CONFIG.SINGLE_PORT_BRAM {1} \
-   CONFIG.SUPPORTS_NARROW_BURST {0} \
  ] $axi_bram_ctrl_bypass 
 
   # Create instance: axi_crossbar_0, and set properties
@@ -529,7 +529,7 @@ proc create_hier_cell_control { parentCell nameHier } {
   create_bd_cell -type ip -vlnv xilinx.com:hls:dma_dequeue:1.0 dma_dequeue_0
 
   #interconnect to access exchange memory
-  set dma_memory_ic [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 dma_memory_ic ]
+  set dma_memory_ic [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_crossbar:2.1 dma_memory_ic ]
   set_property -dict [ list \
    CONFIG.NUM_SI {2}\
    CONFIG.NUM_MI {1}
@@ -701,10 +701,7 @@ proc create_hier_cell_control { parentCell nameHier } {
                                       [get_bd_pins axi_timer/s_axi_aclk]\
                                       [get_bd_pins dma_dequeue_0/ap_clk]\
                                       [get_bd_pins dma_enqueue_0/ap_clk]\
-                                      [get_bd_pins dma_memory_ic/ACLK]\
-                                      [get_bd_pins dma_memory_ic/S00_ACLK]\
-                                      [get_bd_pins dma_memory_ic/S01_ACLK]\
-                                      [get_bd_pins dma_memory_ic/M00_ACLK]\
+                                      [get_bd_pins dma_memory_ic/aclk]\
                                       [get_bd_pins inflight_queue/s_axis_aclk]\
                                       [get_bd_pins sts_header_cmd_switch/s_axi_ctrl_aclk]\
                                       [get_bd_pins sts_header_cmd_switch/aclk]\
@@ -743,10 +740,7 @@ proc create_hier_cell_control { parentCell nameHier } {
                                                                     [get_bd_pins microblaze_0_axi_periph/M06_ARESETN] \
                                                                     [get_bd_pins dma_enqueue_0/ap_rst_n]\
                                                                     [get_bd_pins dma_dequeue_0/ap_rst_n]\
-                                                                    [get_bd_pins dma_memory_ic/ARESETN]\
-                                                                    [get_bd_pins dma_memory_ic/S00_ARESETN]\
-                                                                    [get_bd_pins dma_memory_ic/S01_ARESETN]\
-                                                                    [get_bd_pins dma_memory_ic/M00_ARESETN]\
+                                                                    [get_bd_pins dma_memory_ic/aresetn]\
                                                                     [get_bd_pins inflight_queue/s_axis_aresetn]\
                                                                     [get_bd_pins sts_header_cmd_switch/s_axi_ctrl_aresetn]\
                                                                     [get_bd_pins sts_header_cmd_switch/aresetn]
