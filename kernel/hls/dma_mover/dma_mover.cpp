@@ -45,23 +45,24 @@ int ack_dma(
 
 // start a DMA operations on a specific channel
 void start_dma(
-    stream<ap_uint<128> > &dma_cmd_channel,
+    stream<ap_uint<104> > &dma_cmd_channel,
     unsigned int btt,
     ap_uint<64> addr,
-    unsigned int tag) {
-  ap_uint<128> dma_cmd;
-  // 31=DRR 30=EOF 29-24=DSA 23=Type 22-0=BTT 15-12=xCACHE 11-8=xUSER 7-4=RSVD 3-0=TAG
-  dma_cmd.range( 31,  0) 	= 0xC0800000 | btt;  
+    unsigned int tag,
+	unsigned int tlast_expected=1) {
+  ap_uint<104> dma_cmd;
+
+  dma_cmd.range( 31,  0) 	= 0x80800000 | btt;  // 31=DRR 30=EOF 29-24=DSA 23=Type 22-0=BTT 
+  dma_cmd.range( 30, 30)    = tlast_expected;
   dma_cmd.range( 95, 32) 	= addr;
-  dma_cmd.range(127, 96) 	= 	  0x2000 | tag;
+  dma_cmd.range(103, 96) 	= 	  0x2000 | tag; //15-12=xCACHE 11-8=xUSER 7-4=RSVD 3-0=TAG
   dma_cmd_channel.write(dma_cmd);
 }
 
 void start_dmas(unsigned int which_dma, 
-	stream<ap_uint<128> > &DMA0_RX_CMD,	
-	stream<ap_uint<128> > &DMA1_RX_CMD,	
-	stream<ap_uint<128> > &DMA2_RX_CMD,	
-	stream<ap_uint<128> > &DMA1_TX_CMD,	
+	stream<ap_uint<104> > &DMA0_RX_CMD,	
+	stream<ap_uint<104> > &DMA1_RX_CMD,	
+	stream<ap_uint<104> > &DMA1_TX_CMD,	
 	unsigned int btt,
 	ap_uint<64> op0_addr,
 	ap_uint<64> op1_addr,
@@ -77,17 +78,14 @@ void start_dmas(unsigned int which_dma,
 		start_dma( DMA1_RX_CMD							, btt, op1_addr, dma_tag);
 	}
 
-	if( which_dma & USE_RES_DMA){		
-		start_dma( DMA1_TX_CMD							, btt, res_addr, dma_tag);
-	} else if( which_dma & USE_RES_DMA_WITHOUT_TLAST){
-		start_dma( DMA1_TX_CMD							, btt, res_addr, dma_tag);
+	if( which_dma & (USE_RES_DMA | USE_RES_DMA_WITHOUT_TLAST) ){		
+		start_dma( DMA1_TX_CMD							, btt, res_addr, dma_tag, ((which_dma & USE_RES_DMA)? 1 : 0) );
 	} 
 }
 
 ap_uint <32>  ack_dmas(unsigned int which_dma, 
 	stream<ap_uint<32> > &DMA0_RX_STS,
 	stream<ap_uint<32> > &DMA1_RX_STS,
-	stream<ap_uint<32> > &DMA2_RX_STS,
 	stream<ap_uint<32> > &DMA1_TX_STS,
 	unsigned int expected_btt,
 	unsigned int dma_tag
@@ -101,14 +99,10 @@ ap_uint <32>  ack_dmas(unsigned int which_dma,
 		err.range( 2*DMA_ERR_BITS-1, 1*DMA_ERR_BITS) 	= ack_dma( DMA1_RX_STS, expected_btt, dma_tag, 0 );
 	}
 
-	if( which_dma & USE_RES_DMA){
-		err.range( 3*DMA_ERR_BITS-1, 2*DMA_ERR_BITS) 	= ack_dma( DMA1_TX_STS, expected_btt, dma_tag, 1  );
+	if( which_dma & (USE_RES_DMA | USE_RES_DMA_WITHOUT_TLAST) ){
+		err.range( 3*DMA_ERR_BITS-1, 2*DMA_ERR_BITS) 	= ack_dma( DMA1_TX_STS, expected_btt, dma_tag,  ( ( which_dma & USE_RES_DMA) ? 1 : 0 )    );
 	} 
-	else if( which_dma & USE_RES_DMA_WITHOUT_TLAST){
-		err.range( 3*DMA_ERR_BITS-1, 2*DMA_ERR_BITS)	= ack_dma( DMA1_TX_STS, expected_btt, dma_tag, 0  );
-	} else {
-		err.range( 3*DMA_ERR_BITS-1, 2*DMA_ERR_BITS)	= DMA_SUCCESS;
-	}
+	
 	return err;
 }
 
@@ -188,10 +182,9 @@ ap_uint <32> ack_pkts(
 }
 
 ap_uint<32> dma_mover_unpacked_internal(
-    stream<ap_uint<128> > &DMA0_RX_CMD	, stream<ap_uint<32> > &DMA0_RX_STS, 
-	stream<ap_uint<128> > &DMA1_RX_CMD	, stream<ap_uint<32> > &DMA1_RX_STS,
-	stream<ap_uint<128> > &DMA2_RX_CMD	, stream<ap_uint<32> > &DMA2_RX_STS,
-	stream<ap_uint<128> > &DMA1_TX_CMD	, stream<ap_uint<32> > &DMA1_TX_STS,
+    stream<ap_uint<104> > &DMA0_RX_CMD	, stream<ap_uint<32> > &DMA0_RX_STS, 
+	stream<ap_uint<104> > &DMA1_RX_CMD	, stream<ap_uint<32> > &DMA1_RX_STS,
+	stream<ap_uint<104> > &DMA1_TX_CMD	, stream<ap_uint<32> > &DMA1_TX_STS,
 	stream<ap_uint<512> > &UDP_PKT_CMD	, stream<ap_uint<32> > &UDP_PKT_STS,
     stream<ap_uint<512> > &TCP_PKT_CMD	, stream<ap_uint<32> > &TCP_PKT_STS,
     unsigned int segment_size,
@@ -209,7 +202,8 @@ ap_uint<32> dma_mover_unpacked_internal(
 	ap_uint <PKT_COMM_OFFSET_END - (PKT_COMM_OFFSET_START + 2) > comm_offset,
     unsigned int which_dma) 
 {
-
+	#pragma HLS PIPELINE II=1 style=flp
+	// latency: 4, 7, 6 for each loop
 	unsigned int src_rank = 0, sequence_number = 0, dst = 0;
 	if ( which_dma & (USE_PACKETIZER_TCP | USE_PACKETIZER_UDP) ) {
 		src_rank 		= *(exchange_mem + comm_offset +  COMM_LOCAL_RANK_OFFSET);
@@ -238,12 +232,12 @@ ap_uint<32> dma_mover_unpacked_internal(
 	curr_len_ack  = segment_size;
 	// 1. issue at most max_dma_in_flight of segment_size
 	for (i = 0; remaining_to_move > 0 && i < max_dma_in_flight; i++) 
-		start_dma:{
+	start_dma:{
 		if (remaining_to_move < segment_size) {
 			curr_len_move = remaining_to_move;//need to rephrase it to unroll loop
 		}
 		// start DMAs
-		start_dmas(which_dma, DMA0_RX_CMD, DMA1_RX_CMD, DMA2_RX_CMD, DMA1_TX_CMD, curr_len_move, op0_addr, op1_addr, res_addr, dma_tag_start);
+		start_dmas(which_dma, DMA0_RX_CMD, DMA1_RX_CMD, DMA1_TX_CMD, curr_len_move, op0_addr, op1_addr, res_addr, dma_tag_start);
 		start_pkts(which_dma, UDP_PKT_CMD, TCP_PKT_CMD, curr_len_move, dst, src_rank, mpi_tag, sequence_number );
 		// update reference 
 		remaining_to_move 	-= curr_len_move;
@@ -256,19 +250,19 @@ ap_uint<32> dma_mover_unpacked_internal(
 	// 2.ack 1 and issue another dma transfer up until there's no more dma move to
 	// issue
 	while (remaining_to_move > 0 && err == DMA_SUCCESS) 
-		ack_and_start_dma:{
+	ack_and_start_dma:{
 		if (remaining_to_ack < segment_size) {
 			curr_len_ack = remaining_to_ack;//need to rephrase it to unroll loop
 		}
 		// wait for DMAs to finish
-		err |= ack_dmas(which_dma, DMA0_RX_STS, DMA1_RX_STS, DMA2_RX_STS, DMA1_TX_STS, curr_len_ack, dma_tag_acked);
+		err |= ack_dmas(which_dma, DMA0_RX_STS, DMA1_RX_STS, DMA1_TX_STS, curr_len_ack, dma_tag_acked);
 		err |= ack_pkts(which_dma, UDP_PKT_STS, TCP_PKT_STS, sequence_number_acked  );
 
 		if (remaining_to_move < segment_size) {
 			curr_len_move = remaining_to_move;
 		}
 		// start DMAs
-		start_dmas(which_dma, DMA0_RX_CMD, DMA1_RX_CMD, DMA2_RX_CMD, DMA1_TX_CMD, curr_len_move, op0_addr, op1_addr, res_addr, dma_tag_start);
+		start_dmas(which_dma, DMA0_RX_CMD, DMA1_RX_CMD, DMA1_TX_CMD, curr_len_move, op0_addr, op1_addr, res_addr, dma_tag_start);
 		start_pkts(which_dma, UDP_PKT_CMD, TCP_PKT_CMD, curr_len_move, dst, src_rank, mpi_tag, sequence_number );
 		// update reference 
 		remaining_to_ack 	-= curr_len_ack;
@@ -279,6 +273,8 @@ ap_uint<32> dma_mover_unpacked_internal(
 		dma_tag_start 		 = (dma_tag_start + 1) & 0xf;
 		dma_tag_acked 		 = (dma_tag_acked + 1) & 0xf;
 		sequence_number		  += 1;
+		// uncomment this to get debug info about last sequence number acknowledged 
+		// by the packetizer  but at the expense of pipelining
 		if( err == DMA_SUCCESS){
 			sequence_number_acked += 1;
 		}
@@ -286,17 +282,20 @@ ap_uint<32> dma_mover_unpacked_internal(
 
 	// 3. finish ack the remaining
 	while (remaining_to_ack > 0 && err == DMA_SUCCESS) 
-		ack_dma:{
+	ack_dma:{
+		#pragma HLS PIPELINE II=1
 		if (remaining_to_ack < segment_size) {
 			curr_len_ack = remaining_to_ack;
 		}
 		// wait for DMAs to finish
-		err |= ack_dmas(which_dma, DMA0_RX_STS, DMA1_RX_STS, DMA2_RX_STS, DMA1_TX_STS, curr_len_ack, dma_tag_acked);
+		err |= ack_dmas(which_dma, DMA0_RX_STS, DMA1_RX_STS, DMA1_TX_STS, curr_len_ack, dma_tag_acked);
 		err |= ack_pkts(which_dma, UDP_PKT_STS, TCP_PKT_STS, sequence_number_acked  );
 
 		// update reference 
 		remaining_to_ack 	-= curr_len_ack;
 		dma_tag_acked 		 = (dma_tag_acked + 1) & 0xf;
+		// uncomment this to get debug info about last sequence number acknowledged 
+		// by the packetizer  but at the expense of pipelining
 		if( err == DMA_SUCCESS){
 			sequence_number_acked += 1;
 		}
@@ -309,10 +308,9 @@ ap_uint<32> dma_mover_unpacked_internal(
 }
 
 void dma_mover(
-    stream<ap_uint<128> > &DMA0_RX_CMD	, stream<ap_uint<32> > &DMA0_RX_STS, 
-	stream<ap_uint<128> > &DMA1_RX_CMD	, stream<ap_uint<32> > &DMA1_RX_STS,
-	stream<ap_uint<128> > &DMA2_RX_CMD	, stream<ap_uint<32> > &DMA2_RX_STS,
-	stream<ap_uint<128> > &DMA1_TX_CMD	, stream<ap_uint<32> > &DMA1_TX_STS,
+    stream<ap_uint<104> > &DMA0_RX_CMD	, stream<ap_uint<32> > &DMA0_RX_STS, 
+	stream<ap_uint<104> > &DMA1_RX_CMD	, stream<ap_uint<32> > &DMA1_RX_STS,
+	stream<ap_uint<104> > &DMA1_TX_CMD	, stream<ap_uint<32> > &DMA1_TX_STS,
 	stream<ap_uint<512> > &UDP_PKT_CMD	, stream<ap_uint<32> > &UDP_PKT_STS,
     stream<ap_uint<512> > &TCP_PKT_CMD	, stream<ap_uint<32> > &TCP_PKT_STS,
     unsigned int segment_size,
@@ -321,16 +319,14 @@ void dma_mover(
     stream< ap_uint<PKT_SIZE> > &pkt_stream,
 	stream< ap_uint<32> > 		&return_stream){
 	#pragma HLS INTERFACE 
-	#pragma HLS INTERFACE s_axilite port = segment_size
-	#pragma HLS INTERFACE s_axilite port = max_dma_in_flight
-	#pragma HLS INTERFACE m_axi port= exchange_mem	depth=24 offset=slave num_read_outstanding=40	num_write_outstanding=40 bundle=mem
-	#pragma HLS INTERFACE s_axilite port = return
+	#pragma HLS INTERFACE s_axilite port=segment_size
+	#pragma HLS INTERFACE s_axilite port=max_dma_in_flight
+	#pragma HLS INTERFACE m_axi port=exchange_mem	depth=24 offset=slave num_read_outstanding=40	num_write_outstanding=40 bundle=mem
+	#pragma HLS INTERFACE s_axilite port=return
 	#pragma HLS INTERFACE axis port = DMA0_RX_CMD
 	#pragma HLS INTERFACE axis port = DMA0_RX_STS
 	#pragma HLS INTERFACE axis port = DMA1_RX_CMD
 	#pragma HLS INTERFACE axis port = DMA1_RX_STS
-	#pragma HLS INTERFACE axis port = DMA2_RX_CMD
-	#pragma HLS INTERFACE axis port = DMA2_RX_STS
 	#pragma HLS INTERFACE axis port = DMA1_TX_CMD
 	#pragma HLS INTERFACE axis port = DMA1_TX_STS
 	#pragma HLS INTERFACE axis port = UDP_PKT_CMD
@@ -353,7 +349,6 @@ void dma_mover(
 	ap_uint<32> ret = dma_mover_unpacked_internal(
 		DMA0_RX_CMD	,DMA0_RX_STS,
 		DMA1_RX_CMD	,DMA1_RX_STS,
-		DMA2_RX_CMD	,DMA2_RX_STS,
 		DMA1_TX_CMD	,DMA1_TX_STS,
 		UDP_PKT_CMD	,UDP_PKT_STS,
 		TCP_PKT_CMD	,TCP_PKT_STS,
