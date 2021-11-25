@@ -57,7 +57,7 @@ void vnx_packetizer(	stream<ap_axiu<DATA_WIDTH,0,0,0> > & in,
 	//32 bits sequence_number of the message
 	ap_uint<DATA_WIDTH> cmd_data 	= cmd.read();
 	unsigned int destination	    = cmd_data.range(DST_END			, DST_START			);
-	ap_uint<DATA_WIDTH-16-1> header = cmd_data.range(DATA_WIDTH-1		, HEADER_COUNT_START);
+	ap_uint<DATA_WIDTH-HEADER_COUNT_START-1> header = cmd_data.range(DATA_WIDTH-1		, HEADER_COUNT_START);
 	int message_bytes 		 		= cmd_data.range(HEADER_COUNT_END	, HEADER_COUNT_START);
 	int message_seq					= cmd_data.range(HEADER_SEQ_END		, HEADER_SEQ_START	);
 	int bytes_to_process 			= message_bytes + bytes_per_word;
