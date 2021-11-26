@@ -16,7 +16,7 @@
 # *******************************************************************************/
 
 PLATFORM ?= xilinx_u280_xdma_201920_3
-DEBUG ?= all
+DEBUG ?= dma_mover
 XCCL_ELF=vitis_ws/ccl_offload_control/Debug/ccl_offload_control.elf
 XCCL_XSA=ccl_offload_ex/ccl_offload.xsa
 XCCL_XO=ccl_offload_ex/exports/ccl_offload.xo
@@ -54,6 +54,7 @@ $(XCCL_XSA): $(GEN_KERNEL_TCL) $(REBUILD_BD_TCL)  tcl/control_bd.tcl tcl/dma_bd.
 	make -C hls/dma_dequeue 	DEVICE=$(FPGAPART)
 	make -C hls/dma_enqueue 	DEVICE=$(FPGAPART)
 	make -C hls/tdest_creation  DEVICE=$(FPGAPART)
+	make -C hls/dma_mover       DEVICE=$(FPGAPART)
 	vivado -mode batch -source $< -tclargs $(FPGAPART) $(BOARDPART) $(DEBUG) $(XCCL_XSA)
 
 OPTIMIZATION=s

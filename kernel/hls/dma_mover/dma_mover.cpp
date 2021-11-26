@@ -321,7 +321,7 @@ void dma_mover(
 	#pragma HLS INTERFACE 
 	#pragma HLS INTERFACE s_axilite port=segment_size
 	#pragma HLS INTERFACE s_axilite port=max_dma_in_flight
-	#pragma HLS INTERFACE m_axi port=exchange_mem	depth=24 offset=slave num_read_outstanding=40	num_write_outstanding=40 bundle=mem
+	#pragma HLS INTERFACE m_axi port=exchange_mem	depth=24 offset=slave num_read_outstanding=4	num_write_outstanding=4 bundle=mem
 	#pragma HLS INTERFACE s_axilite port=return
 	#pragma HLS INTERFACE axis port = DMA0_RX_CMD
 	#pragma HLS INTERFACE axis port = DMA0_RX_STS

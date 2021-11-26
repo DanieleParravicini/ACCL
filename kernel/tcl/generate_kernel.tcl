@@ -97,6 +97,10 @@ if [expr [string equal $debug "all"] || [string equal $debug "dma_harden"]]  {
   puts "Adding debug cores to dma_harden"
   source  -notrace tcl/debug_dma_harden.tcl
 } 
+if [expr [string equal $debug "all"] || [string equal $debug "dma_mover"]]  {
+  puts "Adding debug cores to dma_harden"
+  source  -notrace tcl/debug_dma_mover.tcl
+} 
 if [expr [string equal $debug "all"] || [string equal $debug "axis_switch_0"]]  {
   puts "Adding debug cores to axis_switch_0"
   source  -notrace tcl/debug_axis_switch.tcl

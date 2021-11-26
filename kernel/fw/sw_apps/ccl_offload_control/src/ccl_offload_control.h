@@ -34,34 +34,47 @@ extern "C" {
 
 //AXIS interfaces to/from MB 
 
-#define CMD_DMA0_TX  0
-#define CMD_DMA0_RX  1
-#define CMD_DMA1_TX  2
-#define CMD_DMA1_RX  3
-#define CMD_DMA2_TX  4
-#define CMD_DMA2_RX  5
-#define CMD_UDP_TX   6
-#define CMD_TCP_PORT 7
-#define CMD_TCP_CON  8
-#define CMD_TCP_TX   9
-#define CMD_HOST     10
-#define CMD_SCENARIO 11
-#define CMD_HLS      13
+//#define CMD_DMA0_TX  0
+//#define CMD_DMA0_RX  1
+//#define CMD_DMA1_TX  2
+//#define CMD_DMA1_RX  3
+//#define CMD_DMA2_TX  4
+//#define CMD_DMA2_RX  5
+//#define CMD_UDP_TX   6
+//#define CMD_TCP_PORT 7
+//#define CMD_TCP_CON  8
+//#define CMD_TCP_TX   9
+//#define CMD_HOST     10
+//#define CMD_SCENARIO 11
+//#define CMD_HLS      13
+//
+//#define STS_DMA0_RX  0
+//#define STS_DMA0_TX  1
+//#define STS_DMA1_RX  2
+//#define STS_DMA1_TX  3
+//#define STS_DMA2_RX  4
+//#define STS_DMA2_TX  5
+//#define STS_UDP_RX   6
+//#define STS_TCP_PORT 7
+//#define STS_TCP_CON  8
+//#define STS_TCP_RX   9
+//#define STS_HOST     10 
+//#define STS_TCP_PKT  11 
+//#define STS_UDP_PKT  12
+//#define STS_HLS      13
+//AXIS interfaces to/from MB  still used
+#define CMD_TCP_PORT  7
+#define CMD_TCP_CON   8
+#define CMD_HOST      10
+#define CMD_SCENARIO  11
+#define CMD_DMA_MOVER 12
+#define CMD_HLS       13
 
-#define STS_DMA0_RX  0
-#define STS_DMA0_TX  1
-#define STS_DMA1_RX  2
-#define STS_DMA1_TX  3
-#define STS_DMA2_RX  4
-#define STS_DMA2_TX  5
-#define STS_UDP_RX   6
-#define STS_TCP_PORT 7
-#define STS_TCP_CON  8
-#define STS_TCP_RX   9
-#define STS_HOST     10 
-#define STS_TCP_PKT  11 
-#define STS_UDP_PKT  12
-#define STS_HLS      13
+#define STS_TCP_PORT  7
+#define STS_TCP_CON   8
+#define STS_HOST      10
+#define STS_DMA_MOVER 12
+#define STS_HLS       13
 
 //MAIN SWITCH
 
@@ -169,6 +182,13 @@ extern "C" {
 #define IRQCTRL_BASEADDR        0x44A10000
 #define TIMER_BASEADDR          0x44A20000
 #define ARITH_SWITCH_BASEADDR   0x44B00000
+//HLS IPS 
+#define DMA_DEQUEUE_ADDRESS    0x44C00000
+#define DMA_ENQUEUE_ADDRESS    0x44D00000
+#define DMA_MOVER_ADDRESS      0x44A30000
+#define DMA_MOVER_CONTROL_ADDR_SEGMENT_SIZE_DATA      0x10
+#define DMA_MOVER_CONTROL_ADDR_MAX_DMA_IN_FLIGHT_DATA 0x18
+#define DMA_MOVER_CONTROL_ADDR_EXCHANGE_MEM_DATA      0x20
 //https://www.xilinx.com/html_docs/xilinx2020_2/vitis_doc/managing_interface_synthesis.html#tzw1539734223235
 #define CONTROL_START_MASK      0x00000001
 #define CONTROL_DONE_MASK       0x00000001 << 1
@@ -270,9 +290,7 @@ extern "C" {
 #define PACK_TIMEOUT_STS_ERROR                        21
 #define PACK_SEQ_NUMBER_ERROR                         22
 
-#define DMA_DEQUEUE_ADDRESS    0x44C00000
-#define DMA_ENQUEUE_ADDRESS    0x44D00000
-#define STS_CMD_HEADER_BASE_ADDRESS 0X44A30000
+
 //master
 #define AXIS_STS_CMD_HEADER_M_HEADER_TCP_microblaze   0
 #define AXIS_STS_CMD_HEADER_M_HEADER_TCP_dma_dequeue  1
@@ -300,12 +318,15 @@ extern "C" {
 #define ARITH_i32   2
 #define ARITH_i64   3
 
-//USE DMAS for DMA movement
-#define USE_DMA0_RX 1
-#define USE_DMA1_RX 2
-#define USE_DMA1_TX 4
-#define USE_DMA2_RX 8
-#define USE_DMA1_TX_WITHOUT_TLAST 16
+//USE DMA FLAGS
+#define USE_NONE                    	 0
+#define USE_OP0_DMA                 	 1
+#define USE_OP1_DMA                 	 2
+#define USE_RES_DMA                 	 4
+#define USE_OP2_DMA                 	 8
+#define USE_RES_DMA_WITHOUT_TLAST   	16
+#define USE_PACKETIZER_TCP          	32
+#define USE_PACKETIZER_UDP          	64
 
 #define S_AXI_CONTROL -1
 

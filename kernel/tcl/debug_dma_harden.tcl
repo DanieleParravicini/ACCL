@@ -18,15 +18,16 @@
 # Add dma debug
 set_property HDL_ATTRIBUTE.DEBUG true [ \
     get_bd_intf_nets { \
+    control/dma_harden/exchange_memory_bypass_1 \
     control/dma_harden/dma_enqueue_0_cmd_dma_tcp_V \
     control/dma_harden/dma_enqueue_0_cmd_dma_udp_V \
     control/dma_harden/dma_enqueue_0_inflight_queue_V \
-    control/dma_harden/sts_header_cmd_switch_M01_AXIS \
-    control/dma_harden/sts_header_cmd_switch_M05_AXIS \
-    control/dma_harden/sts_header_cmd_switch_M03_AXIS \
-    control/dma_harden/sts_header_cmd_switch_M07_AXIS \
-    control/dma_harden/exchange_memory_bypass_1}\
+    control/dma_harden/fifo_tcp_depacketizer_sts_M_AXIS \
+    control/dma_harden/fifo_udp_depacketizer_sts_M_AXIS \
+    control/dma_harden/fifo_dma2_s2mm_sts_M_AXIS \
+    control/dma_harden/fifo_dma0_s2mm_sts_M_AXIS}\
 ]
+#todo: update dma_harden  sts/header_udp
 
 create_bd_cell -type ip -vlnv xilinx.com:ip:system_ila:1.1 control/dma_harden/system_ila_dma_harden
 set_property -dict [ list \

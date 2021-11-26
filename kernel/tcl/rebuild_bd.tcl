@@ -839,8 +839,9 @@ proc create_root_design { parentCell } {
   assign_bd_address -offset 0x44A10000 -range 0x00010000 -target_address_space [get_bd_addr_spaces control/microblaze_0/Data] [get_bd_addr_segs control/proc_irq_control/S_AXI/Reg] -force
   # timer 
   assign_bd_address -offset 0x44A20000 -range 0x00010000 -target_address_space [get_bd_addr_spaces control/microblaze_0/Data] [get_bd_addr_segs control/axi_timer/S_AXI/Reg] -force
-  # axis_switch for redirect sts_header_cmd from MCU to dma_enqueue/dequeue
-  assign_bd_address -offset 0x44A30000 -range 0x00010000 -target_address_space [get_bd_addr_spaces control/microblaze_0/Data] [get_bd_addr_segs control/sts_header_cmd_switch/S_AXI_CTRL/Reg] -force 
+  # dma_mover
+  assign_bd_address -offset 0x44A30000 -range 0x00010000 -target_address_space [get_bd_addr_spaces control/microblaze_0/Data] [get_bd_addr_segs control/dma_harden/dma_mover_0/s_axi_control/Reg] -force 
+  assign_bd_address -offset 0x00001000 -range 0x00001000 -target_address_space [get_bd_addr_spaces control/dma_harden/dma_mover_0/Data_m_axi_mem] [get_bd_addr_segs control/microblaze_0_exchange_memory/axi_bram_ctrl_bypass/S_AXI/Mem0] -force
   # axis_switch for arithm in mpi_offload top view
   assign_bd_address -offset 0x44B00000 -range 0x00010000 -target_address_space [get_bd_addr_spaces control/microblaze_0/Data] [get_bd_addr_segs arith_switch_0/S_AXI_CTRL/Reg] -force
   #dma_enqueu/dequeue
