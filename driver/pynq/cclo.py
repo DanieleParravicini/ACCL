@@ -139,7 +139,7 @@ class cclo(DefaultIP):
         self.communicators = []
         self.communicators_addr = self.rx_buffers_adr
         self.check_return_value_flag = True
-        self.ignore_safety_checks = False
+        self.ignore_safety_checks = True
         #TODO: use description to gather info about where to allocate spare buffers
         self.segment_size = None
         from pynq import MMIO
@@ -201,11 +201,11 @@ class cclo(DefaultIP):
         self.communicators_addr = addr+4
         #Start irq-driven RX buffer scheduler and (de)packetizer
         #self.call(scenario=CCLOp.config, function=CCLOCfgFunc.reset_periph)
+        #set segmentation size equal to buffer size
+        self.set_dma_transaction_size(bufsize)
         self.call(scenario=CCLOp.config, function=CCLOCfgFunc.enable_irq)
         self.call(scenario=CCLOp.config, function=CCLOCfgFunc.enable_pkt)
         print("time taken to enqueue buffers", self.exchange_mem.read(0x0FF4))
-        #set segmentation size equal to buffer size
-        self.set_dma_transaction_size(bufsize)
         self.set_max_dma_transaction_flight(10)
     
     def dump_rx_buffers_spares(self, nbufs=None):
@@ -355,7 +355,8 @@ class cclo(DefaultIP):
 
     @self_check_return_value
     def set_delay(self, value=0):
-        self.call(scenario=CCLOp.config, function=CCLOCfgFunc.set_delay, len=value)   
+        pass
+        #self.call(scenario=CCLOp.config, function=CCLOCfgFunc.set_delay, len=value)   
 
     def configure_communicator(self, ranks, local_rank, vnx=False):
         assert len(self.rx_buffer_spares) > 0, "RX buffers unconfigured, please call setup_rx_buffers() first"

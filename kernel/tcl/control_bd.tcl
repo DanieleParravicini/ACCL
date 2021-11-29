@@ -353,61 +353,12 @@ proc create_hier_cell_control { parentCell nameHier } {
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 tcp_openport_cmd
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 tcp_openport_sts
   #to communicate Scenario to axis_switch_0
-  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 M11_AXIS
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 AXIS_CONTROL
 
   # Create pins
   create_bd_pin -dir I -type clk ap_clk
   create_bd_pin -dir I -type rst ap_rst_n
   create_bd_pin -dir O -from 0 -to 0 -type rst encore_aresetn
-
-  # Create instance: compute_rx_udp_cmd_nonzero, and set properties
-  set compute_rx_udp_cmd_nonzero [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_reduced_logic:2.0 compute_rx_udp_cmd_nonzero ]
-  set_property -dict [ list \
-   CONFIG.C_OPERATION {or} \
-   CONFIG.C_SIZE {32} \
-   CONFIG.LOGO_FILE {data/sym_orgate.png} \
- ] $compute_rx_udp_cmd_nonzero
-
-  # Create instance: compute_rx_udp_cmd_zero, and set properties
-  set compute_rx_udp_cmd_zero [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic:2.0 compute_rx_udp_cmd_zero ]
-  set_property -dict [ list \
-   CONFIG.C_OPERATION {not} \
-   CONFIG.C_SIZE {1} \
-   CONFIG.LOGO_FILE {data/sym_notgate.png} \
- ] $compute_rx_udp_cmd_zero
-
-  # Create instance: compute_rx_udp_sts_nonzero, and set properties
-  set compute_rx_udp_sts_nonzero [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_reduced_logic:2.0 compute_rx_udp_sts_nonzero ]
-  set_property -dict [ list \
-   CONFIG.C_OPERATION {or} \
-   CONFIG.C_SIZE {32} \
-   CONFIG.LOGO_FILE {data/sym_orgate.png} \
- ] $compute_rx_udp_sts_nonzero
-
-
-  # Create instance: compute_rx_tcp_cmd_nonzero, and set properties
-  set compute_rx_tcp_cmd_nonzero [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_reduced_logic:2.0 compute_rx_tcp_cmd_nonzero ]
-  set_property -dict [ list \
-   CONFIG.C_OPERATION {or} \
-   CONFIG.C_SIZE {32} \
-   CONFIG.LOGO_FILE {data/sym_orgate.png} \
- ] $compute_rx_tcp_cmd_nonzero
-
-  # Create instance: compute_rx_tcp_cmd_zero, and set properties
-  set compute_rx_tcp_cmd_zero [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic:2.0 compute_rx_tcp_cmd_zero ]
-  set_property -dict [ list \
-   CONFIG.C_OPERATION {not} \
-   CONFIG.C_SIZE {1} \
-   CONFIG.LOGO_FILE {data/sym_notgate.png} \
- ] $compute_rx_tcp_cmd_zero
-
-  # Create instance: compute_rx_tcp_sts_nonzero, and set properties
-  set compute_rx_tcp_sts_nonzero [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_reduced_logic:2.0 compute_rx_tcp_sts_nonzero ]
-  set_property -dict [ list \
-   CONFIG.C_OPERATION {or} \
-   CONFIG.C_SIZE {32} \
-   CONFIG.LOGO_FILE {data/sym_orgate.png} \
- ] $compute_rx_tcp_sts_nonzero
 
   # Create instance: fifo_udp_depacketizer_sts, and set properties
   set fifo_udp_depacketizer_sts [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_data_fifo:2.0 fifo_udp_depacketizer_sts ]
@@ -483,7 +434,7 @@ proc create_hier_cell_control { parentCell nameHier } {
    CONFIG.C_BASE_VECTORS {0x0000000000010000} \
    CONFIG.C_D_AXI {1} \
    CONFIG.C_D_LMB {1} \
-   CONFIG.C_FSL_LINKS {14} \
+   CONFIG.C_FSL_LINKS {6} \
    CONFIG.C_I_LMB {1} \
    CONFIG.C_TRACE {1} \
    CONFIG.C_USE_EXTENDED_FSL_INSTR {1} \
@@ -585,20 +536,20 @@ proc create_hier_cell_control { parentCell nameHier } {
   connect_bd_intf_net [get_bd_intf_pins fifo_udp_packetizer_cmd/S_AXIS] [get_bd_intf_pins dma_mover_0/UDP_PKT_CMD_V]
   connect_bd_intf_net [get_bd_intf_pins fifo_udp_packetizer_sts/M_AXIS] [get_bd_intf_pins dma_mover_0/UDP_PKT_STS_V]
   #tcp
-  connect_bd_intf_net [get_bd_intf_pins fifo_openPort_cmd/S_AXIS] [get_bd_intf_pins microblaze_0/M7_AXIS]
-  connect_bd_intf_net [get_bd_intf_pins fifo_openCon_cmd/S_AXIS ] [get_bd_intf_pins microblaze_0/M8_AXIS]
-  connect_bd_intf_net [get_bd_intf_pins fifo_openPort_sts/M_AXIS] [get_bd_intf_pins microblaze_0/S7_AXIS]
-  connect_bd_intf_net [get_bd_intf_pins fifo_openCon_sts/M_AXIS ] [get_bd_intf_pins microblaze_0/S8_AXIS]
+  connect_bd_intf_net [get_bd_intf_pins fifo_openPort_cmd/S_AXIS] [get_bd_intf_pins microblaze_0/M0_AXIS]
+  connect_bd_intf_net [get_bd_intf_pins fifo_openCon_cmd/S_AXIS ] [get_bd_intf_pins microblaze_0/M1_AXIS]
+  connect_bd_intf_net [get_bd_intf_pins fifo_openPort_sts/M_AXIS] [get_bd_intf_pins microblaze_0/S0_AXIS]
+  connect_bd_intf_net [get_bd_intf_pins fifo_openCon_sts/M_AXIS ] [get_bd_intf_pins microblaze_0/S1_AXIS]
   connect_bd_intf_net [get_bd_intf_pins fifo_tcp_packetizer_cmd/S_AXIS] [get_bd_intf_pins dma_mover_0/TCP_PKT_CMD_V]
   connect_bd_intf_net [get_bd_intf_pins fifo_tcp_packetizer_sts/M_AXIS] [get_bd_intf_pins dma_mover_0/TCP_PKT_STS_V]
   
-  connect_bd_intf_net [get_bd_intf_pins microblaze_0/S10_AXIS] [get_bd_intf_pins microblaze_0_exchange_memory/host_cmd]
-  connect_bd_intf_net [get_bd_intf_pins microblaze_0/M10_AXIS] [get_bd_intf_pins microblaze_0_exchange_memory/host_sts]
+  connect_bd_intf_net [get_bd_intf_pins microblaze_0/S2_AXIS] [get_bd_intf_pins microblaze_0_exchange_memory/host_cmd]
+  connect_bd_intf_net [get_bd_intf_pins microblaze_0/M2_AXIS] [get_bd_intf_pins microblaze_0_exchange_memory/host_sts]
   connect_bd_intf_net -intf_net microblaze_0_axi_periph_M05_AXI [get_bd_intf_pins axi_timer/S_AXI] [get_bd_intf_pins microblaze_0_axi_periph/M02_AXI]
   connect_bd_intf_net -intf_net microblaze_0_axi_periph_M06_AXI [get_bd_intf_pins proc_irq_control/s_axi] [get_bd_intf_pins microblaze_0_axi_periph/M03_AXI]
   connect_bd_intf_net -intf_net microblaze_0_irq [get_bd_intf_pins proc_irq_control/interrupt] [get_bd_intf_pins microblaze_0/INTERRUPT]
   save_bd_design
-  connect_bd_intf_net [get_bd_intf_pins microblaze_0/M11_AXIS          ] [get_bd_intf_pins M11_AXIS]
+  connect_bd_intf_net [get_bd_intf_pins microblaze_0/M3_AXIS          ] [get_bd_intf_pins AXIS_CONTROL]
   # dma memory interconnect
   connect_bd_intf_net [get_bd_intf_pins microblaze_0_axi_periph/M04_AXI] [get_bd_intf_pins dma_dequeue_0/s_axi_control]
   connect_bd_intf_net [get_bd_intf_pins microblaze_0_axi_periph/M05_AXI] [get_bd_intf_pins dma_enqueue_0/s_axi_control]
@@ -624,8 +575,8 @@ proc create_hier_cell_control { parentCell nameHier } {
   connect_bd_intf_net [get_bd_intf_pins fifo_dma2_s2mm_cmd/S_AXIS       ] [get_bd_intf_pins dma_enqueue_0/cmd_dma_tcp_V] 
   #hls cmds and results
   connect_bd_intf_net [get_bd_intf_pins hls_control                     ] [get_bd_intf_pins hostctrl_in_0/cmd_in_V]
-  connect_bd_intf_net [get_bd_intf_pins hostctrl_in_0/cmd_out_V         ] [get_bd_intf_pins microblaze_0/S13_AXIS]
-  connect_bd_intf_net [get_bd_intf_pins microblaze_0/M13_AXIS           ] [get_bd_intf_pins hostctrl_in_0/sts_in_V]
+  connect_bd_intf_net [get_bd_intf_pins hostctrl_in_0/cmd_out_V         ] [get_bd_intf_pins microblaze_0/S5_AXIS]
+  connect_bd_intf_net [get_bd_intf_pins microblaze_0/M5_AXIS           ] [get_bd_intf_pins hostctrl_in_0/sts_in_V]
   connect_bd_intf_net [get_bd_intf_pins hostctrl_in_0/sts_out_V         ] [get_bd_intf_pins hls_control_result]
   #dma_mover_0
   connect_bd_intf_net [get_bd_intf_pins fifo_dma0_mm2s_sts/M_AXIS       ] [get_bd_intf_pins dma_mover_0/DMA0_RX_STS_V]
@@ -634,12 +585,22 @@ proc create_hier_cell_control { parentCell nameHier } {
   connect_bd_intf_net [get_bd_intf_pins fifo_dma0_mm2s_cmd/S_AXIS       ] [get_bd_intf_pins dma_mover_0/DMA0_RX_CMD_V]
   connect_bd_intf_net [get_bd_intf_pins fifo_dma1_mm2s_cmd/S_AXIS       ] [get_bd_intf_pins dma_mover_0/DMA1_RX_CMD_V]
   connect_bd_intf_net [get_bd_intf_pins fifo_dma1_s2mm_cmd/S_AXIS       ] [get_bd_intf_pins dma_mover_0/DMA1_TX_CMD_V]
-  connect_bd_intf_net [get_bd_intf_pins dma_mover_0/return_stream_V     ] [get_bd_intf_pins microblaze_0/S12_AXIS]
   #MCU to data_mover
   create_bd_cell -type ip -vlnv xilinx.com:ip:axis_dwidth_converter:1.1 axis_dwidth_converter_0
   set_property -dict [list CONFIG.M_TDATA_NUM_BYTES {40}] [get_bd_cells axis_dwidth_converter_0]
-  connect_bd_intf_net [get_bd_intf_pins microblaze_0/M12_AXIS] [get_bd_intf_pins axis_dwidth_converter_0/S_AXIS]
-  connect_bd_intf_net [get_bd_intf_pins axis_dwidth_converter_0/M_AXIS] -boundary_type upper [get_bd_intf_pins dma_mover_0/pkt_stream_V]
+  connect_bd_intf_net [get_bd_intf_pins microblaze_0/M4_AXIS] [get_bd_intf_pins axis_dwidth_converter_0/S_AXIS]
+
+  create_bd_cell -type ip -vlnv xilinx.com:ip:axis_data_fifo:2.0 dma_mover_2_mcu_fifo
+  set_property -dict [list CONFIG.FIFO_DEPTH {16}] [get_bd_cells dma_mover_2_mcu_fifo]
+
+  connect_bd_intf_net [get_bd_intf_pins dma_mover_0/return_stream_V] [get_bd_intf_pins dma_mover_2_mcu_fifo/S_AXIS]
+  connect_bd_intf_net [get_bd_intf_pins dma_mover_2_mcu_fifo/M_AXIS] [get_bd_intf_pins microblaze_0/S4_AXIS]
+
+  create_bd_cell -type ip -vlnv xilinx.com:ip:axis_data_fifo:2.0 mcu_2_dma_mover_fifo
+  set_property -dict [list CONFIG.FIFO_DEPTH {16}] [get_bd_cells mcu_2_dma_mover_fifo]
+
+  connect_bd_intf_net [get_bd_intf_pins axis_dwidth_converter_0/M_AXIS] [get_bd_intf_pins mcu_2_dma_mover_fifo/S_AXIS]
+  connect_bd_intf_net [get_bd_intf_pins mcu_2_dma_mover_fifo/M_AXIS] [get_bd_intf_pins dma_mover_0/pkt_stream_V]
 
   # Clocks and resets
   connect_bd_net -net SYS_Rst_1 [get_bd_pins microblaze_0_local_memory/SYS_Rst] [get_bd_pins proc_sys_reset_0/peripheral_reset]
@@ -675,7 +636,9 @@ proc create_hier_cell_control { parentCell nameHier } {
                                       [get_bd_pins dma_memory_ic/aclk]\
                                       [get_bd_pins inflight_queue/s_axis_aclk]\
                                       [get_bd_pins hostctrl_in_0/ap_clk]\
-                                      [get_bd_pins axis_dwidth_converter_0/aclk]
+                                      [get_bd_pins axis_dwidth_converter_0/aclk]\
+                                      [get_bd_pins dma_mover_2_mcu_fifo/s_axis_aclk]\
+                                      [get_bd_pins mcu_2_dma_mover_fifo/s_axis_aclk]
                                       
   connect_bd_net [get_bd_pins ap_rst_n] [get_bd_pins proc_sys_reset_0/ext_reset_in]
   #external reset
@@ -713,25 +676,21 @@ proc create_hier_cell_control { parentCell nameHier } {
                                                                     [get_bd_pins dma_mover_0/ap_rst_n]\
                                                                     [get_bd_pins dma_memory_ic/aresetn]\
                                                                     [get_bd_pins inflight_queue/s_axis_aresetn]\
-                                                                    [get_bd_pins axis_dwidth_converter_0/aresetn]
+                                                                    [get_bd_pins axis_dwidth_converter_0/aresetn]\
+                                                                    [get_bd_pins dma_mover_2_mcu_fifo/s_axis_aresetn]\
+                                                                    [get_bd_pins mcu_2_dma_mover_fifo/s_axis_aresetn]
                                                                   
   #create hierarchy for dma_enqueue/dma_dequeue/dma_ic/dma_mover/data_convert 
-  group_bd_cells dma_harden [get_bd_cells dma_dequeue_0] [get_bd_cells inflight_queue] [get_bd_cells dma_enqueue_0] [get_bd_cells dma_memory_ic] [get_bd_cells dma_mover_0] [get_bd_cells axis_dwidth_converter_0]
+  group_bd_cells dma_harden [get_bd_cells dma_dequeue_0]\
+                            [get_bd_cells inflight_queue]\
+                            [get_bd_cells dma_enqueue_0]\
+                            [get_bd_cells dma_memory_ic]\
+                            [get_bd_cells dma_mover_0]\
+                            [get_bd_cells axis_dwidth_converter_0]\
+                            [get_bd_cells dma_mover_2_mcu_fifo]\
+                            [get_bd_cells mcu_2_dma_mover_fifo]
   # interrupt generation
-  connect_bd_net -net rx_udp_cmd_count    [get_bd_pins compute_rx_udp_cmd_nonzero/Op1   ] [get_bd_pins fifo_dma0_s2mm_cmd/axis_wr_data_count]
-  connect_bd_net -net rx_udp_cmd_nonzero  [get_bd_pins compute_rx_udp_cmd_nonzero/Res   ] [get_bd_pins compute_rx_udp_cmd_zero/Op1]
-  connect_bd_net -net rx_udp_cmd_zero     [get_bd_pins proc_irq_concat/In1              ] [get_bd_pins compute_rx_udp_cmd_zero/Res]
-  connect_bd_net -net rx_udp_sts_count    [get_bd_pins compute_rx_udp_sts_nonzero/Op1   ] [get_bd_pins fifo_dma0_s2mm_sts/axis_rd_data_count]
-  connect_bd_net -net rx_udp_sts_nonzero  [get_bd_pins proc_irq_concat/In2              ] [get_bd_pins compute_rx_udp_sts_nonzero/Res]
-
-  connect_bd_net -net rx_tcp_cmd_count    [get_bd_pins compute_rx_tcp_cmd_nonzero/Op1   ] [get_bd_pins fifo_dma2_s2mm_cmd/axis_wr_data_count]
-  connect_bd_net -net rx_tcp_cmd_nonzero  [get_bd_pins compute_rx_tcp_cmd_nonzero/Res   ] [get_bd_pins compute_rx_tcp_cmd_zero/Op1]
-  connect_bd_net -net rx_tcp_cmd_zero     [get_bd_pins proc_irq_concat/In3              ] [get_bd_pins compute_rx_tcp_cmd_zero/Res]
-  connect_bd_net -net rx_tcp_sts_count    [get_bd_pins compute_rx_tcp_sts_nonzero/Op1   ] [get_bd_pins fifo_dma2_s2mm_sts/axis_rd_data_count]
-  connect_bd_net -net rx_tcp_sts_nonzero  [get_bd_pins proc_irq_concat/In4              ] [get_bd_pins compute_rx_tcp_sts_nonzero/Res]
-
-  connect_bd_net -net axi_timer_irq       [get_bd_pins proc_irq_concat/In0              ] [get_bd_pins axi_timer/interrupt  ]
-  connect_bd_net -net concat_irq          [get_bd_pins proc_irq_concat/dout             ] [get_bd_pins proc_irq_control/intr]
+  connect_bd_net [get_bd_pins axi_timer/interrupt] [get_bd_pins proc_irq_control/intr]
   # Restore current instance
   current_bd_instance $oldCurInst
 }

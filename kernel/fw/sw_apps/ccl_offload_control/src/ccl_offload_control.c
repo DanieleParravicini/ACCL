@@ -559,10 +559,12 @@ void static inline start_dma(
   putd( CMD_DMA_MOVER, len          );
   putd( CMD_DMA_MOVER, 0            );
   putd( CMD_DMA_MOVER, 0            );
-  putd( CMD_DMA_MOVER, DMA0_rx_addr );
+  putd( CMD_DMA_MOVER, DMA0_rx_addr       );
+  putd( CMD_DMA_MOVER, DMA0_rx_addr << 32 );
   putd( CMD_DMA_MOVER, DMA1_rx_addr );
+  putd( CMD_DMA_MOVER, DMA1_rx_addr << 32 );
   putd( CMD_DMA_MOVER, DMA1_tx_addr );
-  putd( CMD_DMA_MOVER, DMA2_rx_addr );
+  putd( CMD_DMA_MOVER, DMA1_tx_addr << 32 );
   cputd(CMD_DMA_MOVER, what_DMAS    );
 }
 
@@ -583,19 +585,21 @@ void static inline start_dma_and_packetizer(
   // len 		    32 bits
   // dst_rank 	32 bits	
   // mpi_tag 	  32 bits
-  // op0_addr 	32 bits	
-  // op1_addr 	32 bits	
-  // res_addr 	32 bits	
+  // op0_addr 	64 bits	
+  // op1_addr 	64 bits	
+  // res_addr 	64 bits	
   // which_dma 	8 bit
   // communicator addr 12 bits
   //then you gather from STS_DMA_MOVER the result of the operation
   putd( CMD_DMA_MOVER, len          );
   putd( CMD_DMA_MOVER, 0            );
   putd( CMD_DMA_MOVER, 0            );
-  putd( CMD_DMA_MOVER, DMA0_rx_addr );
+  putd( CMD_DMA_MOVER, DMA0_rx_addr       );
+  putd( CMD_DMA_MOVER, DMA0_rx_addr << 32 );
   putd( CMD_DMA_MOVER, DMA1_rx_addr );
+  putd( CMD_DMA_MOVER, DMA1_rx_addr << 32 );
   putd( CMD_DMA_MOVER, DMA1_tx_addr );
-  putd( CMD_DMA_MOVER, DMA2_rx_addr );
+  putd( CMD_DMA_MOVER, DMA1_tx_addr << 32 );
   what_DMAS = what_DMAS | (use_tcp ? USE_PACKETIZER_TCP : USE_PACKETIZER_UDP);
   unsigned int which_dma_and_communicator = ((unsigned int ) world) << 8 | what_DMAS;
   cputd(CMD_DMA_MOVER, which_dma_and_communicator);

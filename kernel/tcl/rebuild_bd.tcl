@@ -806,7 +806,7 @@ proc create_root_design { parentCell } {
                                                                       [get_bd_pins control_xbar/M04_ARESETN] \
                                                                       [get_bd_pins control_xbar/M05_ARESETN] 
   # connect axis_switch_0/scenario_V to MB/M11_AXIS
-  connect_bd_intf_net [get_bd_intf_pins control/M11_AXIS          ] [get_bd_intf_pins axis_switch_0/scenario_V] 
+  connect_bd_intf_net [get_bd_intf_pins control/AXIS_CONTROL        ] [get_bd_intf_pins axis_switch_0/scenario_V] 
   save_bd_design
   # Create address segments
   #1. exchange memory module

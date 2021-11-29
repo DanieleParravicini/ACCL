@@ -63,18 +63,18 @@ extern "C" {
 //#define STS_UDP_PKT  12
 //#define STS_HLS      13
 //AXIS interfaces to/from MB  still used
-#define CMD_TCP_PORT  7
-#define CMD_TCP_CON   8
-#define CMD_HOST      10
-#define CMD_SCENARIO  11
-#define CMD_DMA_MOVER 12
-#define CMD_HLS       13
+#define CMD_TCP_PORT  0
+#define CMD_TCP_CON   1
+#define CMD_HOST      2
+#define CMD_SCENARIO  3
+#define CMD_DMA_MOVER 4
+#define CMD_HLS       5
 
-#define STS_TCP_PORT  7
-#define STS_TCP_CON   8
-#define STS_HOST      10
-#define STS_DMA_MOVER 12
-#define STS_HLS       13
+#define STS_TCP_PORT  0
+#define STS_TCP_CON   1
+#define STS_HOST      2
+#define STS_DMA_MOVER 4
+#define STS_HLS       5
 
 //MAIN SWITCH
 
