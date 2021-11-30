@@ -560,11 +560,11 @@ void static inline start_dma(
   putd( CMD_DMA_MOVER, 0            );
   putd( CMD_DMA_MOVER, 0            );
   putd( CMD_DMA_MOVER, DMA0_rx_addr       );
-  putd( CMD_DMA_MOVER, DMA0_rx_addr << 32 );
+  putd( CMD_DMA_MOVER, DMA0_rx_addr >> 32 );
   putd( CMD_DMA_MOVER, DMA1_rx_addr );
-  putd( CMD_DMA_MOVER, DMA1_rx_addr << 32 );
+  putd( CMD_DMA_MOVER, DMA1_rx_addr >> 32 );
   putd( CMD_DMA_MOVER, DMA1_tx_addr );
-  putd( CMD_DMA_MOVER, DMA1_tx_addr << 32 );
+  putd( CMD_DMA_MOVER, DMA1_tx_addr >> 32 );
   cputd(CMD_DMA_MOVER, what_DMAS    );
 }
 
@@ -592,16 +592,16 @@ void static inline start_dma_and_packetizer(
   // communicator addr 12 bits
   //then you gather from STS_DMA_MOVER the result of the operation
   putd( CMD_DMA_MOVER, len          );
-  putd( CMD_DMA_MOVER, 0            );
-  putd( CMD_DMA_MOVER, 0            );
+  putd( CMD_DMA_MOVER, dst_rank     );
+  putd( CMD_DMA_MOVER, mpi_tag      );
   putd( CMD_DMA_MOVER, DMA0_rx_addr       );
-  putd( CMD_DMA_MOVER, DMA0_rx_addr << 32 );
+  putd( CMD_DMA_MOVER, DMA0_rx_addr >> 32 );
   putd( CMD_DMA_MOVER, DMA1_rx_addr );
-  putd( CMD_DMA_MOVER, DMA1_rx_addr << 32 );
+  putd( CMD_DMA_MOVER, DMA1_rx_addr >> 32 );
   putd( CMD_DMA_MOVER, DMA1_tx_addr );
-  putd( CMD_DMA_MOVER, DMA1_tx_addr << 32 );
+  putd( CMD_DMA_MOVER, DMA1_tx_addr >> 32 );
   what_DMAS = what_DMAS | (use_tcp ? USE_PACKETIZER_TCP : USE_PACKETIZER_UDP);
-  unsigned int which_dma_and_communicator = ((unsigned int ) world) << 8 | what_DMAS;
+  unsigned int which_dma_and_communicator = ((unsigned int ) world->ranks - 8 ) << 8 | what_DMAS;
   cputd(CMD_DMA_MOVER, which_dma_and_communicator);
 }
 
@@ -1633,7 +1633,7 @@ int main() {
             start_dma_enqueue(use_tcp);
             start_dma_dequeue(use_tcp);
             cfg_arith_switch(ARITH_INTERNAL);
-            start_dma_mover(dma_segment_size, max_dma_in_flight, 0 );
+            start_dma_mover(dma_segment_size, max_dma_in_flight, EXCHMEM_BASEADDR );
             microblaze_enable_interrupts();
             break;
           case HOUSEKEEP_IRQDIS:
