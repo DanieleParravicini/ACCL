@@ -24,7 +24,7 @@
     #define PKT_WHICH_DMA_START            288
     #define PKT_WHICH_DMA_END              295
     #define PKT_COMM_OFFSET_START          296
-    #define PKT_COMM_OFFSET_END            307
+    #define PKT_COMM_OFFSET_END            308
     #define PKT_SIZE                       320
     //ERR 
     #define DMA_ERR_BITS                     8
