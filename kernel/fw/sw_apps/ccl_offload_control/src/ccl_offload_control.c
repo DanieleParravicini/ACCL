@@ -1633,7 +1633,7 @@ int main() {
             start_dma_enqueue(use_tcp);
             start_dma_dequeue(use_tcp);
             cfg_arith_switch(ARITH_INTERNAL);
-            start_dma_mover(dma_segment_size, max_dma_in_flight, EXCHMEM_BASEADDR );
+            start_dma_mover(dma_segment_size, max_dma_in_flight, 0 );
             microblaze_enable_interrupts();
             break;
           case HOUSEKEEP_IRQDIS:

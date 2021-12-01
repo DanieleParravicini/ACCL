@@ -17,21 +17,11 @@
 #include "ap_axi_sdata.h"
 #include "hls_stream.h"
 #include "ap_int.h"
+#include "tcp_packetizer.h"
 
 using namespace hls;
 using namespace std;
 
-#define DATA_WIDTH 512
-#define DST_START 		   0
-#define DST_END			   DST_START+15
-#define HEADER_COUNT_START DST_END+1
-#define HEADER_COUNT_END   HEADER_COUNT_START+31
-#define HEADER_TAG_START   HEADER_COUNT_END+1
-#define HEADER_TAG_END	   HEADER_TAG_START+31
-#define HEADER_SRC_START   HEADER_TAG_END+1
-#define HEADER_SRC_END	   HEADER_SRC_START+31
-#define HEADER_SEQ_START   HEADER_SRC_END+1
-#define HEADER_SEQ_END	   HEADER_SEQ_START+31
 
 int ntransfers(int nbytes){
 	int bytes_per_transfer = DATA_WIDTH/8;
@@ -76,11 +66,11 @@ int main()
 	message_src 	= 1;
 	message_seq		= 42;
 
-	cmd_data.range(DST_END			, DST_START			) = session;
-	cmd_data.range(HEADER_COUNT_END	, HEADER_COUNT_START) = message_bytes;
-	cmd_data.range(HEADER_TAG_END	, HEADER_TAG_START	) = message_tag;
-	cmd_data.range(HEADER_SRC_END	, HEADER_SRC_START	) = message_src;
-	cmd_data.range(HEADER_SEQ_END	, HEADER_SEQ_START	) = message_seq;
+	cmd_data.range( PKT_CMD_DST_END 	, PKT_CMD_DST_START		) = session;
+	cmd_data.range( PKT_CMD_LEN_END 	, PKT_CMD_LEN_START		) = message_bytes;
+	cmd_data.range( PKT_CMD_MPI_TAG_END , PKT_CMD_MPI_TAG_START	) = message_tag;
+	cmd_data.range( PKT_CMD_SRC_RANK_END, PKT_CMD_SRC_RANK_START) = message_src;
+	cmd_data.range( PKT_CMD_SEQ_NUM_END , PKT_CMD_SEQ_NUM_START	) = message_seq;
 	cmd.write(cmd_data);
 
 	for(int i=0; i<ntransfers(message_bytes); i++){
@@ -101,9 +91,9 @@ int main()
 
 	//read cmd_txHandler
 	tx_cmd = cmd_txHandler.read();
-	if (tx_cmd(31,0) 	!= session) 			  { cout << "session wrong " 		<< endl; return 1;}
-	if (tx_cmd(63,32) 	!= (message_bytes + 64) ) { cout << "message bytes wrong " 	<< endl; return 1;}
-	if (tx_cmd(95,64) 	!= max_pktsize) 		  { cout << "max pkt size wrong " 	<< endl; return 1;}
+	if (tx_cmd(31,0) 	!= session) 			  { cout << "session wrong got " 		<< tx_cmd(31,0)  	<< " expected " << session				<< endl; return 1;}
+	if (tx_cmd(63,32) 	!= (message_bytes + 64) ) { cout << "message bytes wrong got " 	<< tx_cmd(63,32)  	<< " expected " << (message_bytes + 64) << endl; return 1;}
+	if (tx_cmd(95,64) 	!= max_pktsize) 		  { cout << "max pkt size wrong got " 	<< tx_cmd(95,64)  	<< " expected " << max_pktsize 			<< endl; return 1;}
 
 	//parse header
 	outword = out.read();
@@ -131,11 +121,11 @@ int main()
 	message_seq		= 43;
 
 
-	cmd_data.range(DST_END			, DST_START			) = session;
-	cmd_data.range(HEADER_COUNT_END	, HEADER_COUNT_START) = message_bytes;
-	cmd_data.range(HEADER_TAG_END	, HEADER_TAG_START	) = message_tag;
-	cmd_data.range(HEADER_SRC_END	, HEADER_SRC_START	) = message_src;
-	cmd_data.range(HEADER_SEQ_END	, HEADER_SEQ_START	) = message_seq;
+	cmd_data.range( PKT_CMD_DST_END 	, PKT_CMD_DST_START		) = session;
+	cmd_data.range( PKT_CMD_LEN_END 	, PKT_CMD_LEN_START		) = message_bytes;
+	cmd_data.range( PKT_CMD_MPI_TAG_END , PKT_CMD_MPI_TAG_START	) = message_tag;
+	cmd_data.range( PKT_CMD_SRC_RANK_END, PKT_CMD_SRC_RANK_START) = message_src;
+	cmd_data.range( PKT_CMD_SEQ_NUM_END , PKT_CMD_SEQ_NUM_START	) = message_seq;
 	cmd.write(cmd_data);
 
 	for(int i=0; i<ntransfers(message_bytes); i++){
@@ -156,9 +146,9 @@ int main()
 	
 	//read cmd_txHandler
 	tx_cmd = cmd_txHandler.read();
-	if (tx_cmd(31,0) 	!= session) 			  { cout << "session wrong " 		<< endl; return 1;}
-	if (tx_cmd(63,32) 	!= (message_bytes + 64) ) { cout << "message bytes wrong " 	<< endl; return 1;}
-	if (tx_cmd(95,64) 	!= max_pktsize) 		  { cout << "max pkt size wrong " 	<< endl; return 1;}
+	if (tx_cmd(31,0) 	!= session) 			  { cout << "session wrong got " 		<< tx_cmd(31,0)  	<< " expected " << session				<< endl; return 1;}
+	if (tx_cmd(63,32) 	!= (message_bytes + 64) ) { cout << "message bytes wrong got " 	<< tx_cmd(63,32)  	<< " expected " << (message_bytes + 64) << endl; return 1;}
+	if (tx_cmd(95,64) 	!= max_pktsize) 		  { cout << "max pkt size wrong got " 	<< tx_cmd(95,64)  	<< " expected " << max_pktsize 			<< endl; return 1;}
 
 	//parse header
 	outword = out.read();
@@ -184,11 +174,11 @@ int main()
 	message_src 	= 1;
 	message_seq 	= 44;
 
-	cmd_data.range(DST_END			, DST_START			) = session;
-	cmd_data.range(HEADER_COUNT_END	, HEADER_COUNT_START) = message_bytes;
-	cmd_data.range(HEADER_TAG_END	, HEADER_TAG_START	) = message_tag;
-	cmd_data.range(HEADER_SRC_END	, HEADER_SRC_START	) = message_src;
-	cmd_data.range(HEADER_SEQ_END	, HEADER_SEQ_START	) = message_seq;
+	cmd_data.range( PKT_CMD_DST_END 	, PKT_CMD_DST_START		) = session;
+	cmd_data.range( PKT_CMD_LEN_END 	, PKT_CMD_LEN_START		) = message_bytes;
+	cmd_data.range( PKT_CMD_MPI_TAG_END , PKT_CMD_MPI_TAG_START	) = message_tag;
+	cmd_data.range( PKT_CMD_SRC_RANK_END, PKT_CMD_SRC_RANK_START) = message_src;
+	cmd_data.range( PKT_CMD_SEQ_NUM_END , PKT_CMD_SEQ_NUM_START	) = message_seq;
 	cmd.write(cmd_data);
 
 	for(int i=0; i<ntransfers(message_bytes); i++){

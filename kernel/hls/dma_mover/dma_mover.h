@@ -9,23 +9,37 @@
     using namespace hls;
 
     //DMA MOVER PKTS
-    #define PKT_LEN_START                    0
-    #define PKT_LEN_END                     31
-    #define PKT_DST_RANK_START              32
-    #define PKT_DST_RANK_END                63
-    #define PKT_MPI_TAG_START               64
-    #define PKT_MPI_TAG_END                 95
-    #define PKT_OP0_ADDR_START              96
-    #define PKT_OP0_ADDR_END               159
-    #define PKT_OP1_ADDR_START             160
-    #define PKT_OP1_ADDR_END               223
-    #define PKT_RES_ADDR_START             224
-    #define PKT_RES_ADDR_END               287
-    #define PKT_WHICH_DMA_START            288
-    #define PKT_WHICH_DMA_END              295
-    #define PKT_COMM_OFFSET_START          296
-    #define PKT_COMM_OFFSET_END            308
-    #define PKT_SIZE                       320
+    #define DMA_MOVER_CMD_LEN_START              0
+    #define DMA_MOVER_CMD_LEN_END                DMA_MOVER_CMD_LEN_START         + 31
+    #define DMA_MOVER_CMD_DST_RANK_START         DMA_MOVER_CMD_LEN_END           + 1
+    #define DMA_MOVER_CMD_DST_RANK_END           DMA_MOVER_CMD_DST_RANK_START    + 31
+    #define DMA_MOVER_CMD_MPI_TAG_START          DMA_MOVER_CMD_DST_RANK_END      + 1  
+    #define DMA_MOVER_CMD_MPI_TAG_END            DMA_MOVER_CMD_MPI_TAG_START     + 31
+    #define DMA_MOVER_CMD_OP0_ADDR_START         DMA_MOVER_CMD_MPI_TAG_END       + 1
+    #define DMA_MOVER_CMD_OP0_ADDR_END           DMA_MOVER_CMD_OP0_ADDR_START    + 63
+    #define DMA_MOVER_CMD_OP1_ADDR_START         DMA_MOVER_CMD_OP0_ADDR_END      + 1
+    #define DMA_MOVER_CMD_OP1_ADDR_END           DMA_MOVER_CMD_OP1_ADDR_START    + 63
+    #define DMA_MOVER_CMD_RES_ADDR_START         DMA_MOVER_CMD_OP1_ADDR_END      + 1
+    #define DMA_MOVER_CMD_RES_ADDR_END           DMA_MOVER_CMD_RES_ADDR_START    + 63
+    #define DMA_MOVER_CMD_WHICH_DMA_START        DMA_MOVER_CMD_RES_ADDR_END      + 1
+    #define DMA_MOVER_CMD_WHICH_DMA_END          DMA_MOVER_CMD_WHICH_DMA_START   + 6
+    #define DMA_MOVER_CMD_COMM_OFFSET_START      DMA_MOVER_CMD_WHICH_DMA_END     + 1
+    #define DMA_MOVER_CMD_COMM_OFFSET_END        DMA_MOVER_CMD_COMM_OFFSET_START + 13
+    #define DMA_MOVER_CMD_SIZE                   320
+    //DMA CMD
+    #define DMA_CMD_SIZE                         104 
+    //PKT CMD
+    #define PKT_CMD_DST_START                    0
+    #define PKT_CMD_DST_END                      PKT_CMD_DST_START      + 31
+    #define PKT_CMD_LEN_START                    PKT_CMD_DST_END        + 1
+    #define PKT_CMD_LEN_END                      PKT_CMD_LEN_START      + 31
+    #define PKT_CMD_MPI_TAG_START                PKT_CMD_LEN_END        + 1
+    #define PKT_CMD_MPI_TAG_END                  PKT_CMD_MPI_TAG_START  + 31
+    #define PKT_CMD_SRC_RANK_START               PKT_CMD_MPI_TAG_END    + 1
+    #define PKT_CMD_SRC_RANK_END                 PKT_CMD_SRC_RANK_START + 31
+    #define PKT_CMD_SEQ_NUM_START                PKT_CMD_SRC_RANK_END   + 1
+    #define PKT_CMD_SEQ_NUM_END                  PKT_CMD_SEQ_NUM_START  + 31
+    #define PKT_CMD_SIZE                         512 
     //ERR 
     #define DMA_ERR_BITS                     8
     //USE DMA FLAGS

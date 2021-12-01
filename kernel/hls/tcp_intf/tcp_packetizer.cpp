@@ -17,26 +17,17 @@
 #include "ap_axi_sdata.h"
 #include "hls_stream.h"
 #include "ap_int.h"
+#include "tcp_packetizer.h"
 
 using namespace hls;
 using namespace std;
 
-#define DATA_WIDTH 512
-#define DST_START 		   0
-#define DST_END			   DST_START+15
-#define HEADER_COUNT_START DST_END+1
-#define HEADER_COUNT_END   HEADER_COUNT_START+31
-#define HEADER_TAG_START   HEADER_COUNT_END+1
-#define HEADER_TAG_END	   HEADER_TAG_START+31
-#define HEADER_SRC_START   HEADER_TAG_END+1
-#define HEADER_SRC_END	   HEADER_SRC_START+31
-#define HEADER_SEQ_START   HEADER_SRC_END+1
-#define HEADER_SEQ_END	   HEADER_SEQ_START+31
+
 
 void tcp_packetizer(stream<ap_axiu<DATA_WIDTH,0,0,0> > & in,
 			stream<ap_axiu<DATA_WIDTH,0,0,0> > & out,
-			stream<ap_uint<DATA_WIDTH> > & cmd,
-			stream<ap_uint<96> > & cmd_txHandler,
+			stream<ap_uint<PKT_CMD_SIZE> > & cmd,
+			stream<ap_uint<TX_HANDLER_CMD_SIZE> > & cmd_txHandler,
 			stream<ap_uint<32> > & sts,
 			unsigned int max_pktsize
 			)
@@ -58,17 +49,17 @@ void tcp_packetizer(stream<ap_axiu<DATA_WIDTH,0,0,0> > & in,
 	//32 bits src of the message
 	//32 bits sequence_number of the message
 	ap_uint<DATA_WIDTH> cmd_data 	= cmd.read();
-	unsigned int session	     	= cmd_data.range(DST_END			, DST_START			);
-	ap_uint<DATA_WIDTH-HEADER_COUNT_START-1> header = cmd_data.range(DATA_WIDTH-1		, HEADER_COUNT_START);
-	int message_bytes 		 		= cmd_data.range(HEADER_COUNT_END	, HEADER_COUNT_START);
-	int message_seq					= cmd_data.range(HEADER_SEQ_END		, HEADER_SEQ_START	);
-	int bytes_to_process = message_bytes + bytes_per_word;
+	unsigned int session	     	= cmd_data.range( PKT_CMD_DST_END			, PKT_CMD_DST_START);
+	ap_uint<DATA_WIDTH-PKT_CMD_LEN_START-1> header = cmd_data.range(DATA_WIDTH-1, PKT_CMD_LEN_START);
+	int message_bytes 		 		= cmd_data.range(PKT_CMD_LEN_END			, PKT_CMD_LEN_START);
+	int message_seq					= cmd_data.range(PKT_CMD_SEQ_NUM_END		, PKT_CMD_SEQ_NUM_START	);
+	int bytes_to_process 			= message_bytes + bytes_per_word;
 
 	//send command to txHandler
-	ap_uint<96> tx_cmd;
-	tx_cmd(31,0) 	= session;
-	tx_cmd(63,32) 	= bytes_to_process;
-	tx_cmd(95,64) 	= max_pktsize;
+	ap_uint<TX_HANDLER_CMD_SIZE> tx_cmd;
+	tx_cmd(TX_HANLDER_SESSION_END 		, TX_HANLDER_SESSION_START		) 	= session;
+	tx_cmd(TX_HANLDER_LEN_END 			, TX_HANLDER_LEN_START			) 	= bytes_to_process;
+	tx_cmd(TX_HANLDER_MAX_PKT_SIZE_END 	, TX_HANLDER_MAX_PKT_SIZE_START	) 	= max_pktsize;
 	cmd_txHandler.write(tx_cmd);
 
 	unsigned int pktsize = 1;
@@ -82,7 +73,7 @@ void tcp_packetizer(stream<ap_axiu<DATA_WIDTH,0,0,0> > & in,
 		if (!in.empty()) 
 		{
 		#pragma HLS PIPELINE II=1
-			outword.data.range(HEADER_SEQ_END - HEADER_COUNT_START, 0) 	= header;
+			outword.data.range(PKT_CMD_SEQ_NUM_END - PKT_CMD_LEN_START, 0) 	= header;
 			outword.keep = -1;
 			outword.last = 0;
 			out.write(outword);

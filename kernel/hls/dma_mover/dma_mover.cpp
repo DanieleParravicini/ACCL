@@ -45,12 +45,12 @@ int ack_dma(
 
 // start a DMA operations on a specific channel
 void start_dma(
-    stream<ap_uint<104> > &dma_cmd_channel,
+    stream<ap_uint<DMA_CMD_SIZE> > &dma_cmd_channel,
     unsigned int btt,
     ap_uint<64> addr,
     unsigned int tag,
 	unsigned int tlast_expected=1) {
-  ap_uint<104> dma_cmd;
+  ap_uint<DMA_CMD_SIZE> dma_cmd;
 
   dma_cmd.range( 31,  0) 	= 0x80800000 | btt;  // 31=DRR 30=EOF 29-24=DSA 23=Type 22-0=BTT 
   dma_cmd.range( 30, 30)    = tlast_expected;
@@ -60,9 +60,9 @@ void start_dma(
 }
 
 void start_dmas(unsigned int which_dma, 
-	stream<ap_uint<104> > &DMA0_RX_CMD,	
-	stream<ap_uint<104> > &DMA1_RX_CMD,	
-	stream<ap_uint<104> > &DMA1_TX_CMD,	
+	stream<ap_uint<DMA_CMD_SIZE> > &DMA0_RX_CMD,	
+	stream<ap_uint<DMA_CMD_SIZE> > &DMA1_RX_CMD,	
+	stream<ap_uint<DMA_CMD_SIZE> > &DMA1_TX_CMD,	
 	unsigned int btt,
 	ap_uint<64> op0_addr,
 	ap_uint<64> op1_addr,
@@ -107,7 +107,7 @@ ap_uint <32>  ack_dmas(unsigned int which_dma,
 }
 
 void start_pkt(
-	stream< ap_uint<512> > &pkt_cmd_channel,
+	stream< ap_uint<PKT_CMD_SIZE> > &pkt_cmd_channel,
 	unsigned int len,
 	unsigned int dst_rank,
 	unsigned int src_rank,
@@ -115,13 +115,13 @@ void start_pkt(
 	unsigned int sequence_number
 ) {
 	// prepare header arguments
-	ap_uint<512> pkt_cmd   = 0;
+	ap_uint<PKT_CMD_SIZE> pkt_cmd   = 0;
 	// enqueue message headers
-	pkt_cmd.range( 31,  0) = dst_rank;
-	pkt_cmd.range( 63, 32) = len;
-	pkt_cmd.range( 95, 64) = mpi_tag;
-	pkt_cmd.range(127, 96) = src_rank;
-	pkt_cmd.range(159,128) = sequence_number;
+	pkt_cmd.range( PKT_CMD_DST_END		,PKT_CMD_DST_START		) = dst_rank;
+	pkt_cmd.range( PKT_CMD_LEN_END		,PKT_CMD_LEN_START		) = len;
+	pkt_cmd.range( PKT_CMD_MPI_TAG_END	,PKT_CMD_MPI_TAG_START	) = mpi_tag;
+	pkt_cmd.range( PKT_CMD_SRC_RANK_END	,PKT_CMD_SRC_RANK_START	) = src_rank;
+	pkt_cmd.range( PKT_CMD_SEQ_NUM_END	,PKT_CMD_SEQ_NUM_START	) = sequence_number;
 	
 	pkt_cmd_channel.write( pkt_cmd );
 
@@ -144,8 +144,8 @@ int ack_pkt(
 
 void start_pkts(
 	unsigned int which_dma,
-	stream<ap_uint<512> > &UDP_PKT_CMD,	
-	stream<ap_uint<512> > &TCP_PKT_CMD,	
+	stream<ap_uint<PKT_CMD_SIZE> > &UDP_PKT_CMD,	
+	stream<ap_uint<PKT_CMD_SIZE> > &TCP_PKT_CMD,	
 	unsigned int btt,
 	unsigned int dst_rank,
 	unsigned int src_rank,
@@ -182,11 +182,11 @@ ap_uint <32> ack_pkts(
 }
 
 ap_uint<32> dma_mover_unpacked_internal(
-    stream<ap_uint<104> > &DMA0_RX_CMD	, stream<ap_uint<32> > &DMA0_RX_STS, 
-	stream<ap_uint<104> > &DMA1_RX_CMD	, stream<ap_uint<32> > &DMA1_RX_STS,
-	stream<ap_uint<104> > &DMA1_TX_CMD	, stream<ap_uint<32> > &DMA1_TX_STS,
-	stream<ap_uint<512> > &UDP_PKT_CMD	, stream<ap_uint<32> > &UDP_PKT_STS,
-    stream<ap_uint<512> > &TCP_PKT_CMD	, stream<ap_uint<32> > &TCP_PKT_STS,
+    stream<ap_uint<DMA_CMD_SIZE> > &DMA0_RX_CMD	, stream<ap_uint<32> > &DMA0_RX_STS, 
+	stream<ap_uint<DMA_CMD_SIZE> > &DMA1_RX_CMD	, stream<ap_uint<32> > &DMA1_RX_STS,
+	stream<ap_uint<DMA_CMD_SIZE> > &DMA1_TX_CMD	, stream<ap_uint<32> > &DMA1_TX_STS,
+	stream<ap_uint<PKT_CMD_SIZE> > &UDP_PKT_CMD	, stream<ap_uint<32> > &UDP_PKT_STS,
+    stream<ap_uint<PKT_CMD_SIZE> > &TCP_PKT_CMD	, stream<ap_uint<32> > &TCP_PKT_STS,
     unsigned int segment_size,
     unsigned int max_dma_in_flight,
     //unsigned int op0_len,
@@ -199,7 +199,7 @@ ap_uint<32> dma_mover_unpacked_internal(
     unsigned int dst_rank,
     unsigned int mpi_tag,
     unsigned int * exchange_mem,
-	ap_uint <PKT_COMM_OFFSET_END - (PKT_COMM_OFFSET_START + 2) > comm_offset,
+	ap_uint <DMA_MOVER_CMD_COMM_OFFSET_END - DMA_MOVER_CMD_COMM_OFFSET_START  > comm_offset,
     unsigned int which_dma) 
 {
 	#pragma HLS PIPELINE II=1 style=flp
@@ -308,15 +308,15 @@ ap_uint<32> dma_mover_unpacked_internal(
 }
 
 void dma_mover(
-    stream<ap_uint<104> > &DMA0_RX_CMD	, stream<ap_uint<32> > &DMA0_RX_STS, 
-	stream<ap_uint<104> > &DMA1_RX_CMD	, stream<ap_uint<32> > &DMA1_RX_STS,
-	stream<ap_uint<104> > &DMA1_TX_CMD	, stream<ap_uint<32> > &DMA1_TX_STS,
-	stream<ap_uint<512> > &UDP_PKT_CMD	, stream<ap_uint<32> > &UDP_PKT_STS,
-    stream<ap_uint<512> > &TCP_PKT_CMD	, stream<ap_uint<32> > &TCP_PKT_STS,
+    stream<ap_uint<DMA_CMD_SIZE> > &DMA0_RX_CMD	, stream<ap_uint<32> > &DMA0_RX_STS, 
+	stream<ap_uint<DMA_CMD_SIZE> > &DMA1_RX_CMD	, stream<ap_uint<32> > &DMA1_RX_STS,
+	stream<ap_uint<DMA_CMD_SIZE> > &DMA1_TX_CMD	, stream<ap_uint<32> > &DMA1_TX_STS,
+	stream<ap_uint<PKT_CMD_SIZE> > &UDP_PKT_CMD	, stream<ap_uint<32> > &UDP_PKT_STS,
+    stream<ap_uint<PKT_CMD_SIZE> > &TCP_PKT_CMD	, stream<ap_uint<32> > &TCP_PKT_STS,
     unsigned int segment_size,
     unsigned int max_dma_in_flight,
     unsigned int * exchange_mem,
-    stream< ap_uint<PKT_SIZE> > &pkt_stream,
+    stream< ap_uint<DMA_MOVER_CMD_SIZE> > &pkt_stream,
 	stream< ap_uint<32> > 		&return_stream){
 	#pragma HLS INTERFACE 
 	#pragma HLS INTERFACE s_axilite port=segment_size
@@ -336,15 +336,17 @@ void dma_mover(
 	#pragma HLS INTERFACE axis port = pkt_stream
 	#pragma HLS INTERFACE axis port = return_stream
 	#pragma HLS PIPELINE II=1 style=flp
-	ap_uint< PKT_SIZE> pkt  = pkt_stream.read();
-	unsigned int len 		= pkt.range(PKT_LEN_END			, PKT_LEN_START				);
-	unsigned int dst_rank 	= pkt.range(PKT_DST_RANK_END	, PKT_DST_RANK_START		);	
-	unsigned int mpi_tag 	= pkt.range(PKT_MPI_TAG_END		, PKT_MPI_TAG_START			);
-	unsigned int op0_addr 	= pkt.range(PKT_OP0_ADDR_END	, PKT_OP0_ADDR_START		);	
-	unsigned int op1_addr 	= pkt.range(PKT_OP1_ADDR_END	, PKT_OP1_ADDR_START		);	
-	unsigned int res_addr 	= pkt.range(PKT_RES_ADDR_END	, PKT_RES_ADDR_START		);	
-	unsigned int which_dma 	= pkt.range(PKT_WHICH_DMA_END	, PKT_WHICH_DMA_START		);	
-	ap_uint <PKT_COMM_OFFSET_END - (PKT_COMM_OFFSET_START + 2) > comm_offset = pkt.range(PKT_COMM_OFFSET_END , PKT_COMM_OFFSET_START	+ 2	);	
+	ap_uint< DMA_MOVER_CMD_SIZE> cmd  = pkt_stream.read();
+	unsigned int len 		= cmd.range(DMA_MOVER_CMD_LEN_END		, DMA_MOVER_CMD_LEN_START			);
+	unsigned int dst_rank 	= cmd.range(DMA_MOVER_CMD_DST_RANK_END	, DMA_MOVER_CMD_DST_RANK_START		);	
+	unsigned int mpi_tag 	= cmd.range(DMA_MOVER_CMD_MPI_TAG_END	, DMA_MOVER_CMD_MPI_TAG_START	    );
+	unsigned int op0_addr 	= cmd.range(DMA_MOVER_CMD_OP0_ADDR_END	, DMA_MOVER_CMD_OP0_ADDR_START		);	
+	unsigned int op1_addr 	= cmd.range(DMA_MOVER_CMD_OP1_ADDR_END	, DMA_MOVER_CMD_OP1_ADDR_START		);	
+	unsigned int res_addr 	= cmd.range(DMA_MOVER_CMD_RES_ADDR_END	, DMA_MOVER_CMD_RES_ADDR_START		);	
+	unsigned int which_dma 	= cmd.range(DMA_MOVER_CMD_WHICH_DMA_END	, DMA_MOVER_CMD_WHICH_DMA_START		);	
+
+	ap_uint <DMA_MOVER_CMD_COMM_OFFSET_END - DMA_MOVER_CMD_COMM_OFFSET_START > comm_offset = 0;
+	comm_offset.range(DMA_MOVER_CMD_COMM_OFFSET_END - DMA_MOVER_CMD_COMM_OFFSET_START - 1,  2) = cmd.range(DMA_MOVER_CMD_COMM_OFFSET_END , DMA_MOVER_CMD_COMM_OFFSET_START	+ 2	);	
 
 	ap_uint<32> ret = dma_mover_unpacked_internal(
 		DMA0_RX_CMD	,DMA0_RX_STS,

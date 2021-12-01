@@ -21,23 +21,23 @@ using namespace hls;
 using namespace std;
 
 void dma_mover(
-    stream<ap_uint<104> > &DMA0_RX_CMD	, stream<ap_uint<32> > &DMA0_RX_STS, 
-	stream<ap_uint<104> > &DMA1_RX_CMD	, stream<ap_uint<32> > &DMA1_RX_STS,
-	stream<ap_uint<104> > &DMA1_TX_CMD	, stream<ap_uint<32> > &DMA1_TX_STS,
-	stream<ap_uint<512> > &UDP_PKT_CMD	, stream<ap_uint<32> > &UDP_PKT_STS,
-    stream<ap_uint<512> > &TCP_PKT_CMD	, stream<ap_uint<32> > &TCP_PKT_STS,
+    stream<ap_uint<DMA_CMD_SIZE> > &DMA0_RX_CMD	, stream<ap_uint<32> > &DMA0_RX_STS, 
+	stream<ap_uint<DMA_CMD_SIZE> > &DMA1_RX_CMD	, stream<ap_uint<32> > &DMA1_RX_STS,
+	stream<ap_uint<DMA_CMD_SIZE> > &DMA1_TX_CMD	, stream<ap_uint<32> > &DMA1_TX_STS,
+	stream<ap_uint<PKT_CMD_SIZE> > &UDP_PKT_CMD	, stream<ap_uint<32> > &UDP_PKT_STS,
+    stream<ap_uint<PKT_CMD_SIZE> > &TCP_PKT_CMD	, stream<ap_uint<32> > &TCP_PKT_STS,
     unsigned int segment_size,
     unsigned int max_dma_in_flight,
     unsigned int * exchange_mem,
-    stream< ap_uint<PKT_SIZE> >  & pkt_stream,
+    stream< ap_uint<DMA_MOVER_CMD_SIZE> >  & pkt_stream,
 	stream< ap_uint<32> 	  >  & return_stream);
 
 ap_uint<32> dma_mover_unpacked(
-    stream<ap_uint<104> > &DMA0_RX_CMD	, stream<ap_uint<32> > &DMA0_RX_STS, 
-	stream<ap_uint<104> > &DMA1_RX_CMD	, stream<ap_uint<32> > &DMA1_RX_STS,
-	stream<ap_uint<104> > &DMA1_TX_CMD	, stream<ap_uint<32> > &DMA1_TX_STS,
-	stream<ap_uint<512> > &UDP_PKT_CMD	, stream<ap_uint<32> > &UDP_PKT_STS,
-    stream<ap_uint<512> > &TCP_PKT_CMD	, stream<ap_uint<32> > &TCP_PKT_STS,
+    stream<ap_uint<DMA_CMD_SIZE> > &DMA0_RX_CMD	, stream<ap_uint<32> > &DMA0_RX_STS, 
+	stream<ap_uint<DMA_CMD_SIZE> > &DMA1_RX_CMD	, stream<ap_uint<32> > &DMA1_RX_STS,
+	stream<ap_uint<DMA_CMD_SIZE> > &DMA1_TX_CMD	, stream<ap_uint<32> > &DMA1_TX_STS,
+	stream<ap_uint<PKT_CMD_SIZE> > &UDP_PKT_CMD	, stream<ap_uint<32> > &UDP_PKT_STS,
+    stream<ap_uint<PKT_CMD_SIZE> > &TCP_PKT_CMD	, stream<ap_uint<32> > &TCP_PKT_STS,
     unsigned int segment_size,
     unsigned int max_dma_in_flight,
     unsigned int len,
@@ -49,16 +49,16 @@ ap_uint<32> dma_mover_unpacked(
     unsigned int * exchange_mem,
     unsigned int which_dma) {
 
-		ap_uint< PKT_SIZE> pkt;
-		pkt.range(PKT_LEN_END		  , PKT_LEN_START			) = len;
-		pkt.range(PKT_DST_RANK_END	  , PKT_DST_RANK_START		) =	dst_rank;	
-		pkt.range(PKT_MPI_TAG_END	  , PKT_MPI_TAG_START		) =	mpi_tag;
-		pkt.range(PKT_OP0_ADDR_END	  , PKT_OP0_ADDR_START		) =	op0_addr;	
-		pkt.range(PKT_OP1_ADDR_END	  , PKT_OP1_ADDR_START		) =	op1_addr;	
-		pkt.range(PKT_RES_ADDR_END	  , PKT_RES_ADDR_START		) =	res_addr;	
-		pkt.range(PKT_WHICH_DMA_END	  , PKT_WHICH_DMA_START		) =	which_dma;	
-		pkt.range(PKT_COMM_OFFSET_END , PKT_COMM_OFFSET_START	) =	0;	
-		stream < ap_uint< PKT_SIZE> > pkt_stream; 
+		ap_uint<  DMA_MOVER_CMD_SIZE> pkt;
+		pkt.range(DMA_MOVER_CMD_LEN_END		    , DMA_MOVER_CMD_LEN_START			) = len;
+		pkt.range(DMA_MOVER_CMD_DST_RANK_END    , DMA_MOVER_CMD_DST_RANK_START		) =	dst_rank;	
+		pkt.range(DMA_MOVER_CMD_MPI_TAG_END	    , DMA_MOVER_CMD_MPI_TAG_START		) =	mpi_tag;
+		pkt.range(DMA_MOVER_CMD_OP0_ADDR_END    , DMA_MOVER_CMD_OP0_ADDR_START		) =	op0_addr;	
+		pkt.range(DMA_MOVER_CMD_OP1_ADDR_END    , DMA_MOVER_CMD_OP1_ADDR_START		) =	op1_addr;	
+		pkt.range(DMA_MOVER_CMD_RES_ADDR_END    , DMA_MOVER_CMD_RES_ADDR_START		) =	res_addr;	
+		pkt.range(DMA_MOVER_CMD_WHICH_DMA_END   , DMA_MOVER_CMD_WHICH_DMA_START		) =	which_dma;	
+		pkt.range(DMA_MOVER_CMD_COMM_OFFSET_END , DMA_MOVER_CMD_COMM_OFFSET_START	) =	0;	
+		stream < ap_uint< DMA_MOVER_CMD_SIZE> > pkt_stream; 
 		stream < ap_uint<32> > 	      return_stream;
 		pkt_stream.write(pkt);
 		dma_mover(
@@ -93,9 +93,9 @@ ap_uint <32> create_sts(int btt, int error, int tag, int tlast=0){
     return ret;
 }
 
-ap_uint <104> create_dma_cmd( unsigned int btt, ap_uint<64> addr, unsigned int tag, unsigned expected_tlast=1){
+ap_uint <DMA_CMD_SIZE> create_dma_cmd( unsigned int btt, ap_uint<64> addr, unsigned int tag, unsigned expected_tlast=1){
 
-  ap_uint<104> ret;
+  ap_uint<DMA_CMD_SIZE> ret;
   
   ret.range( 31,  0) 	= 0xC0800000 | btt;  // 31=DRR 30=EOF 29-24=DSA 23=Type 22-0=BTT 15-12=xCACHE 11-8=xUSER 7-4=RSVD 3-0=TAG
   ret.range( 30, 30)	= expected_tlast;
@@ -104,25 +104,26 @@ ap_uint <104> create_dma_cmd( unsigned int btt, ap_uint<64> addr, unsigned int t
   return ret;
 }
 
-ap_uint <512> create_pkt_cmd( unsigned int dst, unsigned int btt, unsigned int mpi_tag,
+ap_uint <PKT_CMD_SIZE> create_pkt_cmd( unsigned int dst, unsigned int btt, unsigned int mpi_tag,
 							  unsigned int src_rank, unsigned int sequence_number){
 
-  ap_uint<512> ret = 0;
-  ret.range( 31,  0) 	= dst;  
-  ret.range( 63, 32) 	= btt;
-  ret.range( 95, 64) 	= mpi_tag;
-  ret.range(127, 96) 	= src_rank;
-  ret.range(159, 128) 	= sequence_number;
+  ap_uint<PKT_CMD_SIZE> ret = 0;
+  ret.range( PKT_CMD_DST_END		, PKT_CMD_DST_START		) 	= dst;  
+  ret.range( PKT_CMD_LEN_END		, PKT_CMD_LEN_START		) 	= btt;
+  ret.range( PKT_CMD_MPI_TAG_END	, PKT_CMD_MPI_TAG_START	) 	= mpi_tag;
+  ret.range( PKT_CMD_SRC_RANK_END	, PKT_CMD_SRC_RANK_START) 	= src_rank;
+  ret.range( PKT_CMD_SEQ_NUM_END	, PKT_CMD_SEQ_NUM_START	) 	= sequence_number;
+ 
   return ret;
 }
 
 int test_pkts( unsigned int which_dma, 
              unsigned int len = 20){
-    stream<ap_uint <104> > DMA0_RX_CMD  ; stream<ap_uint <32>  > DMA0_RX_STS  ; 
-	stream<ap_uint <104> > DMA1_RX_CMD  ; stream<ap_uint <32>  > DMA1_RX_STS  ;
-	stream<ap_uint <104> > DMA1_TX_CMD  ; stream<ap_uint <32>  > DMA1_TX_STS  ;
-	stream<ap_uint <512> > UDP_PKT_CMD  ; stream<ap_uint <32>  > UDP_PKT_STS  ;
-    stream<ap_uint <512> > TCP_PKT_CMD  ; stream<ap_uint <32>  > TCP_PKT_STS  ;
+    stream<ap_uint <DMA_CMD_SIZE> > DMA0_RX_CMD  ; stream<ap_uint <32>  > DMA0_RX_STS  ; 
+	stream<ap_uint <DMA_CMD_SIZE> > DMA1_RX_CMD  ; stream<ap_uint <32>  > DMA1_RX_STS  ;
+	stream<ap_uint <DMA_CMD_SIZE> > DMA1_TX_CMD  ; stream<ap_uint <32>  > DMA1_TX_STS  ;
+	stream<ap_uint <PKT_CMD_SIZE> > UDP_PKT_CMD  ; stream<ap_uint <32>  > UDP_PKT_STS  ;
+    stream<ap_uint <PKT_CMD_SIZE> > TCP_PKT_CMD  ; stream<ap_uint <32>  > TCP_PKT_STS  ;
     unsigned int segment_size       = 10;
     unsigned int max_dma_in_flight  = 20; //max_dma_in_flight can't be really tested :/
     ap_uint<64>  op0_addr           = 0xdeadbeef;
@@ -156,7 +157,7 @@ int test_pkts( unsigned int which_dma,
 
     unsigned int segment_number;
     ap_uint <96> sts;
-    ap_uint <512> pkt_cmd;
+    ap_uint <PKT_CMD_SIZE> pkt_cmd;
     
 
 	//test: ensure that dma_mover segments correctly the buffers for the pkts and
@@ -204,13 +205,13 @@ int test_pkts( unsigned int which_dma,
 				//if there are too many element to transfer: according to segment size
 				//put segment size elements
 				pkt_cmd = TCP_PKT_CMD.read();
-				ap_uint<512> expected_pkt =  create_pkt_cmd(base_session + dst_rank , tmp_to_move, mpi_tag, local_rank,  segment_number );
+				ap_uint<PKT_CMD_SIZE> expected_pkt =  create_pkt_cmd(base_session + dst_rank , tmp_to_move, mpi_tag, local_rank,  segment_number );
 				nerrors     +=( pkt_cmd != expected_pkt);
 				if (nerrors){ cout << "TCP PKT CMD not correct! Got: " << pkt_cmd << " Expected: " << expected_pkt <<  endl; return 1; }
 			}
 			if ( (which_dma & USE_PACKETIZER_UDP) && len_tmp > 0){
 				pkt_cmd = UDP_PKT_CMD.read();
-				ap_uint<512> expected_pkt =  create_pkt_cmd(base_port	   + dst_rank , tmp_to_move, mpi_tag, local_rank, segment_number );
+				ap_uint<PKT_CMD_SIZE> expected_pkt =  create_pkt_cmd(base_port	   + dst_rank , tmp_to_move, mpi_tag, local_rank, segment_number );
 				nerrors     +=( pkt_cmd != expected_pkt);
 				if (nerrors){ cout << "UDP PKT CMD not correct! Got: " << pkt_cmd << " Expected: " << expected_pkt <<  endl; return 1; }
 			}
@@ -245,11 +246,11 @@ int test_pkts( unsigned int which_dma,
 
 int test_pkts_error( unsigned int which_dma, 
              unsigned int len = 20){
-    stream<ap_uint <104> > DMA0_RX_CMD  ; stream<ap_uint <32>  > DMA0_RX_STS  ; 
-	stream<ap_uint <104> > DMA1_RX_CMD  ; stream<ap_uint <32>  > DMA1_RX_STS  ;
-	stream<ap_uint <104> > DMA1_TX_CMD  ; stream<ap_uint <32>  > DMA1_TX_STS  ;
-	stream<ap_uint <512> > UDP_PKT_CMD  ; stream<ap_uint <32>  > UDP_PKT_STS  ;
-    stream<ap_uint <512> > TCP_PKT_CMD  ; stream<ap_uint <32>  > TCP_PKT_STS  ;
+    stream<ap_uint <DMA_CMD_SIZE> > DMA0_RX_CMD  ; stream<ap_uint <32>  > DMA0_RX_STS  ; 
+	stream<ap_uint <DMA_CMD_SIZE> > DMA1_RX_CMD  ; stream<ap_uint <32>  > DMA1_RX_STS  ;
+	stream<ap_uint <DMA_CMD_SIZE> > DMA1_TX_CMD  ; stream<ap_uint <32>  > DMA1_TX_STS  ;
+	stream<ap_uint <PKT_CMD_SIZE> > UDP_PKT_CMD  ; stream<ap_uint <32>  > UDP_PKT_STS  ;
+    stream<ap_uint <PKT_CMD_SIZE> > TCP_PKT_CMD  ; stream<ap_uint <32>  > TCP_PKT_STS  ;
     unsigned int segment_size       = 10;
     unsigned int max_dma_in_flight  = 20; //max_dma_in_flight can't be really tested :/
     ap_uint<64>  op0_addr           = 0xdeadbeef;
@@ -283,7 +284,7 @@ int test_pkts_error( unsigned int which_dma,
 
     unsigned int segment_number;
     ap_uint <96> sts;
-    ap_uint <512> pkt_cmd;
+    ap_uint <PKT_CMD_SIZE> pkt_cmd;
     
 
 	//test: ensure that dma_mover segments correctly the buffers for the pkts and
@@ -338,13 +339,13 @@ int test_pkts_error( unsigned int which_dma,
 				//if there are too many element to transfer: according to segment size
 				//put segment size elements
 				pkt_cmd = TCP_PKT_CMD.read();
-				ap_uint<512> expected_pkt =  create_pkt_cmd(base_session + dst_rank , tmp_to_move, mpi_tag, local_rank,  segment_number );
+				ap_uint<PKT_CMD_SIZE> expected_pkt =  create_pkt_cmd(base_session + dst_rank , tmp_to_move, mpi_tag, local_rank,  segment_number );
 				nerrors     +=( pkt_cmd != expected_pkt);
 				if (nerrors){ cout << "TCP PKT CMD not correct! Got: " << pkt_cmd << " Expected: " << expected_pkt <<  endl; return 1; }
 			}
 			if ( (which_dma & USE_PACKETIZER_UDP) && len_tmp > 0){
 				pkt_cmd = UDP_PKT_CMD.read();
-				ap_uint<512> expected_pkt =  create_pkt_cmd(base_port	   + dst_rank , tmp_to_move, mpi_tag, local_rank, segment_number );
+				ap_uint<PKT_CMD_SIZE> expected_pkt =  create_pkt_cmd(base_port	   + dst_rank , tmp_to_move, mpi_tag, local_rank, segment_number );
 				nerrors     +=( pkt_cmd != expected_pkt);
 				if (nerrors){ cout << "UDP PKT CMD not correct! Got: " << pkt_cmd << " Expected: " << expected_pkt <<  endl; return 1; }
 			}			
@@ -379,11 +380,11 @@ int test_pkts_error( unsigned int which_dma,
 
 int test_dmas( unsigned int which_dma, 
              unsigned int len = 20){
-    stream<ap_uint <104> > DMA0_RX_CMD  ; stream<ap_uint <32>  > DMA0_RX_STS  ; 
-	stream<ap_uint <104> > DMA1_RX_CMD  ; stream<ap_uint <32>  > DMA1_RX_STS  ;
-	stream<ap_uint <104> > DMA1_TX_CMD  ; stream<ap_uint <32>  > DMA1_TX_STS  ;
-	stream<ap_uint <512> > UDP_PKT_CMD  ; stream<ap_uint <32>  > UDP_PKT_STS  ;
-    stream<ap_uint <512> > TCP_PKT_CMD  ; stream<ap_uint <32>  > TCP_PKT_STS  ;
+    stream<ap_uint <DMA_CMD_SIZE> > DMA0_RX_CMD  ; stream<ap_uint <32>  > DMA0_RX_STS  ; 
+	stream<ap_uint <DMA_CMD_SIZE> > DMA1_RX_CMD  ; stream<ap_uint <32>  > DMA1_RX_STS  ;
+	stream<ap_uint <DMA_CMD_SIZE> > DMA1_TX_CMD  ; stream<ap_uint <32>  > DMA1_TX_STS  ;
+	stream<ap_uint <PKT_CMD_SIZE> > UDP_PKT_CMD  ; stream<ap_uint <32>  > UDP_PKT_STS  ;
+    stream<ap_uint <PKT_CMD_SIZE> > TCP_PKT_CMD  ; stream<ap_uint <32>  > TCP_PKT_STS  ;
     unsigned int segment_size       = 10;
     unsigned int max_dma_in_flight  = 20; //max_dma_in_flight can't be really tested :/
     ap_uint<64>  op0_addr           = 0xdeadbeef;
@@ -398,7 +399,7 @@ int test_dmas( unsigned int which_dma,
     unsigned int comm		[10];
     unsigned int dma_tag;
     ap_uint <96> sts;
-    ap_uint <104> cmd;
+    ap_uint <DMA_CMD_SIZE> cmd;
     
 
 	//test: ensure that dma_mover segments correctly the buffers
@@ -483,11 +484,11 @@ int test_dmas( unsigned int which_dma,
 int test_dma_tag_errors( 
 	unsigned int which_dma, 
     unsigned int len = 20){
-    stream<ap_uint <104> > DMA0_RX_CMD  ; stream<ap_uint <32>  > DMA0_RX_STS  ; 
-	stream<ap_uint <104> > DMA1_RX_CMD  ; stream<ap_uint <32>  > DMA1_RX_STS  ;
-	stream<ap_uint <104> > DMA1_TX_CMD  ; stream<ap_uint <32>  > DMA1_TX_STS  ;
-	stream<ap_uint <512> > UDP_PKT_CMD  ; stream<ap_uint <32>  > UDP_PKT_STS  ;
-    stream<ap_uint <512> > TCP_PKT_CMD  ; stream<ap_uint <32>  > TCP_PKT_STS  ;
+    stream<ap_uint <DMA_CMD_SIZE> > DMA0_RX_CMD  ; stream<ap_uint <32>  > DMA0_RX_STS  ; 
+	stream<ap_uint <DMA_CMD_SIZE> > DMA1_RX_CMD  ; stream<ap_uint <32>  > DMA1_RX_STS  ;
+	stream<ap_uint <DMA_CMD_SIZE> > DMA1_TX_CMD  ; stream<ap_uint <32>  > DMA1_TX_STS  ;
+	stream<ap_uint <PKT_CMD_SIZE> > UDP_PKT_CMD  ; stream<ap_uint <32>  > UDP_PKT_STS  ;
+    stream<ap_uint <PKT_CMD_SIZE> > TCP_PKT_CMD  ; stream<ap_uint <32>  > TCP_PKT_STS  ;
     unsigned int segment_size       = 10;
     unsigned int max_dma_in_flight  = 20;
     ap_uint<64>  op0_addr           = 0xdeadbeef;
@@ -503,7 +504,7 @@ int test_dma_tag_errors(
     unsigned int comm		[10];
     unsigned int dma_tag;
     ap_uint <96> sts;
-    ap_uint <104> cmd;
+    ap_uint <DMA_CMD_SIZE> cmd;
     
 
 	//test: ensure that dma_mover segments correctly the buffers
@@ -600,11 +601,11 @@ int test_dma_tag_errors(
 int test_dma_errors( 
 	unsigned int which_dma, 
     unsigned int len = 20){
-    stream<ap_uint <104> > DMA0_RX_CMD  ; stream<ap_uint <32>  > DMA0_RX_STS  ; 
-	stream<ap_uint <104> > DMA1_RX_CMD  ; stream<ap_uint <32>  > DMA1_RX_STS  ;
-	stream<ap_uint <104> > DMA1_TX_CMD  ; stream<ap_uint <32>  > DMA1_TX_STS  ;
-	stream<ap_uint <512> > UDP_PKT_CMD  ; stream<ap_uint <32>  > UDP_PKT_STS  ;
-    stream<ap_uint <512> > TCP_PKT_CMD  ; stream<ap_uint <32>  > TCP_PKT_STS  ;
+    stream<ap_uint <DMA_CMD_SIZE> > DMA0_RX_CMD  ; stream<ap_uint <32>  > DMA0_RX_STS  ; 
+	stream<ap_uint <DMA_CMD_SIZE> > DMA1_RX_CMD  ; stream<ap_uint <32>  > DMA1_RX_STS  ;
+	stream<ap_uint <DMA_CMD_SIZE> > DMA1_TX_CMD  ; stream<ap_uint <32>  > DMA1_TX_STS  ;
+	stream<ap_uint <PKT_CMD_SIZE> > UDP_PKT_CMD  ; stream<ap_uint <32>  > UDP_PKT_STS  ;
+    stream<ap_uint <PKT_CMD_SIZE> > TCP_PKT_CMD  ; stream<ap_uint <32>  > TCP_PKT_STS  ;
     unsigned int segment_size       = 10;
     unsigned int max_dma_in_flight  = 20;
     ap_uint<64>  op0_addr           = 0xdeadbeef;
@@ -620,7 +621,7 @@ int test_dma_errors(
     unsigned int comm		[10];
     unsigned int dma_tag;
     ap_uint <96> sts;
-    ap_uint <104> cmd;
+    ap_uint <DMA_CMD_SIZE> cmd;
     
 
 	//test: ensure that dma_mover correctly notifies errors
