@@ -18,47 +18,47 @@
 #ifndef _HLS_COLLECTIVES_H_
 #define _HLS_COLLECTIVES_H_
 
-int send_in(
+ap_uint<DATA_WIDTH> send_in(
     unsigned int comm,
     unsigned int len,
     unsigned int tag,
     unsigned int dst_rank,
     uint64_t buf_addr);
 
-int recv_in(
+ap_uint<DATA_WIDTH> recv_in(
     unsigned int comm,
     unsigned int len,
     unsigned int tag,
     unsigned int src_rank,
     uint64_t buf_addr);
 
-int broadcast_in(
+ap_uint<DATA_WIDTH> broadcast_in(
     unsigned int comm,
     unsigned int len,
     unsigned int src_rank,
     uint64_t buf_addr);
 
-int scatter_in(
+ap_uint<DATA_WIDTH> scatter_in(
     unsigned int comm,
     unsigned int len,
     unsigned int src_rank,
     uint64_t src_buf_addr,
     uint64_t dst_buf_addr);
 
-int gather_in(
+ap_uint<DATA_WIDTH> gather_in(
     unsigned int comm,
     unsigned int len,
     unsigned int root_rank,
     uint64_t src_buf_addr,
     uint64_t dst_buf_addr);
 
-int allgather_in(
+ap_uint<DATA_WIDTH> allgather_in(
     unsigned int comm,
     unsigned int len,
     uint64_t src_buf_addr,
     uint64_t dst_buf_addr);
 
-int reduce_in(
+ap_uint<DATA_WIDTH> reduce_in(
     unsigned int comm,
     unsigned int len,
     unsigned int function,
@@ -66,38 +66,38 @@ int reduce_in(
     uint64_t src_addr,
     uint64_t dst_addr);
 
-int allreduce_in(
+ap_uint<DATA_WIDTH> allreduce_in(
     unsigned int comm,
     unsigned int len,
     unsigned int function,
     uint64_t src_addr,
     uint64_t dst_addr);
 
-int config_in(unsigned int function);
+ap_uint<DATA_WIDTH> config_in(unsigned int function);
 
-int accumulate_in(
+ap_uint<DATA_WIDTH> accumulate_in(
     unsigned int len,
     unsigned int function,
     uint64_t op0_addr,
     uint64_t op1_addr);
 
-int copy_in(
+ap_uint<DATA_WIDTH> copy_in(
     unsigned int len,
     uint64_t src_addr,
     uint64_t dst_addr);
 
-int ext_kernel_stream_in(
+ap_uint<DATA_WIDTH> ext_kernel_stream_in(
     unsigned int len,
     uint64_t src_addr,
     uint64_t dst_addr);
 
-int reduce_ext_in(
+ap_uint<DATA_WIDTH> reduce_ext_in(
     unsigned int len,
     uint64_t op1_addr,
     uint64_t op2_addr,
     uint64_t dst_addr);
 
-int scatter_reduce_in(
+ap_uint<DATA_WIDTH> scatter_reduce_in(
     unsigned int comm,
     unsigned int len,
     unsigned int function,
