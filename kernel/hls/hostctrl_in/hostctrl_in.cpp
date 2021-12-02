@@ -109,7 +109,7 @@ void hostctrl_in(
     ap_uint<64> addra 	  	= in_data.range(351,288);
     ap_uint<64> addrb    	= in_data.range(415,352);
     ap_uint<64> addrc 		= in_data.range(479,416);
-    stream<ap_uint<32>> cmd;
+    // stream<ap_uint<32>> cmd;
 
 	hostctrl_in_io(scenario, len, comm, root_src_dst, function, msg_tag, buf0_type, buf1_type, buf2_type, addra, addrb, addrc, cmd_out, sts_in, sts_out);
     
