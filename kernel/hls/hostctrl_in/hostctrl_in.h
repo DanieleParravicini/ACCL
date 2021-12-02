@@ -18,24 +18,6 @@
 #ifndef _HLS_CTRL_IN_H_
 #define _HLS_CTRL_IN_H_
 
-//******************************
-//**  XCC COLLECTIVE          **
-//******************************
-#define XCCL_CONFIG               0
-#define XCCL_SEND                 1 
-#define XCCL_RECV                 2
-#define XCCL_BCAST                3
-#define XCCL_SCATTER              4
-#define XCCL_GATHER               5
-#define XCCL_REDUCE               6
-#define XCCL_ALLGATHER            7
-#define XCCL_ALLREDUCE            8
-#define XCCL_ACC                  9
-#define XCCL_COPY                 10
-#define XCCL_EXT_STREAM_KRNL      15
-#define XCCL_EXT_REDUCE           16
-#define XCCL_REDUCE_SCATTER       20
-
 void hostctrl_in(	
                 stream<ap_uint<DATA_WIDTH> > & cmd_in,
 				stream<ap_uint<32> > & 		   cmd_out,

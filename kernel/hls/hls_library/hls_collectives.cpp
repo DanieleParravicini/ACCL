@@ -18,7 +18,7 @@
 #include "hls_stream.h"
 #include "ap_int.h"
 #include "ap_utils.h"
-#include "hostctrl_in.h"
+#include "hls_collectives.h"
 
 using namespace hls;
 using namespace std;
@@ -33,7 +33,7 @@ ap_uint<DATA_WIDTH> send_in(
     uint64_t buf_addr)
 {
     ap_uint<DATA_WIDTH> in_data = 0;
-    in_data.range(31,0)  = XCCL_SEND;
+    in_data.range(31,0)  = ACCL_SEND;
     in_data.range(63,32) = len;
     in_data.range(95,64) = comm;
     in_data.range(127,96) = dst_rank;
@@ -51,7 +51,7 @@ ap_uint<DATA_WIDTH> recv_in(
     uint64_t buf_addr)
 {
     ap_uint<DATA_WIDTH> in_data = 0;
-    in_data.range(31,0)  = XCCL_RECV;
+    in_data.range(31,0)  = ACCL_RECV;
     in_data.range(63,32) = len;
     in_data.range(95,64) = comm;
     in_data.range(127,96) = src_rank;
@@ -68,7 +68,7 @@ ap_uint<DATA_WIDTH> broadcast_in(
     uint64_t buf_addr)
 {
     ap_uint<DATA_WIDTH> in_data = 0;
-    in_data.range(31,0)  = XCCL_BCAST;
+    in_data.range(31,0)  = ACCL_BCAST;
     in_data.range(63,32) = len;
     in_data.range(95,64) = comm;
     in_data.range(127,96) = src_rank;
@@ -86,7 +86,7 @@ ap_uint<DATA_WIDTH> scatter_in(
 )
 {
     ap_uint<DATA_WIDTH> in_data = 0;
-    in_data.range(31,0)  = XCCL_SCATTER;
+    in_data.range(31,0)  = ACCL_SCATTER;
     in_data.range(63,32) = len;
     in_data.range(95,64) = comm;
     in_data.range(127,96) = src_rank;
@@ -104,7 +104,7 @@ ap_uint<DATA_WIDTH> gather_in(
     uint64_t dst_buf_addr
 ){
     ap_uint<DATA_WIDTH> in_data = 0;
-    in_data.range(31,0)  = XCCL_GATHER;
+    in_data.range(31,0)  = ACCL_GATHER;
     in_data.range(63,32) = len;
     in_data.range(95,64) = comm;
     in_data.range(127,96) = root_rank;
@@ -121,7 +121,7 @@ ap_uint<DATA_WIDTH> allgather_in(
     uint64_t dst_buf_addr)
 {
     ap_uint<DATA_WIDTH> in_data = 0;
-    in_data.range(31,0)  = XCCL_ALLGATHER;
+    in_data.range(31,0)  = ACCL_ALLGATHER;
     in_data.range(63,32) = len;
     in_data.range(95,64) = comm;
     in_data.range(351,288) = src_buf_addr;
@@ -139,7 +139,7 @@ ap_uint<DATA_WIDTH> reduce_in(
     uint64_t dst_addr)
 {
     ap_uint<DATA_WIDTH> in_data = 0;
-    in_data.range(31,0)  = XCCL_REDUCE;
+    in_data.range(31,0)  = ACCL_REDUCE;
     in_data.range(63,32) = len;
     in_data.range(95,64) = comm;
     in_data.range(127,96) = root_rank;
@@ -158,7 +158,7 @@ ap_uint<DATA_WIDTH> allreduce_in(
     uint64_t dst_addr)
 {
     ap_uint<DATA_WIDTH> in_data = 0;
-    in_data.range(31,0)  = XCCL_ALLREDUCE;
+    in_data.range(31,0)  = ACCL_ALLREDUCE;
     in_data.range(63,32) = len;
     in_data.range(95,64) = comm;
     in_data.range(159,128) = function;
@@ -171,7 +171,7 @@ ap_uint<DATA_WIDTH> allreduce_in(
 ap_uint<DATA_WIDTH> config_in(unsigned int function)
 {
     ap_uint<DATA_WIDTH> in_data = 0;
-    in_data.range(31,0)  = XCCL_CONFIG;
+    in_data.range(31,0)  = ACCL_CONFIG;
     in_data.range(159,128) = function;
     return in_data;
 }
@@ -184,7 +184,7 @@ ap_uint<DATA_WIDTH> accumulate_in(
     // uint64_t dst_addr)
 {
     ap_uint<DATA_WIDTH> in_data = 0;
-    in_data.range(31,0)  = XCCL_ACC;
+    in_data.range(31,0)  = ACCL_ACC;
     in_data.range(63,32) = len;
     in_data.range(159,128) = function;
     in_data.range(351,288) = op0_addr;
@@ -199,7 +199,7 @@ ap_uint<DATA_WIDTH> copy_in(
     uint64_t dst_addr)
 {
     ap_uint<DATA_WIDTH> in_data = 0;
-    in_data.range(31,0)  = XCCL_COPY;
+    in_data.range(31,0)  = ACCL_COPY;
     in_data.range(63,32) = len;
     in_data.range(351,288) = src_addr;
     in_data.range(415,352) = dst_addr;
@@ -213,7 +213,7 @@ ap_uint<DATA_WIDTH> ext_kernel_stream_in(
     uint64_t dst_addr)
 {
     ap_uint<DATA_WIDTH> in_data = 0;
-    in_data.range(31,0)  = XCCL_EXT_STREAM_KRNL;
+    in_data.range(31,0)  = ACCL_EXT_STREAM_KRNL;
     in_data.range(63,32) = len;
     in_data.range(351,288) = src_addr;
     in_data.range(415,352) = dst_addr;
@@ -228,7 +228,7 @@ ap_uint<DATA_WIDTH> reduce_ext_in(
     uint64_t dst_addr)
 {    
     ap_uint<DATA_WIDTH> in_data = 0;
-    in_data.range(31,0)  = XCCL_EXT_REDUCE;
+    in_data.range(31,0)  = ACCL_EXT_REDUCE;
     in_data.range(63,32) = len;
     in_data.range(351,288) = op1_addr;
     in_data.range(415,352) = op2_addr;
@@ -245,12 +245,12 @@ ap_uint<DATA_WIDTH> scatter_reduce_in(
     uint64_t dst_addr)
 {    
     ap_uint<DATA_WIDTH> in_data = 0;
-    in_data.range(31,0)  = XCCL_REDUCE_SCATTER;
+    in_data.range(31,0)  = ACCL_REDUCE_SCATTER;
     in_data.range(63,32) = len;
     in_data.range(95,64) = comm;
     in_data.range(159,128) = function;
     in_data.range(351,288) = src_addr;
     in_data.range(415,352) = dst_addr;
-    
+
     return in_data;
 }

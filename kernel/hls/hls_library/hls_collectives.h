@@ -18,6 +18,24 @@
 #ifndef _HLS_COLLECTIVES_H_
 #define _HLS_COLLECTIVES_H_
 
+//******************************
+//**  XCC COLLECTIVE          **
+//******************************
+#define ACCL_CONFIG               0
+#define ACCL_SEND                 1 
+#define ACCL_RECV                 2
+#define ACCL_BCAST                3
+#define ACCL_SCATTER              4
+#define ACCL_GATHER               5
+#define ACCL_REDUCE               6
+#define ACCL_ALLGATHER            7
+#define ACCL_ALLREDUCE            8
+#define ACCL_ACC                  9
+#define ACCL_COPY                 10
+#define ACCL_EXT_STREAM_KRNL      15
+#define ACCL_EXT_REDUCE           16
+#define ACCL_REDUCE_SCATTER       20
+
 ap_uint<DATA_WIDTH> send_in(
     unsigned int comm,
     unsigned int len,
