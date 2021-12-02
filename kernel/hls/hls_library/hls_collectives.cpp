@@ -33,12 +33,12 @@ ap_uint<DATA_WIDTH> send_in(
     uint64_t buf_addr)
 {
     ap_uint<DATA_WIDTH> in_data = 0;
-    in_data.range(31,0)  = ACCL_SEND;
-    in_data.range(63,32) = len;
-    in_data.range(95,64) = comm;
-    in_data.range(127,96) = dst_rank;
-    in_data.range(191,160) = tag;
-    in_data.range(351,288) = buf_addr;
+    in_data.range(END_SCENARIO,START_SCENARIO)  = ACCL_SEND;
+    in_data.range(END_LEN,START_LEN) = len;
+    in_data.range(END_COMM,START_COMM) = comm;
+    in_data.range(END_ROOT_SRC_DST,START_ROOT_SRC_DST) = dst_rank;
+    in_data.range(END_TAG,START_TAG) = tag;
+    in_data.range(END_ADDR_A,START_ADDR_A) = buf_addr;
 
     return in_data;
 }
@@ -51,12 +51,12 @@ ap_uint<DATA_WIDTH> recv_in(
     uint64_t buf_addr)
 {
     ap_uint<DATA_WIDTH> in_data = 0;
-    in_data.range(31,0)  = ACCL_RECV;
-    in_data.range(63,32) = len;
-    in_data.range(95,64) = comm;
-    in_data.range(127,96) = src_rank;
-    in_data.range(191,160) = tag;
-    in_data.range(351,288) = buf_addr;
+    in_data.range(END_SCENARIO,START_SCENARIO)  = ACCL_RECV;
+    in_data.range(END_LEN,START_LEN) = len;
+    in_data.range(END_COMM,START_COMM) = comm;
+    in_data.range(END_ROOT_SRC_DST,START_ROOT_SRC_DST) = src_rank;
+    in_data.range(END_TAG,START_TAG) = tag;
+    in_data.range(END_ADDR_A,START_ADDR_A) = buf_addr;
 
     return in_data;
 }
@@ -68,11 +68,11 @@ ap_uint<DATA_WIDTH> broadcast_in(
     uint64_t buf_addr)
 {
     ap_uint<DATA_WIDTH> in_data = 0;
-    in_data.range(31,0)  = ACCL_BCAST;
-    in_data.range(63,32) = len;
-    in_data.range(95,64) = comm;
-    in_data.range(127,96) = src_rank;
-    in_data.range(351,288) = buf_addr;
+    in_data.range(END_SCENARIO,START_SCENARIO)  = ACCL_BCAST;
+    in_data.range(END_LEN,START_LEN) = len;
+    in_data.range(END_COMM,START_COMM) = comm;
+    in_data.range(END_ROOT_SRC_DST,START_ROOT_SRC_DST) = src_rank;
+    in_data.range(END_ADDR_A,START_ADDR_A) = buf_addr;
 
     return in_data;
 }
@@ -86,12 +86,12 @@ ap_uint<DATA_WIDTH> scatter_in(
 )
 {
     ap_uint<DATA_WIDTH> in_data = 0;
-    in_data.range(31,0)  = ACCL_SCATTER;
-    in_data.range(63,32) = len;
-    in_data.range(95,64) = comm;
-    in_data.range(127,96) = src_rank;
-    in_data.range(351,288) = src_buf_addr;
-    in_data.range(415,352) = dst_buf_addr;
+    in_data.range(END_SCENARIO,START_SCENARIO)  = ACCL_SCATTER;
+    in_data.range(END_LEN,START_LEN) = len;
+    in_data.range(END_COMM,START_COMM) = comm;
+    in_data.range(END_ROOT_SRC_DST,START_ROOT_SRC_DST) = src_rank;
+    in_data.range(END_ADDR_A,START_ADDR_A) = src_buf_addr;
+    in_data.range(END_ADDR_B,START_ADDR_B) = dst_buf_addr;
 
     return in_data;
 }
@@ -104,12 +104,12 @@ ap_uint<DATA_WIDTH> gather_in(
     uint64_t dst_buf_addr
 ){
     ap_uint<DATA_WIDTH> in_data = 0;
-    in_data.range(31,0)  = ACCL_GATHER;
-    in_data.range(63,32) = len;
-    in_data.range(95,64) = comm;
-    in_data.range(127,96) = root_rank;
-    in_data.range(351,288) = src_buf_addr;
-    in_data.range(415,352) = dst_buf_addr;
+    in_data.range(END_SCENARIO,START_SCENARIO)  = ACCL_GATHER;
+    in_data.range(END_LEN,START_LEN) = len;
+    in_data.range(END_COMM,START_COMM) = comm;
+    in_data.range(END_ROOT_SRC_DST,START_ROOT_SRC_DST) = root_rank;
+    in_data.range(END_ADDR_A,START_ADDR_A) = src_buf_addr;
+    in_data.range(END_ADDR_B,START_ADDR_B) = dst_buf_addr;
 
     return in_data;
 }
@@ -121,11 +121,11 @@ ap_uint<DATA_WIDTH> allgather_in(
     uint64_t dst_buf_addr)
 {
     ap_uint<DATA_WIDTH> in_data = 0;
-    in_data.range(31,0)  = ACCL_ALLGATHER;
-    in_data.range(63,32) = len;
-    in_data.range(95,64) = comm;
-    in_data.range(351,288) = src_buf_addr;
-    in_data.range(415,352) = dst_buf_addr;
+    in_data.range(END_SCENARIO,START_SCENARIO)  = ACCL_ALLGATHER;
+    in_data.range(END_LEN,START_LEN) = len;
+    in_data.range(END_COMM,START_COMM) = comm;
+    in_data.range(END_ADDR_A,START_ADDR_A) = src_buf_addr;
+    in_data.range(END_ADDR_B,START_ADDR_B) = dst_buf_addr;
 
     return in_data;
 }
@@ -139,13 +139,13 @@ ap_uint<DATA_WIDTH> reduce_in(
     uint64_t dst_addr)
 {
     ap_uint<DATA_WIDTH> in_data = 0;
-    in_data.range(31,0)  = ACCL_REDUCE;
-    in_data.range(63,32) = len;
-    in_data.range(95,64) = comm;
-    in_data.range(127,96) = root_rank;
-    in_data.range(159,128) = function;
-    in_data.range(351,288) = src_addr;
-    in_data.range(415,352) = dst_addr;
+    in_data.range(END_SCENARIO,START_SCENARIO)  = ACCL_REDUCE;
+    in_data.range(END_LEN,START_LEN) = len;
+    in_data.range(END_COMM,START_COMM) = comm;
+    in_data.range(END_ROOT_SRC_DST,START_ROOT_SRC_DST) = root_rank;
+    in_data.range(END_FUNCTION,START_FUNCTION) = function;
+    in_data.range(END_ADDR_A,START_ADDR_A) = src_addr;
+    in_data.range(END_ADDR_B,START_ADDR_B) = dst_addr;
 
     return in_data;
 }
@@ -158,12 +158,12 @@ ap_uint<DATA_WIDTH> allreduce_in(
     uint64_t dst_addr)
 {
     ap_uint<DATA_WIDTH> in_data = 0;
-    in_data.range(31,0)  = ACCL_ALLREDUCE;
-    in_data.range(63,32) = len;
-    in_data.range(95,64) = comm;
-    in_data.range(159,128) = function;
-    in_data.range(351,288) = src_addr;
-    in_data.range(415,352) = dst_addr;
+    in_data.range(END_SCENARIO,START_SCENARIO)  = ACCL_ALLREDUCE;
+    in_data.range(END_LEN,START_LEN) = len;
+    in_data.range(END_COMM,START_COMM) = comm;
+    in_data.range(END_FUNCTION,START_FUNCTION) = function;
+    in_data.range(END_ADDR_A,START_ADDR_A) = src_addr;
+    in_data.range(END_ADDR_B,START_ADDR_B) = dst_addr;
 
     return in_data;
 }
@@ -171,8 +171,8 @@ ap_uint<DATA_WIDTH> allreduce_in(
 ap_uint<DATA_WIDTH> config_in(unsigned int function)
 {
     ap_uint<DATA_WIDTH> in_data = 0;
-    in_data.range(31,0)  = ACCL_CONFIG;
-    in_data.range(159,128) = function;
+    in_data.range(END_SCENARIO,START_SCENARIO)  = ACCL_CONFIG;
+    in_data.range(END_FUNCTION,START_FUNCTION) = function;
     return in_data;
 }
 
@@ -184,11 +184,11 @@ ap_uint<DATA_WIDTH> accumulate_in(
     // uint64_t dst_addr)
 {
     ap_uint<DATA_WIDTH> in_data = 0;
-    in_data.range(31,0)  = ACCL_ACC;
-    in_data.range(63,32) = len;
-    in_data.range(159,128) = function;
-    in_data.range(351,288) = op0_addr;
-    in_data.range(415,352) = op1_addr;
+    in_data.range(END_SCENARIO,START_SCENARIO)  = ACCL_ACC;
+    in_data.range(END_LEN,START_LEN) = len;
+    in_data.range(END_FUNCTION,START_FUNCTION) = function;
+    in_data.range(END_ADDR_A,START_ADDR_A) = op0_addr;
+    in_data.range(END_ADDR_B,START_ADDR_B) = op1_addr;
 
     return in_data;
 }
@@ -199,10 +199,10 @@ ap_uint<DATA_WIDTH> copy_in(
     uint64_t dst_addr)
 {
     ap_uint<DATA_WIDTH> in_data = 0;
-    in_data.range(31,0)  = ACCL_COPY;
-    in_data.range(63,32) = len;
-    in_data.range(351,288) = src_addr;
-    in_data.range(415,352) = dst_addr;
+    in_data.range(END_SCENARIO,START_SCENARIO)  = ACCL_COPY;
+    in_data.range(END_LEN,START_LEN) = len;
+    in_data.range(END_ADDR_A,START_ADDR_A) = src_addr;
+    in_data.range(END_ADDR_B,START_ADDR_B) = dst_addr;
 
     return in_data;
 }
@@ -213,10 +213,10 @@ ap_uint<DATA_WIDTH> ext_kernel_stream_in(
     uint64_t dst_addr)
 {
     ap_uint<DATA_WIDTH> in_data = 0;
-    in_data.range(31,0)  = ACCL_EXT_STREAM_KRNL;
-    in_data.range(63,32) = len;
-    in_data.range(351,288) = src_addr;
-    in_data.range(415,352) = dst_addr;
+    in_data.range(END_SCENARIO,START_SCENARIO)  = ACCL_EXT_STREAM_KRNL;
+    in_data.range(END_LEN,START_LEN) = len;
+    in_data.range(END_ADDR_A,START_ADDR_A) = src_addr;
+    in_data.range(END_ADDR_B,START_ADDR_B) = dst_addr;
 
     return in_data;
 }
@@ -228,11 +228,11 @@ ap_uint<DATA_WIDTH> reduce_ext_in(
     uint64_t dst_addr)
 {    
     ap_uint<DATA_WIDTH> in_data = 0;
-    in_data.range(31,0)  = ACCL_EXT_REDUCE;
-    in_data.range(63,32) = len;
-    in_data.range(351,288) = op1_addr;
-    in_data.range(415,352) = op2_addr;
-    in_data.range(479,416) = dst_addr;
+    in_data.range(END_SCENARIO,START_SCENARIO)  = ACCL_EXT_REDUCE;
+    in_data.range(END_LEN,START_LEN) = len;
+    in_data.range(END_ADDR_A,START_ADDR_A) = op1_addr;
+    in_data.range(END_ADDR_B,START_ADDR_B) = op2_addr;
+    in_data.range(END_ADDR_C,START_ADDR_C) = dst_addr;
 
     return in_data;
 }
@@ -245,12 +245,12 @@ ap_uint<DATA_WIDTH> scatter_reduce_in(
     uint64_t dst_addr)
 {    
     ap_uint<DATA_WIDTH> in_data = 0;
-    in_data.range(31,0)  = ACCL_REDUCE_SCATTER;
-    in_data.range(63,32) = len;
-    in_data.range(95,64) = comm;
-    in_data.range(159,128) = function;
-    in_data.range(351,288) = src_addr;
-    in_data.range(415,352) = dst_addr;
+    in_data.range(END_SCENARIO,START_SCENARIO)  = ACCL_REDUCE_SCATTER;
+    in_data.range(END_LEN,START_LEN) = len;
+    in_data.range(END_COMM,START_COMM) = comm;
+    in_data.range(END_FUNCTION,START_FUNCTION) = function;
+    in_data.range(END_ADDR_A,START_ADDR_A) = src_addr;
+    in_data.range(END_ADDR_B,START_ADDR_B) = dst_addr;
 
     return in_data;
 }
