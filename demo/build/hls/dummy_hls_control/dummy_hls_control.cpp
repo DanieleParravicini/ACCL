@@ -19,6 +19,7 @@
 #include "ap_int.h"
 #include "ap_utils.h"
 #include "hls_stream.h"
+#include "../../../../kernel/hls/hostctrl_in//hostctrl_in.h" 
 
 using namespace hls;
 using namespace std;
@@ -60,18 +61,18 @@ void dummy_hls_control(
 
   ap_uint<512> in_data;
   // Input stream needs to be optimized in the same way as hostctrl
-  in_data.range(31, 0) = scenario;
-  in_data.range(63, 32) = len;
-  in_data.range(95, 64) = comm;
-  in_data.range(127, 96) = root_src_dst;
-  in_data.range(159, 128) = function;
-  in_data.range(191, 160) = msg_tag;
-  in_data.range(223, 192) = buf0_type;
-  in_data.range(255, 224) = buf1_type;
-  in_data.range(287, 256) = buf2_type;
-  in_data.range(351, 288) = addra;
-  in_data.range(415, 352) = addrb;
-  in_data.range(479, 416) = addrc;
+  in_data.range(END_SCENARIO	    ,START_SCENARIO		  ) = scenario;
+  in_data.range(END_LEN			      ,START_LEN			    ) = len;
+  in_data.range(END_COMM		      ,START_COMM			    ) = comm;
+  in_data.range(END_ROOT_SRC_DST  ,START_ROOT_SRC_DST	) = root_src_dst;
+  in_data.range(END_FUNCTION	    ,START_FUNCTION		  ) = function;
+  in_data.range(END_TAG			      ,START_TAG			    ) = msg_tag;
+  in_data.range(END_BUFF_0_TYPE	  ,START_BUFF_0_TYPE	) = buf0_type;
+  in_data.range(END_BUFF_1_TYPE	  ,START_BUFF_1_TYPE	) = buf1_type;
+  in_data.range(END_BUFF_2_TYPE	  ,START_BUFF_2_TYPE	) = buf2_type;
+  in_data.range(END_ADDR_A		    ,START_ADDR_A		    ) = addra;
+  in_data.range(END_ADDR_B		    ,START_ADDR_B		    ) = addrb;
+  in_data.range(END_ADDR_C		    ,START_ADDR_C		    ) = addrc;
   {
 #pragma HLS protocol fixed
     cmd.write(in_data);

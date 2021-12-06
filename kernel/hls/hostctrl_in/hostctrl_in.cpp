@@ -23,8 +23,6 @@
 using namespace hls;
 using namespace std;
 
-#define DATA_WIDTH 512
-
 void hostctrl_in_io(	
 				ap_uint<32> scenario,
 				ap_uint<32> len,
@@ -98,19 +96,18 @@ void hostctrl_in(
 
     ap_uint<DATA_WIDTH> in_data = cmd_in.read();
     //Input stream needs to be optimized in the same way as hostctrl 
-    ap_uint<32> scenario 	= in_data.range(END_SCENARIO,START_SCENARIO);
-    ap_uint<32> len 		= in_data.range(END_LEN,START_LEN);
-    ap_uint<32> comm		= in_data.range(END_COMM,START_COMM);
-    ap_uint<32> root_src_dst= in_data.range(END_ROOT_SRC_DST,START_ROOT_SRC_DST);
-    ap_uint<32> function 	= in_data.range(END_FUNCTION,START_FUNCTION);
-    ap_uint<32> msg_tag 	= in_data.range(END_TAG,START_TAG);
-    ap_uint<32> buf0_type 	= in_data.range(END_BUFF_0_TYPE,START_BUFF_0_TYPE);
-    ap_uint<32> buf1_type 	= in_data.range(END_BUFF_1_TYPE,START_BUFF_1_TYPE);
-    ap_uint<32> buf2_type 	= in_data.range(END_BUFF_2_TYPE,START_BUFF_2_TYPE);
-    ap_uint<64> addra 	  	= in_data.range(END_ADDR_A,START_ADDR_A);
-    ap_uint<64> addrb    	= in_data.range(END_ADDR_B,START_ADDR_B);
-    ap_uint<64> addrc 		= in_data.range(END_ADDR_C,START_ADDR_C);
-    // stream<ap_uint<32>> cmd;
+    ap_uint<32> scenario 	= in_data.range(END_SCENARIO	,START_SCENARIO		);
+    ap_uint<32> len 		= in_data.range(END_LEN			,START_LEN			);
+    ap_uint<32> comm		= in_data.range(END_COMM		,START_COMM			);
+    ap_uint<32> root_src_dst= in_data.range(END_ROOT_SRC_DST,START_ROOT_SRC_DST	);
+    ap_uint<32> function 	= in_data.range(END_FUNCTION	,START_FUNCTION		);
+    ap_uint<32> msg_tag 	= in_data.range(END_TAG			,START_TAG			);
+    ap_uint<32> buf0_type 	= in_data.range(END_BUFF_0_TYPE	,START_BUFF_0_TYPE	);
+    ap_uint<32> buf1_type 	= in_data.range(END_BUFF_1_TYPE	,START_BUFF_1_TYPE	);
+    ap_uint<32> buf2_type 	= in_data.range(END_BUFF_2_TYPE	,START_BUFF_2_TYPE	);
+    ap_uint<64> addra 	  	= in_data.range(END_ADDR_A		,START_ADDR_A		);
+    ap_uint<64> addrb    	= in_data.range(END_ADDR_B		,START_ADDR_B		);
+    ap_uint<64> addrc 		= in_data.range(END_ADDR_C		,START_ADDR_C		);
 
 	hostctrl_in_io(scenario, len, comm, root_src_dst, function, msg_tag, buf0_type, buf1_type, buf2_type, addra, addrb, addrc, cmd_out, sts_in, sts_out);
     
