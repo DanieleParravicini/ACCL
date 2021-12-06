@@ -815,6 +815,7 @@ int receive_offchip_world(
 
   // default size of transaction is full size
   curr_len_move = dma_segment_size;
+  curr_len_ack  = dma_segment_size;
   // 1. issue at most max_dma_in_flight of dma_segment_size
   for (i = 0; remaining_to_move > 0 && i < max_dma_in_flight; i++) {
     if (remaining_to_move < dma_segment_size) {
@@ -875,6 +876,7 @@ int receive_offchip_world(
     
     remaining_to_ack           -= curr_len_ack;
   }
+ 
   return COLLECTIVE_OP_SUCCESS;
 }
 
