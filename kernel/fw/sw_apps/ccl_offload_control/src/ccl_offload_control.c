@@ -434,8 +434,7 @@ static inline void start_dma_enqueue(unsigned int use_tcp) {
 
 static inline void start_dma_mover(unsigned int segment_size, unsigned int max_dma_in_flight, unsigned int * exchange_mem ) {
   SET(DMA_MOVER_ADDRESS + DMA_MOVER_CONTROL_ADDR_SEGMENT_SIZE_DATA      , segment_size);
-  SET(DMA_MOVER_ADDRESS + DMA_MOVER_CONTROL_ADDR_MAX_DMA_IN_FLIGHT_DATA , max_dma_in_flight);
-  SET(DMA_MOVER_ADDRESS + DMA_MOVER_CONTROL_ADDR_EXCHANGE_MEM_DATA      , (unsigned int) exchange_mem);
+  SET(DMA_MOVER_ADDRESS + DMA_MOVER_CONTROL_ADDR_EXCHANGE_MEM_DATA      , (unsigned int) exchange_mem & 0xfffe0000);
   SET(DMA_MOVER_ADDRESS, CONTROL_REPEAT_MASK | CONTROL_START_MASK);
 }
 
@@ -601,7 +600,7 @@ void static inline start_dma_and_packetizer(
   putd( CMD_DMA_MOVER, DMA1_tx_addr );
   putd( CMD_DMA_MOVER, DMA1_tx_addr >> 32 );
   what_DMAS = what_DMAS | (use_tcp ? USE_PACKETIZER_TCP : USE_PACKETIZER_UDP);
-  unsigned int which_dma_and_communicator = ((unsigned int ) world->ranks - 8 ) << 8 | what_DMAS;
+  unsigned int which_dma_and_communicator = ((((unsigned int ) world->ranks - 8 ) ) & 0x0001ffff) << 7 | what_DMAS;
   cputd(CMD_DMA_MOVER, which_dma_and_communicator);
 }
 
@@ -1626,7 +1625,7 @@ int main() {
     buf1_addr     = ((uint64_t)buf1_addrh << 32) | buf1_addrl;
     buf2_addr     = ((uint64_t)buf2_addrh << 32) | buf2_addrl;
     switch (scenario) {
-      case XCCL_CONFIG:
+      case ACCL_CONFIG:
         retval = 0;
         switch (function) {
           case HOUSEKEEP_IRQEN:
@@ -1689,43 +1688,43 @@ int main() {
         }
 
         break;
-      case XCCL_SEND:
+      case ACCL_SEND:
         retval = send(comm, len, msg_tag, root_src_dst, buf0_addr);
         break;
-      case XCCL_RECV:
+      case ACCL_RECV:
         retval = recv(comm, len, msg_tag, root_src_dst, buf0_addr);
         break;
-      case XCCL_BCAST:
+      case ACCL_BCAST:
         retval = broadcast_round_robin(comm, len, root_src_dst, buf0_addr);
         break;
-      case XCCL_SCATTER:
+      case ACCL_SCATTER:
         retval = scatter_rr(comm, len, root_src_dst, buf0_addr, buf1_addr);
         break;
-      case XCCL_GATHER:
+      case ACCL_GATHER:
         retval = gather_ring(comm, len, root_src_dst, buf0_addr, buf1_addr);
         break;
-      case XCCL_REDUCE:
+      case ACCL_REDUCE:
         retval = reduce_ring_streaming(comm, len, function, root_src_dst, buf0_addr, buf1_addr);
         break;
-      case XCCL_ALLGATHER:
+      case ACCL_ALLGATHER:
         retval = allgather_ring(comm, len, buf0_addr, buf1_addr);
         break;
-      case XCCL_ALLREDUCE:
+      case ACCL_ALLREDUCE:
         retval = all_reduce_share(comm, len, function, buf0_addr, buf1_addr);
         break;
-      case XCCL_ACC:
+      case ACCL_ACC:
         retval = accumulate(len, function, buf0_addr, buf1_addr, buf1_addr);
         break;
-      case XCCL_COPY:
+      case ACCL_COPY:
         retval = copy(len, buf0_addr, buf1_addr);
         break;
-      case XCCL_EXT_STREAM_KRNL:
+      case ACCL_EXT_STREAM_KRNL:
         retval = ext_kernel_stream(len, buf0_addr, buf1_addr);
         break;
-      case XCCL_EXT_REDUCE:
+      case ACCL_EXT_REDUCE:
         retval = reduce_ext(len, buf0_addr, buf1_addr, buf2_addr);
         break;
-      case XCCL_REDUCE_SCATTER:
+      case ACCL_REDUCE_SCATTER:
         retval = scatter_reduce(comm, len, function, buf0_addr, buf1_addr);
         break;
       default:

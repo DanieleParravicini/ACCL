@@ -128,20 +128,20 @@ extern "C" {
 //******************************
 //**  XCC COLLECTIVE          **
 //******************************
-#define XCCL_CONFIG               0
-#define XCCL_SEND                 1 
-#define XCCL_RECV                 2
-#define XCCL_BCAST                3
-#define XCCL_SCATTER              4
-#define XCCL_GATHER               5
-#define XCCL_REDUCE               6
-#define XCCL_ALLGATHER            7
-#define XCCL_ALLREDUCE            8
-#define XCCL_ACC                  9
-#define XCCL_COPY                 10
-#define XCCL_EXT_STREAM_KRNL      15
-#define XCCL_EXT_REDUCE           16
-#define XCCL_REDUCE_SCATTER       20
+#define ACCL_CONFIG               0
+#define ACCL_SEND                 1 
+#define ACCL_RECV                 2
+#define ACCL_BCAST                3
+#define ACCL_SCATTER              4
+#define ACCL_GATHER               5
+#define ACCL_REDUCE               6
+#define ACCL_ALLGATHER            7
+#define ACCL_ALLREDUCE            8
+#define ACCL_ACC                  9
+#define ACCL_COPY                 10
+#define ACCL_EXT_STREAM_KRNL      15
+#define ACCL_EXT_REDUCE           16
+#define ACCL_REDUCE_SCATTER       20
 
 //XCCL_CONFIG SUBFUNCTIONS
 #define HOUSEKEEP_IRQEN           0
@@ -187,8 +187,7 @@ extern "C" {
 #define DMA_ENQUEUE_ADDRESS    0x44D00000
 #define DMA_MOVER_ADDRESS      0x44A30000
 #define DMA_MOVER_CONTROL_ADDR_SEGMENT_SIZE_DATA      0x10
-#define DMA_MOVER_CONTROL_ADDR_MAX_DMA_IN_FLIGHT_DATA 0x18
-#define DMA_MOVER_CONTROL_ADDR_EXCHANGE_MEM_DATA      0x20
+#define DMA_MOVER_CONTROL_ADDR_EXCHANGE_MEM_DATA      0x18
 //https://www.xilinx.com/html_docs/xilinx2020_2/vitis_doc/managing_interface_synthesis.html#tzw1539734223235
 #define CONTROL_START_MASK      0x00000001
 #define CONTROL_DONE_MASK       0x00000001 << 1
@@ -322,8 +321,8 @@ extern "C" {
 #define USE_NONE                    	 0
 #define USE_OP0_DMA                 	 1
 #define USE_OP1_DMA                 	 2
-#define USE_RES_DMA                 	 4
-#define USE_OP2_DMA                 	 8
+#define USE_OP2_DMA                 	 4
+#define USE_RES_DMA                 	 8
 #define USE_RES_DMA_WITHOUT_TLAST   	16
 #define USE_PACKETIZER_TCP          	32
 #define USE_PACKETIZER_UDP          	64
