@@ -121,8 +121,9 @@ void issue_cmds(
 
 	for(remaining_to_move 	= len; remaining_to_move > 0; remaining_to_move 	-= curr_len_move) {
 		#pragma HLS PIPELINE II =1
+		sequence_number_start+= 1;
 		if (remaining_to_move < segment_size) {
-			curr_len_move = remaining_to_move;//need to rephrase it to unroll loop
+			curr_len_move = remaining_to_move;
 		}
 
 		if( which_dma.range(USE_OP0_DMA_BIT, USE_OP0_DMA_BIT)){
@@ -152,7 +153,6 @@ void issue_cmds(
 		op1_addr 			+= curr_len_move;
 		res_addr 			+= curr_len_move;
 		dma_tag_start 		 = (dma_tag_start + 1) & 0xf;
-		sequence_number_start+= 1;
 	}
 	
 }
@@ -179,8 +179,9 @@ void retire_cmds(
 	curr_len_ack  = segment_size;
 	// 3. finish ack the remaining
 	for (remaining_to_ack  	= len; remaining_to_ack > 0 ; remaining_to_ack 	-= curr_len_ack ) {
-
 		#pragma HLS PIPELINE
+		sequence_number_acked += 1;
+
 		if (remaining_to_ack < segment_size) {
 			curr_len_ack = remaining_to_ack;
 		}
@@ -212,7 +213,6 @@ void retire_cmds(
 		// update reference 
 
 		dma_tag_acked 		 = (dma_tag_acked + 1) & 0xf;
-		sequence_number_acked += 1;
 	}
 	
 	seq_number_stream.write(sequence_number_acked );
@@ -320,7 +320,7 @@ void dma_mover(
 	unsigned int src_rank = 0, sequence_number = 0, session = 0, port =0;
 	if ( which_dma.range(USE_PACKETIZER_UDP_BIT, USE_PACKETIZER_TCP_BIT) ) {
 		src_rank 		= *(exchange_mem + comm_offset +  COMM_LOCAL_RANK_OFFSET);
-		sequence_number = *(exchange_mem + comm_offset +  COMM_RANKS_OFFSET + (dst_rank * RANK_SIZE) + RANK_OUTBOUND_SEQ_OFFSET) + 1;
+		sequence_number = *(exchange_mem + comm_offset +  COMM_RANKS_OFFSET + (dst_rank * RANK_SIZE) + RANK_OUTBOUND_SEQ_OFFSET);
 		session 		= *(exchange_mem  + comm_offset + COMM_RANKS_OFFSET + dst_rank * RANK_SIZE + RANK_SESSION_OFFSET);
 		port  			= *(exchange_mem  + comm_offset + COMM_RANKS_OFFSET + dst_rank * RANK_SIZE +    RANK_PORT_OFFSET);
 		//if ( which_dma.range(USE_PACKETIZER_TCP_BIT, USE_PACKETIZER_TCP_BIT) ) {

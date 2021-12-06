@@ -274,7 +274,7 @@ int test_pkts_and_dmas( unsigned int which_dma,
 			if( ranks[i].inbound_seq  	!= base_inbound_seq  + i) { cout << "base_inbound_seq of rank " << i << "has been modified!" << endl ; return 1;}
 			
 			if(i <= dst_rank){
-				if( ranks[i].outbound_seq  	!= base_outbound_seq + 1 + i + (len + segment_size -1 ) / segment_size ) { cout << "outbound_seq " << i << " has not been updated! obtained: "  << ranks[i].outbound_seq << " expected: " << base_outbound_seq + i + 1+  (len + segment_size -1 ) / segment_size << endl; return 1;}
+				if( ranks[i].outbound_seq  	!= base_outbound_seq + i + (len + segment_size -1 ) / segment_size ) { cout << "outbound_seq " << i << " has not been updated! obtained: "  << ranks[i].outbound_seq << " expected: " << base_outbound_seq + i +  (len + segment_size -1 ) / segment_size << endl; return 1;}
 			}else{
 				if( ranks[i].outbound_seq 	!= base_outbound_seq + i) { cout << "base_outbound_seq of rank " << i << " has been modified!" << endl; return 1;}
 			}
@@ -400,7 +400,7 @@ int test_pkts( unsigned int which_dma,
 			if( ranks[i].inbound_seq  	!= base_inbound_seq  + i) { cout << "base_inbound_seq of rank " << i << "has been modified!" << endl ; return 1;}
 			
 			if(i <= dst_rank){
-				if( ranks[i].outbound_seq  	!= base_outbound_seq + 1 + i + (len + segment_size -1 ) / segment_size ) { cout << "outbound_seq " << i << " has not been updated! obtained: "  << ranks[i].outbound_seq << " expected: " << base_outbound_seq + i + 1+  (len + segment_size -1 ) / segment_size << endl; return 1;}
+				if( ranks[i].outbound_seq  	!= base_outbound_seq + i + (len + segment_size -1 ) / segment_size ) { cout << "outbound_seq " << i << " has not been updated! obtained: "  << ranks[i].outbound_seq << " expected: " << base_outbound_seq + i +  (len + segment_size -1 ) / segment_size << endl; return 1;}
 			}else{
 				if( ranks[i].outbound_seq 	!= base_outbound_seq + i) { cout << "base_outbound_seq of rank " << i << " has been modified!" << endl; return 1;}
 			}
@@ -535,7 +535,7 @@ int test_pkts_error( unsigned int which_dma,
 			if( ranks[i].inbound_seq  	!= base_inbound_seq  + i) { cout << "base_inbound_seq of rank " << i << "has been modified!" << endl ; return 1;}
 			
 			if(i <= dst_rank){
-				//if( ranks[i].outbound_seq  	!= base_outbound_seq + i + (len + segment_size -1 ) / segment_size ) { cout << "outbound_seq " << i << " has not been updated! obtained: "  << ranks[i].outbound_seq << " expected: " << base_outbound_seq + i + 1+  (len + segment_size -1 ) / segment_size << endl; return 1;}
+				//if( ranks[i].outbound_seq  	!= base_outbound_seq + i + (len + segment_size -1 ) / segment_size ) { cout << "outbound_seq " << i << " has not been updated! obtained: "  << ranks[i].outbound_seq << " expected: " << base_outbound_seq + i +  (len + segment_size -1 ) / segment_size << endl; return 1;}
 			}else{
 				if( ranks[i].outbound_seq 	!= base_outbound_seq + i) { cout << "base_outbound_seq of rank " << i << " has been modified!" << endl; return 1;}
 			}
