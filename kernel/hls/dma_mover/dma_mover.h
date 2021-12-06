@@ -41,16 +41,25 @@
     #define PKT_CMD_SEQ_NUM_END                  PKT_CMD_SEQ_NUM_START  + 31
     #define PKT_CMD_SIZE                         512 
     //ERR 
-    #define DMA_ERR_BITS                     8
+    #define DMA_ERR_BITS                     7
     //USE DMA FLAGS
-    #define USE_NONE                    	 0
-    #define USE_OP0_DMA                 	 1
-    #define USE_OP1_DMA                 	 2
-    #define USE_RES_DMA                 	 4
-    #define USE_OP2_DMA                 	 8
-    #define USE_RES_DMA_WITHOUT_TLAST   	16
-    #define USE_PACKETIZER_TCP          	32
-    #define USE_PACKETIZER_UDP          	64
+    #define USE_BITS                         7
+    #define USE_OP0_DMA_BIT                  0
+    #define USE_OP1_DMA_BIT                	 1
+    #define USE_OP2_DMA_BIT                	 2
+    #define USE_RES_DMA_BIT                	 3
+    #define USE_RES_DMA_WITHOUT_TLAST_BIT  	 4
+    #define USE_PACKETIZER_TCP_BIT         	 5
+    #define USE_PACKETIZER_UDP_BIT         	 6
+
+    #define USE_NONE                    	 DMA_MOVER_CMD_WHICH_DMA_END - DMA_MOVER_CMD_WHICH_DMA_START + 1
+    #define USE_OP0_DMA                 	 1<<USE_OP0_DMA_BIT
+    #define USE_OP1_DMA                 	 1<<USE_OP1_DMA_BIT
+    #define USE_OP2_DMA                 	 1<<USE_OP2_DMA_BIT
+    #define USE_RES_DMA                 	 1<<USE_RES_DMA_BIT
+    #define USE_RES_DMA_WITHOUT_TLAST   	 1<<USE_RES_DMA_WITHOUT_TLAST_BIT
+    #define USE_PACKETIZER_TCP          	 1<<USE_PACKETIZER_TCP_BIT
+    #define USE_PACKETIZER_UDP          	 1<<USE_PACKETIZER_UDP_BIT
     //DMA ERROR FLAGS
     #define DMA_SUCCESS                      0    
     #define DMA_TAG_MISMATCH_ERROR           1     
@@ -60,7 +69,12 @@
     #define DMA_NOT_OKAY_ERROR              16     
     #define DMA_NOT_END_OF_PACKET_ERROR     32            
     #define DMA_NOT_EXPECTED_BTT_ERROR      64
-    #define PACK_SEQ_NUMBER_ERROR          128
+    #define PACK_SEQ_NUMBER_ERROR            1
+    #define UDP_PACK_SEQ_NUMBER_ERROR        1<<UDP_PACK_SEQ_NUMBER_ERROR_BIT
+    #define TCP_PACK_SEQ_NUMBER_ERROR        1<<TCP_PACK_SEQ_NUMBER_ERROR_BIT
+    
+    #define UDP_PACK_SEQ_NUMBER_ERROR_BIT   21
+    #define TCP_PACK_SEQ_NUMBER_ERROR_BIT   22
     //COMMUNICATOR OFFSET
     #define COMM_SIZE_OFFSET                 0
     #define COMM_LOCAL_RANK_OFFSET           1
