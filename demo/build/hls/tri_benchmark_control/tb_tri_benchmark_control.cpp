@@ -24,7 +24,7 @@
 using namespace hls;
 using namespace std;
 
-void tri_benchmark_control(
+ap_uint<96> tri_benchmark_control(
     ap_uint<32> scenario0,
     ap_uint<32> len0,
     ap_uint<32> comm0,
@@ -37,7 +37,7 @@ void tri_benchmark_control(
     ap_uint<64> addra_0,
     ap_uint<64> addrb_0,
     ap_uint<64> addrc_0,
-    ap_uint<32> count_0,
+
     ap_uint<32> scenario_1,
     ap_uint<32> len_1,
     ap_uint<32> comm_1,
@@ -50,7 +50,7 @@ void tri_benchmark_control(
     ap_uint<64> addra_1,
     ap_uint<64> addrb_1,
     ap_uint<64> addrc_1,
-    ap_uint<32> count_1,
+
     ap_uint<32> scenario_2,
     ap_uint<32> len_2,
     ap_uint<32> comm_2,
@@ -63,7 +63,7 @@ void tri_benchmark_control(
     ap_uint<64> addra_2,
     ap_uint<64> addrb_2,
     ap_uint<64> addrc_2,
-    ap_uint<32> count_2,
+
     stream<ap_uint<512>> &cmd_0,
     stream<ap_uint<32>> &sts_0,
     stream<ap_uint<512>> &cmd_1,
@@ -91,7 +91,7 @@ int main() {
     ap_uint<64> addra_0         = 0 + 10 + i;
     ap_uint<64> addrb_0         = 0 + 11 + i;
     ap_uint<64> addrc_0         = 0 + 12 + i;
-    ap_uint<32> count_0         = 0 ;
+
     sts_0.write(0 + 1 + i);
 
     ap_uint<32> scenario_1      = 1 + 1 + i;
@@ -106,7 +106,7 @@ int main() {
     ap_uint<64> addra_1         = 1 + 10 + i;
     ap_uint<64> addrb_1         = 1 + 11 + i;
     ap_uint<64> addrc_1         = 1 + 12 + i;
-    ap_uint<32> count_1         = 0 ;
+
     sts_1.write(1 + 1 + i);
 
     ap_uint<32> scenario_2      = 2 + 1 + i;
@@ -121,7 +121,7 @@ int main() {
     ap_uint<64> addra_2         = 2 + 10 + i;
     ap_uint<64> addrb_2         = 2 + 11 + i;
     ap_uint<64> addrc_2         = 2 + 12 + i;
-    ap_uint<32> count_2         = 0 ;   
+ 
     sts_2.write(2 + 1 + i);
 
     tri_benchmark_control(
@@ -137,7 +137,6 @@ int main() {
         addra_0,
         addrb_0,
         addrc_0,
-        count_0,
         scenario_1,
         len_1,
         comm_1,
@@ -150,7 +149,6 @@ int main() {
         addra_1,
         addrb_1,
         addrc_1,
-        count_1,
         scenario_2,
         len_2,
         comm_2,
@@ -163,7 +161,6 @@ int main() {
         addra_2,
         addrb_2,
         addrc_2,
-        count_2,
         cmd_0, sts_0,
         cmd_1, sts_1,
         cmd_2, sts_2);

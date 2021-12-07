@@ -24,7 +24,7 @@
 using namespace hls;
 using namespace std;
 
-void tri_benchmark_control(
+ap_uint<96> tri_benchmark_control(
     ap_uint<32> scenario_0,
     ap_uint<32> len_0,
     ap_uint<32> comm_0,
@@ -37,7 +37,6 @@ void tri_benchmark_control(
     ap_uint<64> addra_0,
     ap_uint<64> addrb_0,
     ap_uint<64> addrc_0,
-    ap_uint<32> count_0,
     ap_uint<32> scenario_1,
     ap_uint<32> len_1,
     ap_uint<32> comm_1,
@@ -50,7 +49,6 @@ void tri_benchmark_control(
     ap_uint<64> addra_1,
     ap_uint<64> addrb_1,
     ap_uint<64> addrc_1,
-    ap_uint<32> count_1,
     ap_uint<32> scenario_2,
     ap_uint<32> len_2,
     ap_uint<32> comm_2,
@@ -63,7 +61,6 @@ void tri_benchmark_control(
     ap_uint<64> addra_2,
     ap_uint<64> addrb_2,
     ap_uint<64> addrc_2,
-    ap_uint<32> count_2,
     stream<ap_uint<512>> &cmd_0,
     stream<ap_uint<32>> &sts_0,
     stream<ap_uint<512>> &cmd_1,
@@ -83,7 +80,6 @@ void tri_benchmark_control(
 #pragma HLS INTERFACE s_axilite port = addra_0
 #pragma HLS INTERFACE s_axilite port = addrb_0
 #pragma HLS INTERFACE s_axilite port = addrc_0
-#pragma HLS INTERFACE s_axilite port = count_0
 #pragma HLS INTERFACE s_axilite port = scenario_1
 #pragma HLS INTERFACE s_axilite port = len_1
 #pragma HLS INTERFACE s_axilite port = comm_1
@@ -96,7 +92,6 @@ void tri_benchmark_control(
 #pragma HLS INTERFACE s_axilite port = addra_1
 #pragma HLS INTERFACE s_axilite port = addrb_1
 #pragma HLS INTERFACE s_axilite port = addrc_1
-#pragma HLS INTERFACE s_axilite port = count_1
 #pragma HLS INTERFACE s_axilite port = scenario_2
 #pragma HLS INTERFACE s_axilite port = len_2
 #pragma HLS INTERFACE s_axilite port = comm_2
@@ -109,7 +104,6 @@ void tri_benchmark_control(
 #pragma HLS INTERFACE s_axilite port = addra_2
 #pragma HLS INTERFACE s_axilite port = addrb_2
 #pragma HLS INTERFACE s_axilite port = addrc_2
-#pragma HLS INTERFACE s_axilite port = count_2
 #pragma HLS INTERFACE axis port = cmd_0
 #pragma HLS INTERFACE axis port = sts_0
 #pragma HLS INTERFACE axis port = cmd_1
@@ -118,7 +112,8 @@ void tri_benchmark_control(
 #pragma HLS INTERFACE axis port = sts_2
 
 #pragma HLS INTERFACE s_axilite port = return
-  count_0 = 0; count_1 = 0; count_2 = 0;
+  ap_uint<96> ret;
+  ap_uint<32> count_0 = 0, count_1 = 0, count_2 = 0;
   ap_uint <1> flag_0 = 1, flag_1 = 1, flag_2 = 1;
   ap_uint<512> in_data_0, in_data_1, in_data_2;
   // Input stream needs to be optimized in the same way as hostctrl
@@ -190,4 +185,8 @@ void tri_benchmark_control(
   sts_0.read();
   sts_1.read();
   sts_2.read();
+  ret.range(31,  0) = count_0;
+  ret.range(63, 32) = count_1;
+  ret.range(95, 64) = count_2;
+  return ret;
 }
