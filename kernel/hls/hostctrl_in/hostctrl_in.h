@@ -17,6 +17,13 @@
 *******************************************************************************/
 #ifndef _HLS_CTRL_IN_H_
 #define _HLS_CTRL_IN_H_
+#include "ap_int.h"
+#include "ap_utils.h"
+#include "hls_stream.h"
+
+using namespace hls;
+using namespace std;
+
 #define DATA_WIDTH			512
 #define START_SCENARIO 		0
 #define END_SCENARIO 		(START_SCENARIO+32-1)

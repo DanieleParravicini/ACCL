@@ -15,13 +15,7 @@
 #
 # *******************************************************************************/
 
-#include "hls_stream.h"
-#include "ap_int.h"
-#include "ap_utils.h"
 #include "hostctrl_in.h"
-
-using namespace hls;
-using namespace std;
 
 void hostctrl_in_io(	
 				ap_uint<32> scenario,
