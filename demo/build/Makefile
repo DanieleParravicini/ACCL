@@ -20,7 +20,7 @@ PLATFORM ?= xilinx_u280_xdma_201920_3
 #xilinx_u250_gen3x16_xdma_3_1_202020_1
 #xilinx_u280_xdma_201920_3
 XSA := $(strip $(patsubst %.xpfm, % , $(shell basename $(PLATFORM))))
-DEBUG ?= axis_switch_0
+DEBUG ?= None
 MODE ?= tri
 FREQUENCY = 250
 ACCL_XO=../../kernel/ccl_offload_ex/exports/ccl_offload.xo
@@ -38,6 +38,7 @@ CMAC_UDP_XO=$(VNX)/Ethernet/_x.$(PLATFORM)/cmac_$(ETH_IF).xo
 UDP_XO=$(VNX)/NetLayers/_x.$(PLATFORM)/networklayer.xo
 LOOPBACK_XO=hls/loopback/build_vnx_loopback/sol1/impl/export.xo
 DUMMY_HLS_CONTROL_XO=hls/dummy_hls_control/build_dummy_hls_control/sol1/impl/export.xo
+TRI_BENCHMARK_CONTROL_XO=hls/tri_benchmark_control/build_tri_benchmark_control/sol1/impl/export.xo
 TCP_DUMMY_XO=hls/dummy_tcp_stack/build_tcp_stack/sol1/impl/export.xo
 TCP_XO=Vitis_with_100Gbps_TCP-IP/_x.hw.$(XSA)/network_krnl.xo
 CMAC_TCP_XO=Vitis_with_100Gbps_TCP-IP/_x.hw.$(XSA)/cmac_krnl.xo
@@ -105,7 +106,7 @@ else ifeq (dual,$(MODE))
 	VNX_XO = 
 else ifeq (tri,$(MODE))
 	ETH_IF := none
-	VNX_XO = $(TCP_DUMMY_XO) $(LOOPBACK_XO) $(ARITH_XO)
+	VNX_XO = $(TCP_DUMMY_XO) $(LOOPBACK_XO) $(ARITH_XO) $(TRI_BENCHMARK_CONTROL_XO)
 	ifeq (u250,$(findstring u250, $(PLATFORM)))
 		CONFIGFILE = config/link_config_u280_tri.ini
 	endif
@@ -136,7 +137,7 @@ else ifeq (tcp_real_dual, $(MODE))
 	CONFIG += --user_ip_repo_paths Vitis_with_100Gbps_TCP-IP/build/fpga-network-stack/iprepo
 else ifeq (tcp_cmac, $(MODE))
 	CMAC_TCP_XO=Vitis_with_100Gbps_TCP-IP/_x.hw.$(XSA)/cmac_krnl.xo
-	VNX_XO = $(TCP_XO) $(CMAC_TCP_XO) $(LOOPBACK_XO) $(ARITH_XO)
+	VNX_XO = $(TCP_XO) $(CMAC_TCP_XO) $(LOOPBACK_XO) $(ARITH_XO) $(DUMMY_HLS_CONTROL_XO)
 	CONFIGFILE = config/link_config_$(BOARD)_tcp_cmac.ini
 	CONFIG := --config $(CONFIGFILE) 
 	CONFIG += --advanced.param compiler.userPostSysLinkOverlayTcl=$(shell pwd)/Vitis_with_100Gbps_TCP-IP/scripts/post_sys_link.tcl
@@ -186,8 +187,8 @@ tcp_stack_ips:
 	cmake -S Vitis_with_100Gbps_TCP-IP/ -BVitis_with_100Gbps_TCP-IP/build/ -DFDEV_NAME=$(BOARD) -DVIVADO_HLS_ROOT_DIR=/proj/xbuilds/2020.1_released/installs/lin64/Vivado/2020.1 -DVIVADO_ROOT_DIR=/proj/xbuilds/2020.1_released/installs/lin64/Vivado/2020.1 -DTCP_STACK_EN=1 -DTCP_STACK_RX_DDR_BYPASS_EN=1  -DTCP_STACK_WINDOW_SCALING=0 
 	make -C Vitis_with_100Gbps_TCP-IP/build installip
 
-$(XCLBIN): $(ACCL_XO) $(VNX_XO) $(CONFIGFILE) $(DUMMY_HLS_CONTROL_XO)
-	v++ --link --platform $(PLATFORM) --kernel_frequency $(FREQUENCY) --save-temps --temp_dir $(BUILD_DIR) $(CONFIG) -o $@ $(ACCL_XO) $(VNX_XO) $(DUMMY_HLS_CONTROL_XO)
+$(XCLBIN): $(ACCL_XO) $(VNX_XO) $(CONFIGFILE) 
+	v++ --link --platform $(PLATFORM) --kernel_frequency $(FREQUENCY) --save-temps --temp_dir $(BUILD_DIR) $(CONFIG) -o $@ $(ACCL_XO) $(VNX_XO) 
 
 .PHONY: loopback
 loopback: $(LOOPBACK_XO)
@@ -200,6 +201,9 @@ kernel: $(ACCL_XO)
 
 $(DUMMY_HLS_CONTROL_XO): 
 	make -C hls/dummy_hls_control DEVICE=$(FPGAPART)
+
+$(TRI_BENCHMARK_CONTROL_XO): 
+	make -C hls/tri_benchmark_control DEVICE=$(FPGAPART)
 
 $(ACCL_XO):
 	make -C ../../kernel PLATFORM=$(PLATFORM) DEBUG=$(DEBUG) MODE=$(MODE)
