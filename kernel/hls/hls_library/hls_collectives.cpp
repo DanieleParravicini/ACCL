@@ -19,12 +19,10 @@
 #include "ap_int.h"
 #include "ap_utils.h"
 #include "hls_collectives.h"
-#include "hostctrl_in.h"
+#include "../../hostctrl_in/hostctrl_in.h"
 
 using namespace hls;
 using namespace std;
-
-#define DATA_WIDTH 512
 
 ap_uint<32> send_in(
     unsigned int comm,
