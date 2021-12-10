@@ -4,10 +4,10 @@ To test your `.xclbin` on XACC do the following:
     ```
     ssh alveo0
     mkdir ACCL
-    mkdir -p ACCL/demo/build/tcp_u280
+    mkdir -p ACCL/demo/build/tcp
     mkdir -p ACCL/demo/host/measurements/accl
     exit
-    scp -r ACCL/demo/build/link*/ccl_offload.* alveo0:~/ACCL/demo/build/tcp_u280
+    scp -r ACCL/demo/build/link*/ccl_offload.* alveo0:~/ACCL/demo/build/tcp
     scp -r ACCL/driver alveo0:~/ACCL/
     scp -r ACCL/demo/host alveo0:~/ACCL/demo/
     ```
@@ -53,7 +53,7 @@ To test your `.xclbin` on XACC do the following:
         for col in "${collectives[@]}"
         do
             xbutil validate
-            python test_tcp.py --xclbin ../tcp.xclbin --experiment $measures --device 0 --nbufs 40 --nruns $numrun --segment_size $segment_size --bsize $ele_consec --$col --use_tcp
+            python test_tcp.py --xclbin ../build/tcp/ccl_offload.xclbin --experiment $measures --device 0 --nbufs 40 --nruns $numrun --segment_size $segment_size --bsize $ele_consec --$col --use_tcp
         done
     done
     xbutil validate
