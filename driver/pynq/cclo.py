@@ -206,7 +206,7 @@ class cclo(DefaultIP):
         self.call(scenario=CCLOp.config, function=CCLOCfgFunc.enable_irq)
         self.call(scenario=CCLOp.config, function=CCLOCfgFunc.enable_pkt)
         print("time taken to enqueue buffers", self.exchange_mem.read(0x0FF4))
-        self.set_max_dma_transaction_flight(10)
+        #self.set_max_dma_transaction_flight(10)
     
     def dump_rx_buffers_spares(self, nbufs=None):
         addr = self.rx_buffers_adr
@@ -242,8 +242,10 @@ class cclo(DefaultIP):
                 status = "ENQUEUED"
             elif rstatus == 2:
                 status = "RESERVED"
+            elif rstatus == 4:
+                status = "ERROR"
             else :
-                status = "UNKNOWN"
+                status = "UNKNOWN ("+str(rstatus)+")"
 
             try:
                 self.rx_buffer_spares[i].sync_from_device()
@@ -299,21 +301,7 @@ class cclo(DefaultIP):
         if run_async:
             return handle
         else:
-            handle.wait()
-
-    def start_profiling(self, run_async=False, waitfor=[]):
-        handle = self.start(scenario=CCLOp.config, function=CCLOCfgFunc.start_profiling, waitfor=waitfor)
-        if run_async:
-            return handle
-        else:
-            handle.wait()
-
-    def end_profiling(self, run_async=False, waitfor=[]):
-        handle = self.start(scenario=CCLOp.config, function=CCLOCfgFunc.end_profiling, waitfor=waitfor)
-        if run_async:
-            return handle
-        else:
-            handle.wait()     
+            handle.wait()  
 
     def init_connection (self, comm_id=0):
         self.call(scenario=CCLOp.config, comm=self.communicators[comm_id]["addr"], function=CCLOCfgFunc.init_connection)
@@ -327,11 +315,11 @@ class cclo(DefaultIP):
         self.call(scenario=CCLOp.config, comm=self.communicators[comm_id]["addr"], function=CCLOCfgFunc.open_con)
     
     @self_check_return_value
-    def use_udp(self, comm_id=0):
+    def use_udp(self):
         self.call(scenario=CCLOp.config, function=CCLOCfgFunc.use_udp_stack)
     
     @self_check_return_value
-    def use_tcp(self, comm_id=0):
+    def use_tcp(self):
         self.call(scenario=CCLOp.config, function=CCLOCfgFunc.use_tcp_stack)   
     
     @self_check_return_value
@@ -345,21 +333,8 @@ class cclo(DefaultIP):
         self.segment_size = value
         print("time taken to start and stop timer", self.exchange_mem.read(0x0FF4))
 
-    @self_check_return_value
-    def set_max_dma_transaction_flight(self, value=0):
-     
-        if value > 20:
-            warnings.warn("ACCL: transaction size should be less or equal to 20!")
-            return
-        self.call(scenario=CCLOp.config, function=CCLOCfgFunc.set_max_dma_transactions, len=value)   
-
-    @self_check_return_value
-    def set_delay(self, value=0):
-        pass
-        #self.call(scenario=CCLOp.config, function=CCLOCfgFunc.set_delay, len=value)   
-
     def configure_communicator(self, ranks, local_rank, vnx=False):
-        assert len(self.rx_buffer_spares) > 0, "RX buffers unconfigured, please call setup_rx_buffers() first"
+        assert len(self.rx_buffer_spares) > 0, "RX buffers not configured, please call setup_rx_buffers() first"
         if len(self.communicators) == 0:
             addr = self.communicators_addr
         else:
@@ -391,7 +366,7 @@ class cclo(DefaultIP):
             #a 32 bit number is reserved for session id
             # sessions are initialized to 0xFFFFFFFF
             addr += 4
-            self.exchange_mem.write(addr, 0xFFFFFFFF)
+            self.exchange_mem.write(addr, i)
             communicator["session_addr"][i] = addr
         self.communicators.append(communicator)
         
@@ -510,7 +485,6 @@ class cclo(DefaultIP):
             warnings.warn("zero size buffer")
             return
 
-
         if not op1_from_fpga:
             op1.sync_to_device()
         if not op2_from_fpga:
@@ -546,7 +520,7 @@ class cclo(DefaultIP):
             dst_buf.sync_from_device()
 
     @self_check_return_value
-    def bcast(self, comm_id, buf, root, sw=False, from_fpga=False, to_fpga=False, run_async=False, waitfor=[], rr=True):
+    def bcast(self, comm_id, buf, root, from_fpga=False, to_fpga=False, run_async=False, waitfor=[]):
         comm = self.communicators[comm_id]
         is_root = comm["local_rank"] == root
         if not to_fpga and not(is_root) and run_async:
@@ -567,7 +541,7 @@ class cclo(DefaultIP):
             buf.sync_from_device()
 
     @self_check_return_value
-    def scatter(self, comm_id, sbuf, rbuf, count, root, sw=True, from_fpga=False, to_fpga=False, run_async=False, waitfor=[], rr=True):
+    def scatter(self, comm_id, sbuf, rbuf, count, root, from_fpga=False, to_fpga=False, run_async=False, waitfor=[]):
         if not to_fpga and run_async:
             warnings.warn("ACCL: async run returns data on FPGA, user must sync_from_device() after waiting")
         if count == 0:
@@ -576,7 +550,6 @@ class cclo(DefaultIP):
         comm        = self.communicators[comm_id]
         local_rank  = comm["local_rank"]
         p           = len(comm["ranks"])
-
 
         if not from_fpga and local_rank == root:
                 sbuf[:count*p].sync_to_device()
@@ -592,8 +565,8 @@ class cclo(DefaultIP):
             rbuf[0:count].sync_from_device()
 
     @self_check_return_value
-    def gather(self, comm_id, sbuf, rbuf, count, root, sw=True, shift=True, from_fpga=False, to_fpga=False, run_async=False, waitfor=[]):
-        #print(hex(self.mmio.base_addr), count, root, sw, shift)
+    def gather(self, comm_id, sbuf, rbuf, count, root, from_fpga=False, to_fpga=False, run_async=False, waitfor=[]):
+        
         if not to_fpga and run_async:
             warnings.warn("ACCL: async run returns data on FPGA, user must sync_from_device() after waiting")
         if count == 0:
@@ -621,7 +594,7 @@ class cclo(DefaultIP):
             rbuf[:count*p].sync_from_device()
 
     @self_check_return_value
-    def allgather(self, comm_id, sbuf, rbuf, count, fused=False, sw=True, ring=True, from_fpga=False, to_fpga=False, run_async=False, waitfor=[]):
+    def allgather(self, comm_id, sbuf, rbuf, count, from_fpga=False, to_fpga=False, run_async=False, waitfor=[]):
         if not to_fpga and run_async:
             warnings.warn("ACCL: async run returns data on FPGA, user must sync_from_device() after waiting")
         if count == 0:
@@ -649,7 +622,7 @@ class cclo(DefaultIP):
     #TODO: figure out if we need to mess with the datatypes
     # https://stackoverflow.com/questions/49135350/how-to-create-a-uint16-numpy-array-from-a-uint8-raw-image-data-array
     @self_check_return_value
-    def reduce(self, comm_id, sbuf, rbuf, count, root, func, sw=False, shift=True, from_fpga=False, to_fpga=False, run_async=False, waitfor=[]):
+    def reduce(self, comm_id, sbuf, rbuf, count, root, func, from_fpga=False, to_fpga=False, run_async=False, waitfor=[]):
         if not to_fpga and run_async:
             warnings.warn("ACCL: async run returns data on FPGA, user must sync_from_device() after waiting")
         if count == 0:
@@ -679,7 +652,7 @@ class cclo(DefaultIP):
             rbuf[0:count].sync_from_device()
  
     @self_check_return_value
-    def allreduce(self, comm_id, sbuf, rbuf, count, func, fused=False, sw=True,ring=True,share=True, from_fpga=False, to_fpga=False, run_async=False, waitfor=[]):
+    def allreduce(self, comm_id, sbuf, rbuf, count, func, from_fpga=False, to_fpga=False, run_async=False, waitfor=[]):
         if not to_fpga and run_async:
             warnings.warn("ACCL: async run returns data on FPGA, user must sync_from_device() after waiting")
         if count == 0:
@@ -692,9 +665,6 @@ class cclo(DefaultIP):
             return
         if not from_fpga:
             sbuf[0:count].sync_to_device()
-
-         #hw implementations
-            # performs acc = val + acc on each cclo
 
         cclop = CCLOp.allreduce
         prevcall = [self.start(scenario=cclop, len=count, comm=self.communicators[comm_id]["addr"], function=func, addr_0=sbuf, addr_1=rbuf, waitfor=waitfor)]
@@ -721,7 +691,6 @@ class cclo(DefaultIP):
             return
         comm        = self.communicators[comm_id]
         p           = len(comm["ranks"])
-        local_rank  = comm["local_rank"]
 
         if not from_fpga:
             sbuf[0:count*p].sync_to_device()

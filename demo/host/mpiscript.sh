@@ -19,28 +19,20 @@ source /opt/xilinx/xrt/setup.sh
 source /opt/tools/Xilinx/Vitis/2020.2/.settings64-Vitis.sh
 source /opt/tools/external/anaconda/bin/activate pynq-dask
 
-#python test_mpi4py.py 
-declare -a arr=("send" "bcast" "scatter" "gather" "allgather" "reduce" "allreduce")
+declare -a collectives=("send" "bcast" "scatter" "gather" "allgather" "reduce" "allreduce")
+
 cd ~/ACCL/demo/host
-ele_consec="1 2 4 8 16 32 64 128 256 512"
-ele=(1024 2048 4096 8192 16384 32768)
-numrun=20
+ele_consec=" 1 2 4 8 16 32 64 128 256 512 1024 2048 4096 8192 16384 32768 65536"
+segment_sizes=(512 1024 2048)
+numrun=10
+measures="experiment name"
 
-
-for col in "${arr[@]}"
+for segment_size in "${segment_sizes[@]}"
 do
-
-    python test_tcp.py --xclbin ../build/tcp_u280_debug/ccl_offload.xclbin --experiment measures --device 0 --nbufs 60 --nruns $numrun --segment_size 1024 --bsize $ele_consec --$col --use_tcp
-    xbutil program -p ../build/tri/ccl_offload.xclbin
-
-done
-
-
-for col in "${arr[@]}"
-do
-    for i in "${ele[@]}" 
+    for col in "${collectives[@]}"
     do
-        python test_tcp.py --xclbin ../build/tcp_u280_debug/ccl_offload.xclbin --experiment measures --device 0 --nbufs 60 --nruns $numrun --segment_size 1024 --bsize $i --$col --use_tcp
-        xbutil program -p ../build/tri/ccl_offload.xclbin
+        xbutil validate
+        python test_tcp.py --xclbin ../tcp.xclbin --experiment $measures --device 0 --nbufs 40 --nruns $numrun --segment_size $segment_size --bsize $ele_consec --$col --use_tcp
     done
 done
+xbutil validate

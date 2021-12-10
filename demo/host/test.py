@@ -16,13 +16,10 @@
 # *******************************************************************************/
 
 import sys
-import warnings
 import numpy as np
 sys.path.append('../../driver/pynq/')
 from cclo import *
-import json 
 import argparse
-import random
 from queue import Queue
 import threading
 import time
@@ -31,7 +28,8 @@ def configure_xccl(xclbin, board_idx, nbufs=16, bufsize=1024):
     global ext_arithm  
     local_alveo = pynq.Device.devices[board_idx]
     ol=pynq.Overlay(xclbin, device=local_alveo)
-
+    for ip in ol.ip_dict:
+        print(ip)
     print("Allocating 1MB scratchpad memory")
     if local_alveo.name == 'xilinx_u250_xdma_201830_2':
         devicemem = [ol.__getattr__(f"bank{i}") for i in range(args.naccel)]
@@ -54,11 +52,20 @@ def configure_xccl(xclbin, board_idx, nbufs=16, bufsize=1024):
         #cclo[i].dump_exchange_memory()
         
         print("CCLO ",i)
-        cclo[i].use_udp()
+        use_udp = False
+        if use_udp:
+            cclo[i].use_udp()
+        else:
+            cclo[i].use_tcp()
+
         print("Configuring RX Buffers")
         cclo[i].setup_rx_buffers(nbufs, bufsize, devicemem[i])
         print("Configuring a communicator")
         cclo[i].configure_communicator(ranks, i)
+
+        if not use_udp:
+            cclo[i].open_port()
+            cclo[i].open_con()
 
     print("Accelerator ready!")
 
@@ -68,7 +75,7 @@ def test_self_sendrecv():
     print("========================================")
     print("Self Send/Recv ")
     print("========================================")
-    for j in range(args.naccel):
+    for j in range(0,args.naccel):
         
         src_rank = j
         dst_rank = j
@@ -272,7 +279,7 @@ def test_sendrecv_unaligned():
                 if ( rx_buf[dst_rank][offset:] == tx_buf[src_rank][offset:]).all():
                     print("Send/Recv {} -> {} succeeded".format(src_rank, dst_rank))
                 else:
-                    diff        = np.where(recvdata != exp_recvdata)
+                    diff        = np.where(rx_buf[dst_rank][offset:] != tx_buf[src_rank][offset:])
                     firstdiff   = np.min(diff)
                     ndiffs      = diff[0].size 
                     print("Send/Recv {} -> {} failed, {} bytes different starting at {}".format(src_rank, dst_rank, ndiffs, firstdiff))
@@ -281,7 +288,7 @@ def test_bcast(sw=True):
     # test broadcast from each rank
      # test broadcast from each rank
     print("========================================")
-    print(f"Broadcast","sw" if sw else "hw","Synch")
+    print(f"Broadcast hw Synch")
     print("========================================")
     for src_rank in range(args.naccel):
         err_count = 0
@@ -289,7 +296,7 @@ def test_bcast(sw=True):
         threads = []
         for j in range(args.naccel):
             buf = tx_buf[src_rank] if (j==src_rank) else rx_buf[j]
-            threads.append(threading.Thread(target=cclo_inst[j].bcast, args=(0, buf, src_rank, sw, False, True)))
+            threads.append(threading.Thread(target=cclo_inst[j].bcast, args=(0, buf, src_rank, False, True)))
         
         for j in range(args.naccel):
             threads[j].start()
@@ -321,13 +328,13 @@ def test_bcast(sw=True):
         if err_count == 0:
             print(f"Bcast {src_rank} -> all succeeded")
 
-def test_bcast_rnd(sw=True, repetitions=1):
+def test_bcast_rnd( repetitions=1):
     # test broadcast from random rank
     import numpy as np
     rng            = np.random.default_rng(12345)
     random_ranks   = rng.integers(low=0, high=args.naccel, size=repetitions)
     print("========================================")
-    print(f"Broadcast","sw" if sw else "hw","Synch rnd")
+    print(f"Broadcast hw Synch rnd")
     print("========================================")
     
     for src_rank in random_ranks:
@@ -336,7 +343,7 @@ def test_bcast_rnd(sw=True, repetitions=1):
         threads = []
         for j in range(args.naccel):
             buf = tx_buf[src_rank] if (j==src_rank) else rx_buf[j]
-            threads.append(threading.Thread(target=cclo_inst[j].bcast, args=(0, buf, src_rank, sw, False, True)))
+            threads.append(threading.Thread(target=cclo_inst[j].bcast, args=(0, buf, src_rank, False, True)))
         
         for j in range(args.naccel):
             threads[j].start()
@@ -369,10 +376,10 @@ def test_bcast_rnd(sw=True, repetitions=1):
         if err_count == 0:
             print(f"Bcast {src_rank} -> all succeeded")
 
-def test_bcast_async(sw=True):
+def test_bcast_async():
     # test broadcast from each rank
     print("========================================")
-    print(f"Broadcast","sw" if sw else "hw"," Asynch")
+    print(f"Broadcast hw Asynch")
     print("========================================")
     for src_rank in range(args.naccel):
         err_count = 0
@@ -380,7 +387,7 @@ def test_bcast_async(sw=True):
         calls = []
         for j in range(args.naccel):
             buf = tx_buf[src_rank] if (j==src_rank) else rx_buf[j]
-            calls.append(cclo_inst[j].bcast(0, buf, src_rank,sw=sw, from_fpga=False, to_fpga=True, run_async=True))
+            calls.append(cclo_inst[j].bcast(0, buf, src_rank, from_fpga=False, to_fpga=True, run_async=True))
         for j in range(args.naccel):
             calls[j].wait()
         for j in range(args.naccel):
@@ -405,10 +412,10 @@ def test_bcast_async(sw=True):
         if err_count == 0:
             print(f"Bcast {src_rank} -> all succeeded")
 
-def test_scatter(sw=True):
+def test_scatter():
     # test scatter from each rank
     print("========================================")
-    print("Scatter","sw" if sw else "hw")
+    print("Scatter hw")
     print("========================================")
     for i in range(args.naccel):
         err_count = 0
@@ -420,7 +427,7 @@ def test_scatter(sw=True):
         threads = []
         for j in range(args.naccel):
             rx_buf[j][:]=np.zeros(rx_buf[j].shape)# clear rx buffers
-            threads.append(threading.Thread(target=cclo_inst[j].scatter, args=(0, tx_buf[j], rx_buf[j], count, i, sw)))
+            threads.append(threading.Thread(target=cclo_inst[j].scatter, args=(0, tx_buf[j], rx_buf[j], count, i)))
             threads[-1].start()
         for j in range(args.naccel):
             threads[j].join()
@@ -439,10 +446,10 @@ def test_scatter(sw=True):
         if err_count == 0:
             print(f"Scatter {i} -> all succeeded".format(i))
 
-def test_scatter_async(sw=True):
+def test_scatter_async():
     # test scatter from each rank
     print("========================================")
-    print("Scatter Async","sw" if sw else "hw")
+    print("Scatter Async hw")
     print("========================================")
     for i in range(args.naccel):
         err_count = 0
@@ -455,7 +462,7 @@ def test_scatter_async(sw=True):
         for j in range(args.naccel):
             rx_buf[j][:]=np.zeros(rx_buf[j].shape)# clear rx buffers
         for j in range(args.naccel):
-            calls.append(cclo_inst[j].scatter(0, tx_buf[j], rx_buf[j], count, i, sw=sw, from_fpga=False, to_fpga=True, run_async=True))
+            calls.append(cclo_inst[j].scatter(0, tx_buf[j], rx_buf[j], count, i,from_fpga=False, to_fpga=True, run_async=True))
         for j in range(args.naccel):
             calls[j].wait()
         for j in range(args.naccel):
@@ -467,10 +474,10 @@ def test_scatter_async(sw=True):
         if err_count == 0:
             print("Scatter {} -> all succeeded".format(i))
 
-def test_gather(sw=True, ring=True):
+def test_gather():
     # test gather from each rank
     print("========================================")
-    print("Gather","sw" if sw else "hw","ring" if ring else "non-ring")
+    print("Gather hw ring")
     print("========================================")
     for i in range(args.naccel):
         err_count = 0
@@ -482,7 +489,7 @@ def test_gather(sw=True, ring=True):
         threads = []
         for j in range(args.naccel):
             tx_buf[j][:]=np.random.randint(1000, size=tx_buf[j].shape)#init tx buffers
-            threads.append(threading.Thread(target=cclo_inst[j].gather, args=(0, tx_buf[j], rx_buf[j], count, i, sw , ring)))
+            threads.append(threading.Thread(target=cclo_inst[j].gather, args=(0, tx_buf[j], rx_buf[j], count, i)))
             threads[-1].start()
         for j in range(args.naccel):
             threads[j].join()
@@ -493,10 +500,10 @@ def test_gather(sw=True, ring=True):
         if err_count == 0:
             print("Gather {} <- all succeeded".format(i))
 
-def test_gather_async(sw=True, ring=True):
+def test_gather_async():
     # test gather from each rank
     print("========================================")
-    print("Gather Async","sw" if sw else "hw","ring" if ring else "non-ring")
+    print("Gather Async hw ring" )
     print("========================================")
     for i in range(args.naccel):
         err_count = 0
@@ -509,7 +516,7 @@ def test_gather_async(sw=True, ring=True):
         for j in range(args.naccel):
             tx_buf[j][:]=np.random.randint(1000, size=tx_buf[j].shape)#init tx buffers
         for j in range(args.naccel):
-            calls.append(cclo_inst[j].gather(0, tx_buf[j], rx_buf[j], count, i, sw=sw, shift=ring, from_fpga=False, to_fpga=True, run_async=True))
+            calls.append(cclo_inst[j].gather(0, tx_buf[j], rx_buf[j], count, i, from_fpga=False, to_fpga=True, run_async=True))
         for j in range(args.naccel):
             calls[j].wait()
             rx_buf[i].sync_from_device()
@@ -521,10 +528,10 @@ def test_gather_async(sw=True, ring=True):
         if err_count == 0:
             print("Gather {} <- all succeeded".format(i))
 
-def test_allgather(sw=True, ring=True, fused=False):
+def test_allgather(sw=True):
     # test gather from each rank
     print("========================================")
-    print("AllGather","sw" if sw else "hw","ring" if ring else "non-ring","Fused" if fused else "Non-Fused")
+    print("AllGather hw ring Fused" )
     print("========================================")
     err_count = 0
     count = len(tx_buf[0])//args.naccel
@@ -536,7 +543,7 @@ def test_allgather(sw=True, ring=True, fused=False):
         tx_buf[i][:]=np.random.randint(1000, size=tx_buf[i].shape)#init tx buffers
     threads = []
     for j in range(args.naccel):
-        threads.append(threading.Thread(target=cclo_inst[j].allgather, args=(0, tx_buf[j], rx_buf[j], count, fused, sw , ring)))
+        threads.append(threading.Thread(target=cclo_inst[j].allgather, args=(0, tx_buf[j], rx_buf[j], count)))
         threads[-1].start()
     for j in range(args.naccel):
         threads[j].join()
@@ -548,10 +555,10 @@ def test_allgather(sw=True, ring=True, fused=False):
     if err_count == 0:
         print("AllGather succeeded")
 
-def test_allgather_async(sw=True, ring=True, fused=False):
+def test_allgather_async():
     # test gather from each rank
     print("========================================")
-    print("AllGather Async","sw" if sw else "hw","ring" if ring else "non-ring","Fused" if fused else "Non-Fused")
+    print("AllGather Async hw ring Fused")
     print("========================================")
     err_count = 0
     count = len(tx_buf[0])//args.naccel
@@ -563,7 +570,7 @@ def test_allgather_async(sw=True, ring=True, fused=False):
         tx_buf[i][:]=np.random.randint(1000, size=tx_buf[i].shape)#init tx buffers
     calls = []
     for j in range(args.naccel):
-        calls.append(cclo_inst[j].allgather(0, tx_buf[j], rx_buf[j], count, fused=fused, sw=sw, ring=ring, from_fpga=False, to_fpga=True, run_async=True))
+        calls.append(cclo_inst[j].allgather(0, tx_buf[j], rx_buf[j], count, from_fpga=False, to_fpga=True, run_async=True))
     for j in range(args.naccel):
         calls[j].wait()
     for i in range(args.naccel):
@@ -575,10 +582,10 @@ def test_allgather_async(sw=True, ring=True, fused=False):
     if err_count == 0:
         print("AllGather succeeded")
 
-def test_reduce(sw=True, shift=False):
+def test_reduce():
     # test reduce from each rank
     print("========================================")
-    print("Reduce","sw" if sw else "hw","shift" if shift else "non-shift")
+    print("Reduce hw shift" )
     print("========================================")
     for np_type in [np.float32, np.float64, np.int32, np.int64]:
         for root in np.random.default_rng().permutation(range(args.naccel)):
@@ -599,7 +606,7 @@ def test_reduce(sw=True, shift=False):
                 expected += tx_buf[j].view(np_type)
             #create run
             for j in range(args.naccel):
-                threads.append(threading.Thread(target=cclo_inst[j].reduce, args=(0, tx_buf[j], rx_buf[j], count, root, np_type_2_cclo_type(np_type), sw, shift)))
+                threads.append(threading.Thread(target=cclo_inst[j].reduce, args=(0, tx_buf[j], rx_buf[j], count, root, np_type_2_cclo_type(np_type))))
                 threads[-1].start()
             #wait for others to finish
             for j in range(args.naccel):
@@ -625,10 +632,10 @@ def test_reduce(sw=True, shift=False):
             else:
                 print(f"Reduce {np_type}: {root} <- all succeeded")
 
-def test_reduce_async(sw=True, shift=False):
+def test_reduce_async():
     # test reduce from each rank
     print("========================================")
-    print("Reduce Async","sw" if sw else "hw","shift" if shift else "non-shift")
+    print("Reduce Async hw shift")
     print("========================================")
     for np_type in [np.float32, np.float64, np.int32, np.int64]:
         for root in np.random.default_rng().permutation(range(args.naccel)):
@@ -649,7 +656,7 @@ def test_reduce_async(sw=True, shift=False):
             #create run
             handles = []
             for j in range(args.naccel):
-                handles += [cclo_inst[j].reduce(0, tx_buf[j], rx_buf[j], count, root, np_type_2_cclo_type(np_type), sw=sw, shift=shift, run_async=True, to_fpga=True)]
+                handles += [cclo_inst[j].reduce(0, tx_buf[j], rx_buf[j], count, root, np_type_2_cclo_type(np_type), run_async=True, to_fpga=True)]
             #wait for others to finish
             for a_handle in handles:
                 a_handle.wait()
@@ -675,10 +682,10 @@ def test_reduce_async(sw=True, shift=False):
                 print(f"Reduce {np_type}: {root} <- all succeeded")
 
 
-def test_allreduce(fused=False, sw=False):
+def test_allreduce():
     # test reduce from each rank
     print("========================================")
-    print("AllReduce ","Fused" if fused else "Non-Fused","sw" if sw else "hw")
+    print("AllReduce Fused hw")
     print("========================================")
     #for each type
     for np_type in  [ np.int32, np.int64, np.float32, np.float64]:
@@ -694,7 +701,7 @@ def test_allreduce(fused=False, sw=False):
         
         threads = []
         for j in range(args.naccel):
-            threads.append(threading.Thread(target=cclo_inst[j].allreduce, args=(0, tx_buf[j], rx_buf[j], count,  np_type_2_cclo_type(np_type), fused, sw)))
+            threads.append(threading.Thread(target=cclo_inst[j].allreduce, args=(0, tx_buf[j], rx_buf[j], count,  np_type_2_cclo_type(np_type))))
         for j in range(args.naccel):
             threads[j].start()
         #wait for completion
@@ -730,10 +737,10 @@ def test_allreduce(fused=False, sw=False):
             else:
                 print(f"AllReduce {np_type}: {j} <- all succeeded")
 
-def test_allreduce_async(fused=False, sw=False):
+def test_allreduce_async():
     # test reduce from each rank
     print("========================================")
-    print("AllReduce Asynch","Fused" if fused else "Non-Fused","sw" if sw else "hw")
+    print("AllReduce Asynch Fused hw")
     print("========================================")
     #for each type
     for np_type in [np.float32, np.float64, np.int32, np.int64]:
@@ -748,7 +755,7 @@ def test_allreduce_async(fused=False, sw=False):
             #tx_buf[j][:]=np.ones(                   rx_buf[j].shape, dtype=np_type)# init tx buffer
         handles = []
         for j in range(args.naccel):
-            handles += [cclo_inst[j].allreduce(0, tx_buf[j], rx_buf[j], count,  np_type_2_cclo_type(np_type), fused, sw, run_async=True, to_fpga=True)]
+            handles += [cclo_inst[j].allreduce(0, tx_buf[j], rx_buf[j], count,  np_type_2_cclo_type(np_type), run_async=True, to_fpga=True)]
         #wait for completion
         for a_handle in handles:
             a_handle.wait()
@@ -1032,78 +1039,38 @@ def benchmark(niter):
         
     #bcast
     if args.bcast:
-        if args.sw:
-            #bcast sw
-            def f(cclo_inst, j,  prevcall):
-                return cclo_inst.bcast(0, tx_buf[j], root=0, sw=True, from_fpga=True, to_fpga=True, run_async=True, waitfor=prevcall)
-            duration_us = bench_base(f)
-            print_timing_us('Bcast sw',duration_us)
-
-        
-        else:
-            #bcast hw
-            def f(cclo_inst,j , prevcall):
-                return cclo_inst.bcast(0, tx_buf[j], root=0, sw=False, from_fpga=True, to_fpga=True, run_async=True, waitfor=prevcall)
-            duration_us = bench_base(f)
-            print_timing_us('Bcast hw',duration_us)
+        def f(cclo_inst,j , prevcall):
+            return cclo_inst.bcast(0, tx_buf[j], root=0, from_fpga=True, to_fpga=True, run_async=True, waitfor=prevcall)
+        duration_us = bench_base(f)
+        print_timing_us('Bcast hw',duration_us)
     
     # Scatter
     if args.scatter:
-        if args.sw:
-            def f(cclo_inst,j , prevcall):
-                return cclo_inst.scatter(0, tx_buf[j], rx_buf[j], tx_buf[j].size//args.naccel, root=0,sw=True, from_fpga=True, to_fpga=True, run_async=True, waitfor=prevcall)
-            duration_us = bench_base(f)
+       
+        def f(cclo_inst,j , prevcall):
+            return cclo_inst.scatter(0, tx_buf[j], rx_buf[j], tx_buf[j].size//args.naccel, root=0, from_fpga=True, to_fpga=True, run_async=True, waitfor=prevcall)
+        duration_us = bench_base(f)
 
-            print_timing_us('Scatter sw',duration_us)
-        else:
-            def f(cclo_inst,j , prevcall):
-                return cclo_inst.scatter(0, tx_buf[j], rx_buf[j], tx_buf[j].size//args.naccel, root=0,sw=False, from_fpga=True, to_fpga=True, run_async=True, waitfor=prevcall)
-            duration_us = bench_base(f)
-
-            print_timing_us('Scatter hw',duration_us)
+        print_timing_us('Scatter hw',duration_us)
 
     if args.gather:
-        if args.sw:
-            def f(cclo_inst,j , prevcall):
-                return cclo_inst.gather(0, tx_buf[j], rx_buf[j], tx_buf[j].size//args.naccel, root=1, sw=True, from_fpga=True, to_fpga=True, run_async=True, waitfor=prevcall)
-            duration_us = bench_base(f)
-
-            print_timing_us('Gather sw',duration_us)
-        else:
-            def f(cclo_inst,j , prevcall):
-                return cclo_inst.gather(0, tx_buf[j], rx_buf[j], tx_buf[j].size//args.naccel, root=1, sw=False, from_fpga=True, to_fpga=True, run_async=True, waitfor=prevcall)
-            duration_us = bench_base(f)
-            
-            print_timing_us('Gather hw',duration_us)
+       
+        def f(cclo_inst,j , prevcall):
+            return cclo_inst.gather(0, tx_buf[j], rx_buf[j], tx_buf[j].size//args.naccel, root=1, from_fpga=True, to_fpga=True, run_async=True, waitfor=prevcall)
+        duration_us = bench_base(f)
+        
+        print_timing_us('Gather hw',duration_us)
     # Allgather
     if args.allgather:
-        if args.sw:
-            def f(cclo_inst,j , prevcall):
-                return cclo_inst.allgather(0, tx_buf[j], rx_buf[j], tx_buf[j].size//args.naccel, sw=True, ring=True, fused=True, from_fpga=True, to_fpga=True, run_async=True, waitfor=prevcall)
-            duration_us = bench_base(f)
+        
+        def f(cclo_inst,j , prevcall):
+            return cclo_inst.allgather(0, tx_buf[j], rx_buf[j], tx_buf[j].size//args.naccel, from_fpga=True, to_fpga=True, run_async=True, waitfor=prevcall)
+        duration_us = bench_base(f)
+        
+        print_timing_us('Allgather fused hw',duration_us)
 
-            print_timing_us('Allgather fused sw',duration_us)
-
-            def f(cclo_inst,j , prevcall):
-                return cclo_inst.allgather(0, tx_buf[j], rx_buf[j], tx_buf[j].size//args.naccel, sw=True, ring=True, fused=False, from_fpga=True, to_fpga=True, run_async=True, waitfor=prevcall)
-            duration_us = bench_base(f)
-
-            print_timing_us('Allgather non fused sw',duration_us)
-        else:
-            def f(cclo_inst,j , prevcall):
-                return cclo_inst.allgather(0, tx_buf[j], rx_buf[j], tx_buf[j].size//args.naccel, sw=False, ring=True, fused=True, from_fpga=True, to_fpga=True, run_async=True, waitfor=prevcall)
-            duration_us = bench_base(f)
-            
-            print_timing_us('Allgather fused hw',duration_us)
-
-            def f(cclo_inst,j , prevcall):
-                return cclo_inst.allgather(0, tx_buf[j], rx_buf[j], tx_buf[j].size//args.naccel, sw=False, ring=True, fused=False, from_fpga=True, to_fpga=True, run_async=True, waitfor=prevcall)
-            duration_us = bench_base(f)
-            
-            print_timing_us('Allgather non fused hw',duration_us)
     # Reduce
     
-    threads = []
     #fill vector
     for j in range(args.naccel):
         tx_buf[j][:]=np.ones( tx_buf[j].shape, dtype=np.float32)# init tx buffer
@@ -1113,44 +1080,21 @@ def benchmark(niter):
         #tx_buf[j][:]=np.random.random_sample(size=tx_buf[j].shape)#init tx buffers
         #tx_buf[j][:]=np.random.randint(127, size=tx_buf[j].size, dtype=np.int8)#init tx buffers
     if args.reduce:
-        if args.sw:
-            def f(cclo_inst,j , prevcall):
-                return cclo_inst.reduce(0, tx_buf[j].view(np.float32), rx_buf[j].view(np.float32), tx_buf[j].view(np.uint8).size, root=1, func=CCLOReduceFunc.fp, sw=True, shift=True, from_fpga=True, to_fpga=True, run_async=True, waitfor=prevcall)
-            duration_us = bench_base(f)
         
-            print_timing_us('Reduce sw ring',duration_us)
-        else:
-            def f(cclo_inst,j , prevcall):
-                return cclo_inst.reduce(0, tx_buf[j].view(np.float32), rx_buf[j].view(np.float32), tx_buf[j].view(np.uint8).size, root=1, func=CCLOReduceFunc.fp, sw=False, shift=True, from_fpga=True, to_fpga=True, run_async=True, waitfor=prevcall)
-            duration_us = bench_base(f)
-        
-            print_timing_us('Reduce hw ring',duration_us)
+        def f(cclo_inst,j , prevcall):
+            return cclo_inst.reduce(0, tx_buf[j].view(np.float32), rx_buf[j].view(np.float32), tx_buf[j].view(np.uint8).size, root=1, func=CCLOReduceFunc.fp,  from_fpga=True, to_fpga=True, run_async=True, waitfor=prevcall)
+        duration_us = bench_base(f)
+    
+        print_timing_us('Reduce hw ring',duration_us)
     # Allreduce
     if args.allreduce:
-        if args.sw:
-            def f(cclo_inst,j , prevcall):
-                return cclo_inst.allreduce(0, tx_buf[j].view(np.float32), rx_buf[j].view(np.float32), tx_buf[j].view(np.uint8).size, CCLOReduceFunc.fp, sw=True, ring=True, fused=True, from_fpga=True, to_fpga=True, run_async=True, waitfor=prevcall)
-            duration_us = bench_base(f)
         
-            print_timing_us('Allreduce fused sw ring',duration_us)
+        def f(cclo_inst,j , prevcall):
+            return cclo_inst.allreduce(0, tx_buf[j].view(np.float32), rx_buf[j].view(np.float32), tx_buf[j].view(np.uint8).size, CCLOReduceFunc.fp, from_fpga=True, to_fpga=True, run_async=True, waitfor=prevcall)
+        duration_us = bench_base(f)
+        
+        print_timing_us('Allreduce fused hw ring',duration_us)
 
-            def f(cclo_inst,j , prevcall):
-                return cclo_inst.allreduce(0, tx_buf[j].view(np.float32), rx_buf[j].view(np.float32), tx_buf[j].view(np.uint8).size, CCLOReduceFunc.fp, sw=True, ring=True, fused=False, from_fpga=True, to_fpga=True, run_async=True, waitfor=prevcall)
-            duration_us = bench_base(f)
-        
-            print_timing_us('Allreduce non fused sw ring',duration_us)
-        else:
-            def f(cclo_inst,j , prevcall):
-                return cclo_inst.allreduce(0, tx_buf[j].view(np.float32), rx_buf[j].view(np.float32), tx_buf[j].view(np.uint8).size, CCLOReduceFunc.fp, sw=False, ring=True, fused=True, from_fpga=True, to_fpga=True, run_async=True, waitfor=prevcall)
-            duration_us = bench_base(f)
-            
-            print_timing_us('Allreduce fused hw ring',duration_us)
-
-            def f(cclo_inst,j , prevcall):
-                return cclo_inst.allreduce(0, tx_buf[j].view(np.float32), rx_buf[j].view(np.float32), tx_buf[j].view(np.uint8).size, CCLOReduceFunc.fp, sw=False, ring=True, fused=False, from_fpga=True, to_fpga=True, run_async=True, waitfor=prevcall)
-            duration_us = bench_base(f)
-        
-            print_timing_us('Allreduce non fused hw ring',duration_us)
     csv_file.close()
 
 def test_spare():
@@ -1246,6 +1190,8 @@ if __name__ == "__main__":
 
     if args.dump_rx_regs >= 0 :
         for cclo_i in cclo_inst:
+            from time import sleep
+            sleep(1)
             cclo_i.dump_rx_buffers_spares()
 
     try:
@@ -1266,99 +1212,41 @@ if __name__ == "__main__":
                 test_sendrecv_unaligned()
 
         if not args.benchmark and args.bcast:
-            for i in range(args.nruns):
-                if args.sw:
-                    test_bcast(         sw=True)
-                    test_bcast_async(   sw=True)
-                else:
-                    test_bcast(         sw=False)
-                    test_bcast_async(   sw=False)
-            if args.sw:
-                test_bcast_rnd(     sw=True , repetitions=5)
-            else:
-                test_bcast_rnd(     sw=False, repetitions=5)
+
+            test_bcast()
+            test_bcast_async()
+            test_bcast_rnd(repetitions=5)
 
         if not args.benchmark and args.scatter:
             for i in range(args.nruns):
-                if args.sw:
-                    test_scatter(    sw=True)
-                    test_scatter_async(sw=True)
-                else:
-                    test_scatter(    sw=False)
-                    test_scatter_async(sw=False)
-                
+                test_scatter()
+                test_scatter_async()
+            
 
         if not args.benchmark and args.gather:
             for i in range(args.nruns):
-                if args.sw:
-                    ##test_gather(       sw=True , ring=False) non-shift sw gather not implemented
-                    test_gather(        sw=True , ring=True )
-                    ##test_gather_async( sw=True , ring=False) non-shift sw gather not implemented
-                    test_gather_async(  sw=True , ring=True )
-                else:
-                    #test_gather(        sw=False, ring=False) not safe now
-                    test_gather(        sw=False, ring=True )
-                    #test_gather_async(  sw=False, ring=False) not safe now
-                    test_gather_async(  sw=False, ring=True ) 
+                
+                test_gather( )
+                test_gather_async( ) 
                 
 
         if not args.benchmark and args.allgather:
             for i in range(args.nruns):
-                if args.sw:
-                    test_allgather(         sw=True , ring=True , fused=True  )
-                    test_allgather(         sw=True , ring=True , fused=False )
-                    #test_allgather(         sw=True , ring=False, fused=False ) not safe now
-                    #test_allgather(         sw=True , ring=False, fused=True  ) not implemented
-                    test_allgather_async(   sw=True , ring=True , fused=True  )
-                    test_allgather_async(   sw=True , ring=True , fused=False )
-                    #test_allgather_async(   sw=True , ring=False, fused=False ) not safe now
-                    #test_allgather_async(   sw=True , ring=False, fused=True  ) not implemented
-                else:
-                    test_allgather(         sw=False , ring=True , fused=True  )
-                    #test_allgather(         sw=False , ring=True , fused=False ) not implemented
-                    #test_allgather(         sw=False , ring=False, fused=False ) not safe now
-                    #test_allgather(         sw=False , ring=False, fused=True  ) not implemented
-                    test_allgather_async(   sw=False , ring=True , fused=True  )
-                    #test_allgather_async(   sw=False , ring=True , fused=False ) not implemented
-                    #test_allgather_async(   sw=False , ring=False, fused=False ) not safe now
-                    #test_allgather_async(   sw=False , ring=False, fused=True  ) not implemented
+                    test_allgather( )
+                    test_allgather_async( )
 
 
         if not args.benchmark and args.reduce:
             for i in range(args.nruns):
-                
-                if args.sw :
-                    if (args.segment_size >= args.bsize and args.naccel*(args.bsize + args.segment_size -1)//args.segment_size < args.nbufs):
-                        #test_reduce(sw=True , shift=False) no-shift not implemented
-                        test_reduce(sw=True , shift=True)
-                        #test_reduce_async(sw=True , shift=False) no-shift not implemented
-                        test_reduce_async(sw=True , shift=True)
-                    else:
-                        import warnings
-                        warnings.warn("not safe to run sw reduce! it may run out of buffers") 
-                else:
-                    #test_reduce(sw=False, shift=False) not safe now
-                    test_reduce(sw=False, shift=True)
-                    #test_reduce_async(sw=False, shift=False) not safe now
-                    test_reduce_async(sw=False, shift=True)
+                test_reduce(sw=False, shift=True)
+                test_reduce_async(sw=False, shift=True)
                
 
         if not args.benchmark and args.allreduce:
             for i in range(args.nruns):
-                if args.sw :
-                    if (args.segment_size >= args.bsize and args.naccel*(args.bsize + args.segment_size -1)//args.segment_size < args.nbufs):
-                        test_allreduce(fused=False  , sw=True )
-                        test_allreduce(fused=True   , sw=True )       
-                        test_allreduce_async(fused=False  , sw=True )
-                        test_allreduce_async(fused=True   , sw=True )
-                    else:
-                        import warnings
-                        warnings.warn("not safe to run sw allreduce! it may run out of buffers") 
-                else:    
-                    test_allreduce(fused=False  , sw=False)
-                    test_allreduce(fused=True   , sw=False)
-                    test_allreduce_async(fused=False  , sw=False) 
-                    test_allreduce_async(fused=True   , sw=False)
+               
+                test_allreduce()
+                test_allreduce_async() 
 
 
         if not args.benchmark and args.accumulate:
@@ -1400,67 +1288,25 @@ if __name__ == "__main__":
                     test_self_sendrecv()
                     test_sendrecv()
                     test_sendrecv_unaligned()
-                    test_bcast(         sw=True)
-                    test_bcast_async(   sw=True)
-                    test_bcast(         sw=False)
-                    test_bcast_async(   sw=False)
-                    test_bcast_rnd(     sw=True , repetitions=5)
-                    test_bcast_rnd(     sw=False, repetitions=5)
-                    test_scatter(       sw=True)
-                    test_scatter(       sw=False)
-                    test_scatter_async( sw=True)
-                    test_scatter_async( sw=False)
-                    ##test_gather(       sw=True , ring=False) non-shift sw gather not implemented
-                    test_gather(        sw=True , ring=True )
-                    #test_gather(        sw=False, ring=False) not safe now
-                    test_gather(        sw=False, ring=True )
-                    ##test_gather_async( sw=True , ring=False) non-shift sw gather not implemented
-                    test_gather_async(  sw=True , ring=True )
-                    #test_gather_async(  sw=False, ring=False) not safe now
-                    test_gather_async(  sw=False, ring=True ) 
-                    test_allgather(         sw=True , ring=True , fused=True  )
-                    test_allgather(         sw=True , ring=True , fused=False )
-                    #test_allgather(         sw=True , ring=False, fused=False ) not safe now
-                    #test_allgather(         sw=True , ring=False, fused=True  ) not implemented
-                    test_allgather(         sw=False , ring=True , fused=True  )
-                    #test_allgather(         sw=False , ring=True , fused=False ) not implemented
-                    #test_allgather(         sw=False , ring=False, fused=False ) not safe now
-                    #test_allgather(         sw=False , ring=False, fused=True  ) not implemented
-                    test_allgather_async(   sw=True , ring=True , fused=True  )
-                    test_allgather_async(   sw=True , ring=True , fused=False )
-                    #test_allgather_async(   sw=True , ring=False, fused=False ) not safe now
-                    #test_allgather_async(   sw=True , ring=False, fused=True  ) not implemented
-                    test_allgather_async(   sw=False , ring=True , fused=True  )
-                    #test_allgather_async(   sw=False , ring=True , fused=False ) not implemented
-                    #test_allgather_async(   sw=False , ring=False, fused=False ) not safe now
-                    #test_allgather_async(   sw=False , ring=False, fused=True  ) not implemented
+                    test_bcast()
+                    test_bcast_async()
+                    test_bcast_rnd( repetitions=5)
+                    test_scatter()
+                    test_scatter_async()
+                    test_gather()
+                    test_gather_async() 
+                    test_allgather()
+                    test_allgather_async()
                     test_copy()
                     # do not allow the arithmetic test to progress
                     # if sizes aren't divisible by sizeof(fp32) or sizeof(fp64)
                     if size % 8 == 0:
                         test_acc()
                         
-                        #test_reduce(sw=False, shift=False) not safe now
-                        test_reduce(sw=False, shift=True)
-                        #test_reduce_async(sw=False, shift=False) not safe now
-                        test_reduce_async(sw=False, shift=True)
-                        test_allreduce( sw=False, fused=False   )
-                        test_allreduce( sw=False, fused=True    )
-                        test_allreduce_async(fused=False  , sw=False)
-                        test_allreduce_async(fused=True   , sw=False)
-                        if  (args.segment_size >= size and args.naccel*(args.bsize + args.segment_size -1)//args.segment_size <= args.nbufs):
-                            test_allreduce( sw=True , fused=True    )
-                            #test_reduce(sw=True , shift=False) no-shift not implemented
-                            test_reduce(sw=True , shift=True)
-                            #test_reduce_async(sw=True , shift=False) no-shift not implemented
-                            test_reduce_async(sw=True , shift=True)
-                            test_allreduce( sw=True , fused=False   )
-                            test_allreduce_async(fused=False  , sw=True )
-                            test_allreduce_async(fused=True   , sw=True )
-                            pass   
-                        else:
-                            import warnings
-                            warnings.warn("not safe to run sw allreduce non fused version! it may run out of buffers") 
+                        test_reduce()
+                        test_reduce_async()
+                        test_allreduce()
+                        test_allreduce_async()
                             
     except KeyboardInterrupt:
         print("CTR^C")
@@ -1468,10 +1314,10 @@ if __name__ == "__main__":
         print(e)
         import traceback
         traceback.print_tb(e.__traceback__)
-        for jj in range(args.naccel):
-            print(f"{jj}tx buffer {np.uint8}: {tx_buf[jj].view(np.uint8)}")
-            print(f"{jj}rx buffer {np.uint8}: {rx_buf[jj].view(np.uint8)}")
-            cclo_inst[jj].dump_communicator()
-            cclo_inst[jj].dump_rx_buffers_spares()
-
+        
+    for j in range(args.naccel):
+            print(f"{j}tx buffer {np.uint8}: {tx_buf[j].view(np.uint8)}")
+            print(f"{j}rx buffer {np.uint8}: {rx_buf[j].view(np.uint8)}")
+            cclo_inst[j].dump_communicator()
+            cclo_inst[j].dump_rx_buffers_spares()
     deinit_system()
