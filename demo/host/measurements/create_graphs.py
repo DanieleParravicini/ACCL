@@ -1431,77 +1431,110 @@ if __name__ == "__main__":
         #optimized_vs_base(other,experiments_filtering, logy=False, figure_label="dma_hardened_broadcast_comparison")
         #
 
-        other = pd.concat([load_csvs_under("accl/dma_hardened2")])
-        other = remove_multiple_headers(other)
+        #other = pd.concat([load_csvs_under("accl/dma_hardened2")])
+        #other = remove_multiple_headers(other)
+        #for collective_op in ["Send/recv","Broadcast", "Scatter", "Gather", "Allgather", "Reduce", "Allreduce"]:
+        #    experiments_filtering = []
+        #    for segment_size, marker in [(128,"o"), (256, "*"), (512, "v"), (1024, ">")]:
+        #        experiments_filtering.append(
+        #            { 
+        #                "experiment":"dma_mcu",
+        #                "line style":f"C0-{marker}",
+        #                "label":f"MCU s:{segment_size}",
+        #                "collective name": collective_op,
+        #                "Segment_size[KB]":segment_size,
+        #                "board_instance":"xilinx_u280_xdma_201920_3", 
+        #                "number of banks":6,
+        #                "number of nodes": 3,
+        #                "F2F":True,
+        #                "H2H":False})
+        #    
+        #    collective_label = collective_op.replace("/","")
+        #    print(collective_op)
+        #    optimized_vs_base(other, experiments_filtering , logy=True, figure_label=f"dma_mcu_{collective_label}_trend")
+        #for collective_op in ["Send/recv","Broadcast", "Scatter", "Gather", "Allgather", "Reduce", "Allreduce"]:
+        #    experiments_filtering = []
+        #
+        #    for segment_size, marker in [(128,"o"), (256, "*"), (512, "v"), (1024, ">")]:
+        #        experiments_filtering.append(
+        #            { 
+        #                "experiment":"dma_hardened2",
+        #                "line style":f"C1-{marker}",
+        #                "label": f"dma hardened s:{segment_size}",
+        #                "collective name": collective_op,
+        #                "Segment_size[KB]":segment_size,
+        #                "board_instance":"xilinx_u280_xdma_201920_3", 
+        #                "number of banks":6,
+        #                "number of nodes": 3,
+        #                "F2F":True,
+        #                "H2H":False})
+        #    collective_label = collective_op.replace("/","")
+        #    print(collective_op)
+        #    optimized_vs_base(other, experiments_filtering , logy=True, figure_label=f"dma_hardened_{collective_label}_trend")
+        #for collective_op in ["Send/recv","Broadcast", "Scatter", "Gather", "Allgather", "Reduce", "Allreduce"]:
+        #    experiments_filtering = []
+        #    for segment_size, marker in [(128,"o"), (256, "*"), (512, "v"), (1024, ">")]:
+        #        experiments_filtering.append(
+        #            { 
+        #                "experiment":"dma_mcu",
+        #                "line style":f"C0-{marker}",
+        #                "label":f"MCU s:{segment_size}",
+        #                "collective name": collective_op,
+        #                "Segment_size[KB]":segment_size,
+        #                "board_instance":"xilinx_u280_xdma_201920_3", 
+        #                "number of banks":6,
+        #                "number of nodes": 3,
+        #                "F2F":True,
+        #                "H2H":False})
+        #    for segment_size, marker in [(128,"o"), (256, "*"), (512, "v"), (1024, ">")]:
+        #        experiments_filtering.append(
+        #            { 
+        #                "experiment":"dma_hardened2",
+        #                "line style":f"C1-{marker}",
+        #                "label": f"dma hardened s:{segment_size}",
+        #                "collective name": collective_op,
+        #                "Segment_size[KB]":segment_size,
+        #                "board_instance":"xilinx_u280_xdma_201920_3", 
+        #                "number of banks":6,
+        #                "number of nodes": 3,
+        #                "F2F":True,
+        #                "H2H":False})
+        #    collective_label = collective_op.replace("/","")
+        #    print(collective_op)
+        #    optimized_vs_base(other, experiments_filtering , logy=True, figure_label=f"dma_hardened_{collective_label}_comparison")
 
-        for collective_op in ["Send/recv","Broadcast", "Scatter", "Gather", "Allgather", "Reduce", "Allreduce"]:
+        other = pd.concat([load_csvs_under("accl/dma_mover")])
+        other = remove_multiple_headers(other)
+        for collective_op in ["Send/recv", "Accumulate"]:
             experiments_filtering = []
-            for segment_size, marker in [(128,"o"), (256, "*"), (512, "v"), (1024, ">")]:
+            for segment_size, marker in [(1024, ">"), (1, "x")]:
                 experiments_filtering.append(
                     { 
-                        "experiment":"dma_mcu",
+                        "experiment":"dma_mover",
                         "line style":f"C0-{marker}",
+                        "label":f"dma mover:{segment_size}",
+                        "collective name": collective_op,
+                        "Segment_size[KB]":segment_size,
+                        "board_instance":"xilinx_u280_xdma_201920_3", 
+                        "number of banks":6,
+                        "number of nodes": 2,
+                        "F2F":True,
+                        "H2H":False})
+                
+                experiments_filtering.append(
+                    { 
+                        "experiment":"old_tcp",
+                        "line style":f"C1-{marker}",
                         "label":f"MCU s:{segment_size}",
                         "collective name": collective_op,
                         "Segment_size[KB]":segment_size,
                         "board_instance":"xilinx_u280_xdma_201920_3", 
                         "number of banks":6,
-                        "number of nodes": 3,
+                        "number of nodes": 2,
                         "F2F":True,
                         "H2H":False})
+                
             
             collective_label = collective_op.replace("/","")
             print(collective_op)
-            optimized_vs_base(other, experiments_filtering , logy=True, figure_label=f"dma_mcu_{collective_label}_trend")
-
-        for collective_op in ["Send/recv","Broadcast", "Scatter", "Gather", "Allgather", "Reduce", "Allreduce"]:
-            experiments_filtering = []
-        
-            for segment_size, marker in [(128,"o"), (256, "*"), (512, "v"), (1024, ">")]:
-                experiments_filtering.append(
-                    { 
-                        "experiment":"dma_hardened2",
-                        "line style":f"C1-{marker}",
-                        "label": f"dma hardened s:{segment_size}",
-                        "collective name": collective_op,
-                        "Segment_size[KB]":segment_size,
-                        "board_instance":"xilinx_u280_xdma_201920_3", 
-                        "number of banks":6,
-                        "number of nodes": 3,
-                        "F2F":True,
-                        "H2H":False})
-            collective_label = collective_op.replace("/","")
-            print(collective_op)
-            optimized_vs_base(other, experiments_filtering , logy=True, figure_label=f"dma_hardened_{collective_label}_trend")
-
-        for collective_op in ["Send/recv","Broadcast", "Scatter", "Gather", "Allgather", "Reduce", "Allreduce"]:
-            experiments_filtering = []
-            for segment_size, marker in [(128,"o"), (256, "*"), (512, "v"), (1024, ">")]:
-                experiments_filtering.append(
-                    { 
-                        "experiment":"dma_mcu",
-                        "line style":f"C0-{marker}",
-                        "label":f"MCU s:{segment_size}",
-                        "collective name": collective_op,
-                        "Segment_size[KB]":segment_size,
-                        "board_instance":"xilinx_u280_xdma_201920_3", 
-                        "number of banks":6,
-                        "number of nodes": 3,
-                        "F2F":True,
-                        "H2H":False})
-            for segment_size, marker in [(128,"o"), (256, "*"), (512, "v"), (1024, ">")]:
-                experiments_filtering.append(
-                    { 
-                        "experiment":"dma_hardened2",
-                        "line style":f"C1-{marker}",
-                        "label": f"dma hardened s:{segment_size}",
-                        "collective name": collective_op,
-                        "Segment_size[KB]":segment_size,
-                        "board_instance":"xilinx_u280_xdma_201920_3", 
-                        "number of banks":6,
-                        "number of nodes": 3,
-                        "F2F":True,
-                        "H2H":False})
-            collective_label = collective_op.replace("/","")
-            print(collective_op)
-            optimized_vs_base(other, experiments_filtering , logy=True, figure_label=f"dma_hardened_{collective_label}_comparison")
+            optimized_vs_base(other, experiments_filtering , logy=True, figure_label=f"dmamover_vs_old_tcp_{collective_label}_trend")
